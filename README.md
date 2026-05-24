@@ -142,6 +142,6 @@ The DeepSeek keyword trainer does not fine-tune model weights. It uses DeepSeek 
 
 The dictionary harvester is iterative. Run it repeatedly with different seed queries or larger `BILIBILI_HARVEST_MAX_QUERIES` values to expand coverage. By default it skips queries and BV ids already recorded in the harvest state. No crawler can prove it has gathered every possible Bilibili slang term, so the practical target is continued growth with zero duplicate dictionary terms and broader family coverage.
 
-To protect dictionary quality, model-generated keywords are accepted only when the cleaned term can be found in the crawled Bilibili comment text. Terms without direct text evidence are counted as `evidenceRejected` in the harvest report and are not merged into the dictionary.
+To protect dictionary quality, model-generated keywords are accepted only when the cleaned term can be found in the crawled Bilibili comment text. Accepted entries include `evidenceCount` and `evidenceSamples` so each term can be audited against source comments. Terms without direct text evidence are counted as `evidenceRejected` in the harvest report and are not merged into the dictionary.
 
 The scoring language is framed as behavior-risk analysis over a bounded public comment sample, not as a clinical diagnosis or definitive personality judgment.

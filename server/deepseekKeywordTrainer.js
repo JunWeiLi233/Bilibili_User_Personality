@@ -74,6 +74,9 @@ function mergeKeywordEntry(existing, incoming, now) {
   const shouldReplaceDetails = shouldReplaceFamily || existing.family === incoming.family || !existing.meaning;
   const base = shouldReplaceFamily ? incoming : existing;
   const details = shouldReplaceDetails ? incoming : {};
+  const evidenceSamples = unique([...(existing.evidenceSamples || []), ...(incoming.evidenceSamples || [])]).slice(0, 5);
+  const existingEvidenceCount = Math.max(0, Number(existing.evidenceCount) || 0);
+  const incomingEvidenceCount = Math.max(0, Number(incoming.evidenceCount) || 0);
 
   return {
     ...base,
@@ -83,6 +86,11 @@ function mergeKeywordEntry(existing, incoming, now) {
     meaning: details.meaning || existing.meaning || incoming.meaning,
     risk: details.risk || existing.risk || incoming.risk,
     confidence: Math.max(existingConfidence, incomingConfidence),
+    evidenceCount:
+      evidenceSamples.length > 0 && evidenceSamples.length < existingEvidenceCount + incomingEvidenceCount
+        ? Math.max(existingEvidenceCount, incomingEvidenceCount)
+        : existingEvidenceCount + incomingEvidenceCount,
+    evidenceSamples,
     updatedAt: now,
   };
 }
@@ -118,6 +126,8 @@ export function normalizeKeywordEntries(rawEntries = []) {
         meaning,
         risk: String(item.risk || '').trim() || (family === 'cooperation' || family === 'correction' ? 'positive' : 'medium'),
         confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.68,
+        evidenceCount: Math.max(0, Number(item.evidenceCount) || 0),
+        evidenceSamples: Array.isArray(item.evidenceSamples) ? unique(item.evidenceSamples.map((sample) => String(sample || '').trim())).slice(0, 5) : [],
       });
     }
   }
@@ -133,10 +143,43 @@ function cleanEvidenceText(text) {
   return cleanTerm(text).toLowerCase();
 }
 
+function countOccurrences(haystack, needle) {
+  if (!haystack || !needle) return 0;
+  let count = 0;
+  let index = 0;
+  while (index <= haystack.length) {
+    const found = haystack.indexOf(needle, index);
+    if (found === -1) break;
+    count += 1;
+    index = found + Math.max(needle.length, 1);
+  }
+  return count;
+}
+
+function evidenceForTerm(term, text) {
+  const needle = cleanEvidenceText(term);
+  const evidenceText = cleanEvidenceText(text);
+  const evidenceCount = countOccurrences(evidenceText, needle);
+  const evidenceSamples = [];
+  if (evidenceCount > 0) {
+    for (const line of String(text || '').split(/\r?\n/)) {
+      const cleanLine = cleanEvidenceText(line);
+      if (cleanLine.includes(needle)) {
+        const sample = line.replace(/\s+/g, ' ').trim();
+        if (sample) evidenceSamples.push(sample.length > 120 ? `${sample.slice(0, 120)}...` : sample);
+      }
+      if (evidenceSamples.length >= 3) break;
+    }
+  }
+  return { evidenceCount, evidenceSamples: unique(evidenceSamples).slice(0, 3) };
+}
+
 export function filterKeywordEntriesByEvidence(entries = [], text = '') {
   const evidenceText = cleanEvidenceText(text);
   if (!evidenceText) return [];
-  return normalizeKeywordEntries(entries).filter((entry) => evidenceText.includes(cleanEvidenceText(entry.term)));
+  return normalizeKeywordEntries(entries)
+    .map((entry) => ({ ...entry, ...evidenceForTerm(entry.term, text) }))
+    .filter((entry) => entry.evidenceCount > 0);
 }
 
 async function readDictionary(dictionaryPath) {

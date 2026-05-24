@@ -90,10 +90,12 @@ test('filters keyword entries to terms with direct text evidence', () => {
       { term: '[doge]', family: 'cooperation', meaning: '表情梗' },
       { term: 'notpresent', family: 'attack', meaning: 'model hallucination' },
     ],
-    'this Bilibili comment uses [doge] only',
+    'this Bilibili comment uses [doge] only\nsecond [doge] sample',
   );
 
   assert.deepEqual(entries.map((entry) => entry.term), ['doge']);
+  assert.equal(entries[0].evidenceCount, 2);
+  assert.deepEqual(entries[0].evidenceSamples, ['this Bilibili comment uses [doge] only', 'second [doge] sample']);
 });
 
 test('merges learned keyword entries into a persistent local dictionary', async () => {
@@ -251,6 +253,8 @@ test('rejects DeepSeek keywords that are not evidenced in crawled text', async (
     assert.equal(result.usedFallback, false);
     assert.equal(result.evidenceRejected, 1);
     assert.deepEqual(result.entries.map((entry) => entry.term), ['doge']);
+    assert.equal(result.entries[0].evidenceCount, 1);
+    assert.deepEqual(result.entries[0].evidenceSamples, ['this Bilibili comment uses [doge] only']);
     assert.deepEqual(result.dictionary.families.cooperation, ['doge']);
     assert.deepEqual(result.dictionary.families.attack, []);
   } finally {
