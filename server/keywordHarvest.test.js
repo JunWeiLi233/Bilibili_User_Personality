@@ -212,6 +212,7 @@ test('buildKeywordHarvestQueryPlan prioritizes retry actions before fresh harves
       coverageMode: 'all-weak',
       maxQueries: 2,
       queryVariantsPerTerm: 2,
+      includeExhaustedFallbackTemplates: false,
       termAttempts: {
         missed: {
           term: 'missed',
@@ -385,6 +386,48 @@ test('buildKeywordHarvestQueryPlan skips terms that exhausted every built-in que
   );
 
   assert.deepEqual(plan.map((item) => item.term), ['yygq', 'yygq']);
+});
+
+test('buildKeywordHarvestQueryPlan automatically uses exhausted fallback templates', () => {
+  const allQueries = [
+    'doge \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'doge \u8bc4\u8bba\u533a',
+    'doge \u70ed\u8bc4',
+    'doge \u5f39\u5e55',
+    'doge \u4e89\u8bae \u8bc4\u8bba\u533a',
+    'doge \u662f\u4ec0\u4e48\u6897',
+    'doge \u4ec0\u4e48\u610f\u601d',
+    'doge \u51fa\u5904',
+    'doge \u540d\u6897',
+    'doge \u540d\u573a\u9762 \u8bc4\u8bba\u533a',
+    'doge \u5207\u7247 \u8bc4\u8bba',
+    'doge \u8bc4\u8bba \u6897',
+    'doge B\u7ad9',
+    'doge',
+  ];
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 1,
+      queryVariantsPerTerm: 2,
+      termAttempts: {
+        doge: {
+          term: 'doge',
+          attempts: allQueries.length,
+          successfulAttempts: 0,
+          queries: allQueries.map((query) => ({ query })),
+        },
+      },
+    },
+  );
+
+  assert.equal(plan[0].query, 'doge \u56de\u590d');
+  assert.equal(plan[0].builtInVariant, false);
+  assert.equal(plan[0].previouslyTried, false);
 });
 
 test('buildKeywordHarvestQueryPlan can reopen exhausted terms with extra runtime templates', () => {
@@ -561,6 +604,7 @@ test('summarizeTermAttempts reports exhausted terms after every built-in variant
     {
       entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }],
     },
+    { includeExhaustedFallbackTemplates: false },
   );
 
   assert.equal(summary.exhaustedTerms, 1);
@@ -632,7 +676,7 @@ test('buildCoverageActions classifies covered, unattempted, missed, partial, and
         },
       },
     },
-    { targetEvidence: 3, requireSourceBackedEvidence: true },
+    { targetEvidence: 3, requireSourceBackedEvidence: true, includeExhaustedFallbackTemplates: false },
   );
   const byTerm = Object.fromEntries(actions.map((item) => [item.term, item]));
 

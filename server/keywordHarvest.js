@@ -106,9 +106,12 @@ function renderQueryTemplate(template, term, family) {
 
 function queryTemplatesFromOptions(options = {}) {
   const extraTemplates = parseTemplateList(options.extraQueryTemplates);
+  const exhaustedTemplates =
+    options.includeExhaustedFallbackTemplates === false ? [] : parseTemplateList(options.exhaustedSuggestionTemplates || DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES);
   return [
     ...TERM_QUERY_TEMPLATES.map((template) => ({ template, builtIn: true })),
     ...extraTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
+    ...exhaustedTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
   ];
 }
 
