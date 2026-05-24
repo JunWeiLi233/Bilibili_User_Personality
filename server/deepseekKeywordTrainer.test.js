@@ -125,19 +125,31 @@ test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', 
   const entries = findDictionaryEntriesWithTextEvidence(
     {
       entries: [
+        { term: '\u53cd\u6b63\u6211\u4eec\u8d62\u9ebb\u4e86', family: 'attack', meaning: 'long-form win-meme phrase' },
+        { term: '\u8c01\u662f\u8e6d\u6982\u5ff5', family: 'attack', meaning: 'question-form variant' },
+        { term: '\u81ea\u5df1\u67e5\u53bb', family: 'evasion', meaning: 'imperative variant' },
+        { term: '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528', family: 'evasion', meaning: 'question-form variant' },
         { term: 'dddd', family: 'evasion', meaning: 'abbreviation for \u61c2\u7684\u90fd\u61c2' },
         { term: 'yygq', family: 'attack', meaning: 'abbreviation for \u9634\u9633\u602a\u6c14' },
         { term: 'pink', family: 'attack', meaning: 'shorthand for \u7c89\u7ea2' },
       ],
     },
-    '\u61c2\u7684\u90fd\u61c2\uff0c\u4e0d\u89e3\u91ca\n\u8fd9\u6761\u8bc4\u8bba\u6709\u70b9\u9634\u9633\u602a\u6c14\n\u5c0f\u7c89\u7ea2\u53c8\u6765\u4e86',
+    '\u6211\u4eec\u8d62\u9ebb\u4e86\n\u8fd9\u5c31\u662f\u8e6d\u6982\u5ff5\n\u81ea\u5df1\u67e5\u5427\n\u95ee\u767e\u5ea6\u4e5f\u884c\n\u61c2\u7684\u90fd\u61c2\uff0c\u4e0d\u89e3\u91ca\n\u8fd9\u6761\u8bc4\u8bba\u6709\u70b9\u9634\u9633\u602a\u6c14\n\u5c0f\u7c89\u7ea2\u53c8\u6765\u4e86',
     {
       source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-alias/',
       uid: 'BV-alias',
     },
   );
 
-  assert.deepEqual(entries.map((entry) => entry.term), ['dddd', 'yygq', 'pink']);
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u53cd\u6b63\u6211\u4eec\u8d62\u9ebb\u4e86',
+    '\u8c01\u662f\u8e6d\u6982\u5ff5',
+    '\u81ea\u5df1\u67e5\u53bb',
+    '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528',
+    'dddd',
+    'yygq',
+    'pink',
+  ]);
   assert.equal(entries.every((entry) => entry.evidenceCount === 1), true);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-alias'), true);
 });
