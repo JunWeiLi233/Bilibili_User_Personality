@@ -225,6 +225,15 @@ function buildRuntimeLexicon(customLexicon = {}) {
   );
 }
 
+function mergeDictionaryFamilies(currentLexicon, families = {}) {
+  return Object.fromEntries(
+    Object.keys(baseLexicons).map((family) => {
+      const learned = Array.isArray(families[family]) ? families[family] : [];
+      return [family, [...new Set([...(currentLexicon[family] || []), ...learned])]];
+    }),
+  );
+}
+
 function splitComments(text) {
   return text
     .split(/\n+/)
@@ -638,6 +647,7 @@ function App() {
     }
   });
   const [analysisState, setAnalysisState] = React.useState('ready');
+  const [localLlmConfig, setLocalLlmConfig] = React.useState(null);
 
   const runtimeLexicon = React.useMemo(() => buildRuntimeLexicon(customLexicon), [customLexicon]);
   const selectedUser = profiles.find((user) => user.id === selectedId) || profiles[0];
@@ -651,6 +661,50 @@ function App() {
   React.useEffect(() => {
     window.localStorage.setItem('bili-argument-lexicon', JSON.stringify(customLexicon));
   }, [customLexicon]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function loadLocalLlm() {
+      try {
+        const [configResponse, dictionaryResponse] = await Promise.all([
+          fetch('/api/local-llm/config'),
+          fetch('/api/local-llm/dictionary'),
+        ]);
+        const config = await configResponse.json();
+        const dictionaryPayload = await dictionaryResponse.json();
+        if (cancelled) return;
+        setLocalLlmConfig(config);
+        if (dictionaryPayload.ok && dictionaryPayload.dictionary?.families) {
+          setCustomLexicon((current) => mergeDictionaryFamilies(current, dictionaryPayload.dictionary.families));
+        }
+        setFetchState((current) =>
+          current.status === 'idle'
+            ? {
+                ...current,
+                message: config.available
+                  ? `本地 Ollama 模型 ${config.model} 已连接；输入 UID 后会抓取发言、训练中文关键词并写入本地词典。`
+                  : '未检测到可用 Ollama 模型；输入 UID 后仍会用本地规则提取关键词并写入本地词典。',
+              }
+            : current,
+        );
+      } catch {
+        if (!cancelled) {
+          setFetchState((current) =>
+            current.status === 'idle'
+              ? {
+                  ...current,
+                  message: '本地模型配置读取失败；请确认 npm run server 和 Ollama 服务已启动。',
+                }
+              : current,
+          );
+        }
+      }
+    }
+    loadLocalLlm();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const fetchUidComments = async () => {
     const searchUid = query.trim().match(/\d+/)?.[0] || '';
@@ -688,12 +742,39 @@ function App() {
       const statementCount = data.statements?.length ?? data.comments.length;
       const dynamicCount = data.dynamics?.length ?? 0;
       const postCount = data.authoredPosts?.length ?? 0;
+      let learnedRuntimeLexicon = runtimeLexicon;
+      let learnedNote = localLlmConfig?.available ? `本地模型 ${localLlmConfig.model} 未发现新关键词。` : '本地关键词规则未发现新词。';
+      if (nextCommentText.trim()) {
+        setFetchState({ status: 'loading', message: '正在用本地开源模型提取中文关键词并写入本地词典...' });
+        try {
+          const trainResponse = await fetch('/api/local-llm/train-keywords', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              uid: data.uid,
+              text: nextCommentText,
+              source: data.source,
+            }),
+          });
+          const trainData = await trainResponse.json();
+          if (trainData.ok) {
+            const nextCustomLexicon = mergeDictionaryFamilies(customLexicon, trainData.dictionary?.families || {});
+            setCustomLexicon(nextCustomLexicon);
+            learnedRuntimeLexicon = buildRuntimeLexicon(nextCustomLexicon);
+            learnedNote = `${trainData.available ? `本地模型 ${trainData.model}` : '本地规则'}学习 ${trainData.entries.length} 个中文关键词${trainData.usedFallback ? '（使用规则兜底）' : ''}。`;
+          } else {
+            learnedNote = `本地模型训练失败：${trainData.error || '未知错误'}。`;
+          }
+        } catch (error) {
+          learnedNote = `本地模型训练失败：${error.message}。`;
+        }
+      }
       if (statementCount > 0) {
         const generated = scoreComments({
           name: data.uname || `UID ${data.uid}`,
           uid: `mid ${data.uid}`,
           text: nextCommentText,
-          runtimeLexicon,
+          runtimeLexicon: learnedRuntimeLexicon,
           analysisMode,
         });
         setProfiles((current) => [generated, ...current.filter((item) => !item.id.startsWith('generated-'))]);
@@ -702,7 +783,7 @@ function App() {
       }
       setFetchState({
         status: statementCount > 0 ? 'ready' : 'empty',
-        message: `扫描 ${data.objects?.length ?? data.videos.length} 个公开对象（视频 ${data.videos.length} / 动态 ${dynamicCount}），采集 ${postCount} 条公开动态原文与 ${data.comments.length} 条该 UID 评论互动。${data.confidenceHint}。${data.warnings?.length ? `警告：${data.warnings.join('；')}` : ''}`,
+        message: `扫描 ${data.objects?.length ?? data.videos.length} 个公开对象（视频 ${data.videos.length} / 动态 ${dynamicCount}），采集 ${postCount} 条公开动态原文与 ${data.comments.length} 条该 UID 评论互动。${learnedNote}${data.confidenceHint}。${data.warnings?.length ? `警告：${data.warnings.join('；')}` : ''}`,
       });
       setAnalysisState('ready');
     } catch (error) {

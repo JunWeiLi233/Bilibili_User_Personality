@@ -3,3 +3,4 @@ dist/
 .omx/
 .DS_Store
 *.log
+server/localKeywordDictionary.json

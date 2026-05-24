@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { URL } from 'node:url';
 
 import { analyzeUid } from './bilibiliCrawler.js';
+import { getLocalLlmConfig, readKeywordDictionary, trainKeywordDictionary } from './localKeywordTrainer.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const VITE_PORT = Number(process.env.VITE_PORT || 5191);
@@ -29,6 +30,23 @@ const server = createServer(async (request, response) => {
 
   if (url.pathname === '/api/health') {
     return writeJson(response, 200, { ok: true });
+  }
+
+  if (url.pathname === '/api/local-llm/config') {
+    return writeJson(response, 200, await getLocalLlmConfig());
+  }
+
+  if (url.pathname === '/api/local-llm/dictionary') {
+    return writeJson(response, 200, { ok: true, dictionary: await readKeywordDictionary() });
+  }
+
+  if (url.pathname === '/api/local-llm/train-keywords' && request.method === 'POST') {
+    try {
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      return writeJson(response, 200, await trainKeywordDictionary(payload));
+    } catch (error) {
+      return writeJson(response, 500, { ok: false, error: error.message });
+    }
   }
 
   if (url.pathname === '/api/bilibili/analyze-uid' && request.method === 'POST') {
