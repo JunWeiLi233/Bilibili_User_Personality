@@ -146,6 +146,11 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     deps.includeVideoContext === true ||
     process.env.BILIBILI_HARVEST_INCLUDE_VIDEO_CONTEXT === '1' ||
     existingTermsOnly;
+  const prioritizeSearchQueries =
+    payload.prioritizeSearchQueries === true ||
+    deps.prioritizeSearchQueries === true ||
+    process.env.BILIBILI_HARVEST_PRIORITIZE_SEARCH_QUERIES === '1' ||
+    existingTermsOnly;
   const discoveryWarnings = [];
   let discoveredVideos = [];
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
@@ -195,7 +200,11 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
           discoveryWarnings.push(`${query}: ${error.message}`);
         }
       }
-      discoveryGroups.push(controversialPopularGroup, controversyGroup, searchGroup);
+      discoveryGroups.push(
+        ...(prioritizeSearchQueries
+          ? [searchGroup, controversialPopularGroup, controversyGroup]
+          : [controversialPopularGroup, controversyGroup, searchGroup]),
+      );
     }
     if (discoveryMode === 'popular' || discoveryMode === 'mixed' || discoveryMode === 'controversial') {
       const discoverPopular = deps.discoverPopularVideos || discoverPopularVideos;

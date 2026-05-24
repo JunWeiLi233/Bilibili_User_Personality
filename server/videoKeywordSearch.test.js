@@ -213,6 +213,49 @@ test('searchVideoKeywords controversial discovery mixes controversy seeds, searc
   assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1hotPolitics', 'BV1politics1', 'BV1dictionary', 'BV1popular01']);
 });
 
+test('searchVideoKeywords prioritizes dictionary search videos during existing-only coverage', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: 'dictionary term comments',
+      controversyQueries: ['politics debate'],
+      discoveryMode: 'controversial',
+      discoveryLimit: 4,
+      pages: 1,
+      existingTermsOnly: true,
+    },
+    {
+      discoverVideosByKeyword: async (query, _limit, options = {}) => {
+        if (query === 'dictionary term comments') {
+          return [{ bvid: 'BV1dictionary', title: 'dictionary term comments', sourceUrl: 'https://www.bilibili.com/video/BV1dictionary/' }];
+        }
+        if (options.searchOrder === 'click') {
+          return [{ bvid: 'BV1hotPolitics', title: 'hot politics', sourceUrl: 'https://www.bilibili.com/video/BV1hotPolitics/' }];
+        }
+        return [{ bvid: 'BV1politics1', title: 'politics', sourceUrl: 'https://www.bilibili.com/video/BV1politics1/' }];
+      },
+      discoverPopularVideos: async () => [{ bvid: 'BV1popular01', title: 'popular', sourceUrl: 'https://www.bilibili.com/video/BV1popular01/' }],
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1dictionary', 'BV1hotPolitics', 'BV1politics1', 'BV1popular01']);
+});
+
 test('default controversy seed list includes debate-heavy Bilibili topics', () => {
   const seeds = DEFAULT_CONTROVERSY_SEARCH_QUERIES.split('\n');
   assert.equal(seeds.some((seed) => seed.includes('\u65f6\u653f')), true);
