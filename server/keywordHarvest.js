@@ -320,6 +320,55 @@ export function summarizeTermAttempts(state = {}, dictionary = {}, options = {})
   };
 }
 
+export function buildCoverageActions(dictionary = {}, state = {}, options = {}) {
+  const entries = sortEntriesForCoverage(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
+  const attempts = state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
+  const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
+  return entries.map((entry) => {
+    const term = String(entry.term || '').trim();
+    const family = entry.family || 'attack';
+    const attempt = getTermAttempt(attempts, term);
+    const count = evidenceCount(entry);
+    const exhausted = isTermAttemptExhausted(term, family, attempt, options);
+    const successfulAttempts = Number(attempt?.successfulAttempts) || 0;
+    const attemptsCount = Number(attempt?.attempts) || 0;
+    const triedQueries = attemptedVariantQueries(attempt);
+    const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, options);
+    const nextVariant = availableVariants.find((variant) => !triedQueries.has(variant.query)) || null;
+    let status = 'covered';
+    let action = 'none';
+    if (count < targetEvidence && exhausted) {
+      status = 'exhausted';
+      action = 'add_query_template';
+    } else if (count < targetEvidence && attemptsCount === 0) {
+      status = 'weak_unattempted';
+      action = 'harvest';
+    } else if (count < targetEvidence && successfulAttempts === 0) {
+      status = 'weak_missed';
+      action = nextVariant ? 'retry_with_new_variant' : 'add_query_template';
+    } else if (count < targetEvidence) {
+      status = 'weak_partial';
+      action = 'harvest_more_evidence';
+    }
+    return {
+      term,
+      family,
+      status,
+      action,
+      evidenceCount: count,
+      targetEvidence,
+      evidenceNeeded: Math.max(0, targetEvidence - count),
+      attempts: attemptsCount,
+      successfulAttempts,
+      exhausted,
+      nextQuery: nextVariant?.query || '',
+      suggestedQueries: exhausted ? suggestedQueriesForExhaustedTerm(term, family, attempt, options) : [],
+      lastQuery: attempt?.lastQuery || '',
+      lastError: attempt?.lastError || '',
+    };
+  });
+}
+
 function summarizeCoverageProgress(beforeCoverage, afterCoverage) {
   return {
     weakTermsResolved: Math.max(0, (beforeCoverage?.weakTerms || 0) - (afterCoverage?.weakTerms || 0)),
@@ -437,6 +486,11 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     extraQueryTemplates: options.extraQueryTemplates,
     exhaustedSuggestionTemplates: options.exhaustedSuggestionTemplates,
   });
+  const coverageActions = buildCoverageActions(after, { termAttempts }, {
+    targetEvidence: options.targetEvidence,
+    extraQueryTemplates: options.extraQueryTemplates,
+    exhaustedSuggestionTemplates: options.exhaustedSuggestionTemplates,
+  });
   const finishedAt = new Date().toISOString();
   const nextState = {
     version: 1,
@@ -488,6 +542,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     coverage,
     coverageProgress,
     termAttemptSummary,
+    coverageActions,
     dictionary: after,
   };
 }
@@ -516,6 +571,7 @@ export async function harvestKeywordDictionaryRounds(options = {}, deps = {}) {
     growth: last?.growth || null,
     coverage: last?.coverage || null,
     termAttemptSummary: last?.termAttemptSummary || null,
+    coverageActions: last?.coverageActions || null,
     dictionary: last?.dictionary || null,
   };
 }

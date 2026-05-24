@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 
 import {
+  buildCoverageActions,
   buildKeywordHarvestQueries,
   buildKeywordHarvestQueryPlan,
   harvestKeywordDictionary,
@@ -372,6 +373,67 @@ test('summarizeTermAttempts reports exhausted terms after every built-in variant
   assert.equal(summary.exhaustedSamples[0].suggestedQueries.includes('doge 热评'), true);
 });
 
+test('buildCoverageActions classifies covered, unattempted, missed, partial, and exhausted terms', () => {
+  const variants = [
+    'doge Bilibili discussion comments',
+    'doge Bilibili comments',
+    'doge B站 评论区',
+    'doge 哔哩哔哩 弹幕',
+    'doge 评论 梗',
+    'doge 评论区',
+    'doge 梗',
+    'doge 发言',
+    'doge 争议',
+    'doge',
+  ];
+  const actions = buildCoverageActions(
+    {
+      entries: [
+        { term: 'covered', family: 'attack', evidenceCount: 3 },
+        { term: 'newbie', family: 'attack', evidenceCount: 0 },
+        { term: 'missed', family: 'attack', evidenceCount: 0 },
+        { term: 'partial', family: 'attack', evidenceCount: 1 },
+        { term: 'doge', family: 'cooperation', evidenceCount: 0 },
+      ],
+    },
+    {
+      termAttempts: {
+        missed: {
+          term: 'missed',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: 'missed Bilibili comment meme' }],
+          lastQuery: 'missed Bilibili comment meme',
+        },
+        partial: {
+          term: 'partial',
+          attempts: 1,
+          successfulAttempts: 1,
+          queries: [{ query: 'partial Bilibili comment meme', hit: true }],
+        },
+        doge: {
+          term: 'doge',
+          family: 'cooperation',
+          attempts: variants.length,
+          successfulAttempts: 0,
+          queries: variants.map((query) => ({ query })),
+        },
+      },
+    },
+    { targetEvidence: 3 },
+  );
+  const byTerm = Object.fromEntries(actions.map((item) => [item.term, item]));
+
+  assert.equal(byTerm.covered.action, 'none');
+  assert.equal(byTerm.newbie.action, 'harvest');
+  assert.equal(byTerm.missed.action, 'retry_with_new_variant');
+  assert.equal(byTerm.missed.nextQuery, 'missed Bilibili comments');
+  assert.equal(byTerm.partial.action, 'harvest_more_evidence');
+  assert.equal(byTerm.doge.status, 'exhausted');
+  assert.equal(byTerm.doge.action, 'add_query_template');
+  assert.equal(byTerm.doge.suggestedQueries.includes('doge 热评'), true);
+});
+
 
 test('harvestKeywordDictionary runs dictionary-seeded searches and reports growth', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-'));
@@ -425,6 +487,7 @@ test('harvestKeywordDictionary runs dictionary-seeded searches and reports growt
     assert.equal(result.coverage.weakTerms, 2);
     assert.equal(result.coverageProgress.evidenceGained, 0);
     assert.equal(result.termAttemptSummary.attemptedTerms, 1);
+    assert.equal(result.coverageActions.some((item) => item.action !== 'none'), true);
     assert.deepEqual(result.state.scannedBvids, ['BV1111111111', 'BV2222222222']);
     const dogeAttempt = Object.values(result.state.termAttempts).find((item) => item.term === 'doge');
     assert.equal(dogeAttempt.attempts, 1);

@@ -87,6 +87,7 @@ function serializeResult(result, statePath, reportPath) {
     requestedRounds: result.requestedRounds,
     growth: result.growth,
     coverage: result.coverage,
+    coverageActions: result.coverageActions,
     state: result.state,
     rounds: result.rounds.map((round, index) => ({
       round: index + 1,
@@ -176,6 +177,15 @@ if (result.coverage?.complete) {
   console.log('Next weak dictionary terms to target:');
   for (const entry of result.coverage.weakSamples.slice(0, 10)) {
     console.log(`- [${entry.family}] ${entry.term}: ${entry.evidenceCount}/${result.coverage.targetEvidence}`);
+  }
+}
+
+const nextActions = (result.coverageActions || []).filter((item) => item.action !== 'none').slice(0, 10);
+if (nextActions.length) {
+  console.log('Next coverage actions:');
+  for (const item of nextActions) {
+    const nextQuery = item.nextQuery ? `, next query "${item.nextQuery}"` : '';
+    console.log(`- [${item.status}] ${item.term}: ${item.action}, needs ${item.evidenceNeeded}${nextQuery}`);
   }
 }
 
