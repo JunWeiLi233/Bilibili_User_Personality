@@ -510,6 +510,71 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
+.vocabulary-radar {
+  grid-column: 1 / -1;
+  padding: 16px 18px 18px;
+  border-top: 1px solid rgba(23, 23, 23, 0.12);
+}
+
+.vocabulary-radar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.vocabulary-radar-head strong {
+  color: #20231f;
+  font-size: 14px;
+}
+
+.vocabulary-radar-head span {
+  max-width: 430px;
+  color: #635d53;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.vocabulary-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.vocabulary-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 7px 9px;
+  border: 1px solid rgba(23, 23, 23, 0.12);
+  background: rgba(255, 255, 255, 0.48);
+  border-radius: 4px;
+}
+
+.vocabulary-chip b {
+  color: #20231f;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.vocabulary-chip i {
+  color: #635d53;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.vocabulary-support {
+  border-color: rgba(47, 93, 80, 0.25);
+  background: rgba(47, 93, 80, 0.09);
+}
+
+.vocabulary-risk {
+  border-color: rgba(162, 106, 45, 0.28);
+  background: rgba(162, 106, 45, 0.1);
+}
+
 .metric-strip {
   margin-top: 14px;
   border: 1px solid rgba(23, 23, 23, 0.16);
@@ -835,6 +900,22 @@ mark {
 
   .radar-label {
     font-size: 10px;
+  }
+
+  .vocabulary-radar-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .vocabulary-radar-head span {
+    text-align: left;
+  }
+
+  .vocabulary-chip {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
   }
 
   .metric-strip,

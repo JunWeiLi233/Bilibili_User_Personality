@@ -216,6 +216,59 @@ const speechActRules = [
 
 const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
 
+const lexiconFamilyMeta = {
+  attack: {
+    label: '攻击/嘲讽',
+    axis: '对抗性动机',
+    type: '情绪化表达',
+    severity: '中',
+    polarity: 'risk',
+    diagnosis: '动态语库命中攻击或嘲讽语义族，会推高对抗性动机并压低合作讨论。',
+  },
+  absolutes: {
+    label: '绝对化',
+    axis: '认知闭合',
+    type: '缺少限定',
+    severity: '中',
+    polarity: 'risk',
+    diagnosis: '动态语库命中绝对化断言语义族，会推高认知闭合并影响逻辑一致性。',
+  },
+  evidence: {
+    label: '证据线索',
+    axis: '证据敏感',
+    type: '证据请求',
+    severity: '低',
+    polarity: 'support',
+    diagnosis: '动态语库命中证据或来源相关语义族，会作为证据敏感的正向线索。',
+  },
+  evasion: {
+    label: '举证回避',
+    axis: '证据敏感',
+    type: '缺证断言',
+    severity: '中',
+    polarity: 'risk',
+    diagnosis: '动态语库命中举证回避语义族，会降低证据敏感并增加证明责任转移风险。',
+  },
+  cooperation: {
+    label: '合作讨论',
+    axis: '合作讨论',
+    type: '合作线索',
+    severity: '低',
+    polarity: 'support',
+    diagnosis: '动态语库命中澄清、条件化或合作语义族，会作为合作讨论的正向线索。',
+  },
+  correction: {
+    label: '自我修正',
+    axis: '修正意愿',
+    type: '修正线索',
+    severity: '低',
+    polarity: 'support',
+    diagnosis: '动态语库命中修正或承认语义族，会作为修正意愿的正向线索。',
+  },
+};
+
+const familyOrder = Object.keys(lexiconFamilyMeta);
+
 function buildRuntimeLexicon(customLexicon = {}) {
   return Object.fromEntries(
     Object.entries(baseLexicons).map(([key, terms]) => {
@@ -227,7 +280,7 @@ function buildRuntimeLexicon(customLexicon = {}) {
 
 function mergeDictionaryFamilies(currentLexicon, families = {}) {
   return Object.fromEntries(
-    Object.keys(baseLexicons).map((family) => {
+    familyOrder.map((family) => {
       const learned = Array.isArray(families[family]) ? families[family] : [];
       return [family, [...new Set([...(currentLexicon[family] || []), ...learned])]];
     }),
@@ -293,47 +346,52 @@ function classifySpeechAct(comment, index, totalComments) {
       ];
 }
 
-function classifyLexiconError(comment, index, totalComments, runtimeLexicon) {
-  const lexiconRules = [
-    {
-      type: '情绪化表达',
-      severity: '中',
-      terms: runtimeLexicon.attack,
-      diagnosis: '动态语库命中攻击或嘲讽语义族，建议再看上下文确认是否为玩笑、引用或反讽。',
-    },
-    {
-      type: '缺证断言',
-      severity: '中',
-      terms: runtimeLexicon.evasion,
-      diagnosis: '动态语库命中举证回避语义族，可能存在证明责任转移。',
-    },
-    {
-      type: '逻辑错误',
-      severity: '中',
-      terms: runtimeLexicon.absolutes,
-      diagnosis: '动态语库命中绝对化断言语义族，可能存在过度概括。',
-    },
-  ];
-
-  for (const rule of lexiconRules) {
-    const term = rule.terms.find((item) => comment.includes(item));
-    if (term) {
-      return {
-        id: `lexicon-${index}-${term}`,
+function findLexiconMarks(comment, index, totalComments, runtimeLexicon) {
+  const marks = [];
+  for (const family of familyOrder) {
+    const meta = lexiconFamilyMeta[family];
+    const terms = runtimeLexicon[family] || [];
+    for (const term of terms) {
+      if (!term || !comment.includes(term)) continue;
+      marks.push({
+        id: `lexicon-${index}-${family}-${term}`,
         source: '动态语库',
-        speechAct: '词族风险提示',
-        target: '词面线索',
-        type: rule.type,
-        severity: rule.severity,
+        speechAct: `${meta.label}词汇标记`,
+        target: meta.axis,
+        type: meta.type,
+        severity: meta.severity,
         comment,
         highlight: term,
-        diagnosis: rule.diagnosis,
-        evidence: `第 ${index + 1}/${totalComments} 条评论命中“${term}”。词面命中只作为辅助证据，不单独定性。`,
-        confidence: 0.62,
-      };
+        family,
+        axis: meta.axis,
+        polarity: meta.polarity,
+        diagnosis: `${meta.diagnosis} 词面命中只作为 radar 辅助证据，不单独定性。`,
+        evidence: `第 ${index + 1}/${totalComments} 条评论命中字典词“${term}”（${meta.label}），已计入 radar「${meta.axis}」相关计算。`,
+        confidence: meta.polarity === 'risk' ? 0.64 : 0.6,
+      });
     }
   }
-  return null;
+  return [...new Map(marks.map((mark) => [`${mark.family}:${mark.highlight}`, mark])).values()].slice(0, 4);
+}
+
+function summarizeVocabularyMarks(marks) {
+  const grouped = new Map();
+  for (const mark of marks) {
+    const key = `${mark.family}:${mark.highlight}`;
+    const current = grouped.get(key) || {
+      term: mark.highlight,
+      family: mark.family,
+      label: lexiconFamilyMeta[mark.family]?.label || mark.family,
+      axis: mark.axis,
+      polarity: mark.polarity,
+      count: 0,
+    };
+    current.count += 1;
+    grouped.set(key, current);
+  }
+  return [...grouped.values()]
+    .sort((a, b) => b.count - a.count || familyOrder.indexOf(a.family) - familyOrder.indexOf(b.family))
+    .slice(0, 14);
 }
 
 function inferCandidateFamily(term, sourceLine) {
@@ -403,9 +461,9 @@ function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons,
   const semanticActs = comments.flatMap((comment, index) => classifySpeechAct(comment, index, total));
   const negativeActs = semanticActs.filter((act) => !act.positive && !act.neutral);
   const positiveActs = semanticActs.filter((act) => act.positive);
-  const lexiconErrors = comments
-    .map((comment, index) => classifyLexiconError(comment, index, total, runtimeLexicon))
-    .filter(Boolean);
+  const lexiconMarks = comments.flatMap((comment, index) => findLexiconMarks(comment, index, total, runtimeLexicon));
+  const riskLexiconMarks = lexiconMarks.filter((mark) => mark.polarity === 'risk');
+  const vocabularyMarks = summarizeVocabularyMarks(lexiconMarks);
 
   const semanticSeed = {
     attack: 26,
@@ -426,7 +484,7 @@ function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons,
     attack: clamp(28 + density(runtimeLexicon.attack) * 24 + perThousand(joined, runtimeLexicon.attack) * 2.8),
     closure: clamp(30 + density(runtimeLexicon.absolutes) * 18 + perThousand(joined, runtimeLexicon.absolutes) * 2.2),
     evidence: clamp(55 + density(runtimeLexicon.evidence) * 16 - density(runtimeLexicon.evasion) * 22),
-    logic: clamp(68 - (lexiconErrors.length / total) * 24),
+    logic: clamp(68 - (riskLexiconMarks.length / total) * 18 + density(runtimeLexicon.evidence) * 5),
     cooperation: clamp(46 + density(runtimeLexicon.cooperation) * 18 - density(runtimeLexicon.attack) * 16 - density(runtimeLexicon.evasion) * 12),
     correction: clamp(36 + density(runtimeLexicon.correction) * 28 + density(runtimeLexicon.cooperation) * 8 - density(runtimeLexicon.evasion) * 12),
   };
@@ -442,44 +500,44 @@ function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons,
       axis: '对抗性动机',
       value: mix('attack'),
       benchmark: 52,
-      note: `语义裁判检出 ${negativeActs.filter((act) => ['人', '动机'].includes(act.target)).length} 条人/动机攻击；语库攻击密度 ${perThousand(joined, runtimeLexicon.attack).toFixed(1)} / 千字。`,
+      note: `语义裁判检出 ${negativeActs.filter((act) => ['人', '动机'].includes(act.target)).length} 条人/动机攻击；字典 attack 标记 ${lexiconMarks.filter((mark) => mark.family === 'attack').length} 次，密度 ${perThousand(joined, runtimeLexicon.attack).toFixed(1)} / 千字。`,
     },
     {
       axis: '认知闭合',
       value: mix('closure'),
       benchmark: 49,
-      note: `全称化或强事实断言 ${negativeActs.filter((act) => ['命题范围', '事实'].includes(act.target)).length} 条；绝对化语义族密度 ${perThousand(joined, runtimeLexicon.absolutes).toFixed(1)} / 千字。`,
+      note: `全称化或强事实断言 ${negativeActs.filter((act) => ['命题范围', '事实'].includes(act.target)).length} 条；字典 absolutes 标记 ${lexiconMarks.filter((mark) => mark.family === 'absolutes').length} 次。`,
     },
     {
       axis: '证据敏感',
       value: mix('evidence'),
       benchmark: 58,
-      note: `证据词 ${countMatches(joined, runtimeLexicon.evidence)} 次，举证回避 ${countMatches(joined, runtimeLexicon.evasion)} 次。`,
+      note: `证据词 ${countMatches(joined, runtimeLexicon.evidence)} 次，举证回避 ${countMatches(joined, runtimeLexicon.evasion)} 次；两类字典标记共同影响此轴。`,
     },
     {
       axis: '逻辑一致',
       value: mix('logic'),
       benchmark: 61,
-      note: `语义裁判检出 ${negativeActs.length} 条高风险话语行为；词面规则检出 ${lexiconErrors.length} 条辅助证据。`,
+      note: `语义裁判检出 ${negativeActs.length} 条高风险话语行为；风险类字典标记 ${riskLexiconMarks.length} 条作为辅助扣分。`,
     },
     {
       axis: '合作讨论',
       value: mix('cooperation'),
       benchmark: 55,
-      note: `澄清、让步或条件化表达 ${countMatches(joined, runtimeLexicon.cooperation)} 次；正向话语行为 ${positiveActs.length} 条。`,
+      note: `澄清、让步或条件化表达 ${countMatches(joined, runtimeLexicon.cooperation)} 次；cooperation 字典标记 ${lexiconMarks.filter((mark) => mark.family === 'cooperation').length} 次。`,
     },
     {
       axis: '修正意愿',
       value: mix('correction'),
       benchmark: 46,
-      note: `修正或承认表达 ${countMatches(joined, runtimeLexicon.correction)} 次；显式修正 ${positiveActs.filter((act) => act.target === '自我修正').length} 条。`,
+      note: `修正或承认表达 ${countMatches(joined, runtimeLexicon.correction)} 次；correction 字典标记 ${lexiconMarks.filter((mark) => mark.family === 'correction').length} 次。`,
     },
   ].map((score) => ({ ...score, value: Math.round(clamp(score.value)) }));
 
   const primaryErrors =
     analysisMode === 'lexicon'
-      ? lexiconErrors
-      : [...negativeActs, ...(analysisMode === 'hybrid' ? lexiconErrors.slice(0, 2) : [])];
+      ? lexiconMarks
+      : [...negativeActs, ...(analysisMode === 'hybrid' ? lexiconMarks.slice(0, 4) : [])];
 
   const fallbackErrors =
     primaryErrors.length > 0
@@ -511,14 +569,15 @@ function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons,
     analyzed: comments.length,
     confidence,
     stanceSwitchRate: clamp((positiveActs.length + countMatches(joined, runtimeLexicon.correction)) / Math.max(total * 2, 1), 0, 1),
-    disagreementRate: clamp((negativeActs.length + lexiconErrors.length * 0.4) / Math.max(total, 1), 0, 1),
+    disagreementRate: clamp((negativeActs.length + riskLexiconMarks.length * 0.35) / Math.max(total, 1), 0, 1),
     engineLabel: analysisModes.find((mode) => mode.id === analysisMode)?.label || '混合模式',
     speechSummary: {
       negative: negativeActs.length,
       positive: positiveActs.length,
-      lexicon: lexiconErrors.length,
+      lexicon: lexiconMarks.length,
       mode: analysisMode,
     },
+    vocabularyMarks,
     scores,
     errors: fallbackErrors,
   };
@@ -989,6 +1048,22 @@ function App() {
                 </div>
               ))}
             </div>
+            {selectedUser.vocabularyMarks?.length > 0 && (
+              <div className="vocabulary-radar" aria-label="字典词汇 radar 标记">
+                <div className="vocabulary-radar-head">
+                  <strong>字典词汇标记</strong>
+                  <span>这些词来自本地/DeepSeek 语库，并参与 radar 对应轴计算</span>
+                </div>
+                <div className="vocabulary-chip-grid">
+                  {selectedUser.vocabularyMarks.map((mark) => (
+                    <span className={`vocabulary-chip vocabulary-${mark.polarity}`} key={`${mark.family}-${mark.term}`}>
+                      <b>{mark.term}</b>
+                      <i>{mark.label} · {mark.axis}{mark.count > 1 ? ` ×${mark.count}` : ''}</i>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="metric-strip">

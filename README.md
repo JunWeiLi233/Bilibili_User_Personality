@@ -30,6 +30,7 @@ Research-driven prototype for evaluating whether a selected Bilibili user's publ
   - Current config reads `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, `DEEPSEEK_REASONING_EFFORT`, and `DEEPSEEK_BASE_URL`.
   - Extracts Chinese internet terms, meanings, variants, and semantic families from crawled comments.
   - Writes learned terms to `server/deepseekKeywordDictionary.json` and merges them into the local analyzer.
+  - Marks dictionary hits inside analyzed comments, maps each semantic family to a radar axis, and shows the vocabulary markers under the radar chart.
 - Built-in public test samples from Bilibili video `BV19yGa61Ee6`.
 
 ## Run Locally
