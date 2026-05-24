@@ -126,12 +126,33 @@ test('summarizeEvidenceCoverage reports weak terms and family coverage', () => {
   );
 
   assert.equal(coverage.terms, 3);
+  assert.equal(coverage.complete, false);
   assert.equal(coverage.totalEvidence, 6);
   assert.equal(coverage.averageEvidence, 2);
+  assert.equal(coverage.coverageRatio, 0.3333);
+  assert.equal(coverage.evidenceDeficit, 4);
   assert.equal(coverage.weakTerms, 2);
   assert.equal(coverage.zeroEvidenceTerms, 1);
   assert.deepEqual(coverage.weakSamples.map((entry) => entry.term), ['典中典', '懂的都懂']);
+  assert.deepEqual(coverage.zeroEvidenceSamples.map((entry) => entry.term), ['典中典']);
   assert.deepEqual(coverage.byFamily.attack, { terms: 1, evidence: 0, weak: 1, zero: 1 });
+});
+
+test('summarizeEvidenceCoverage marks coverage complete when every term reaches target evidence', () => {
+  const coverage = summarizeEvidenceCoverage(
+    {
+      entries: [
+        { term: 'doge', family: 'cooperation', evidenceCount: 3 },
+        { term: '懂的都懂', family: 'evasion', evidenceCount: 5 },
+      ],
+    },
+    { targetEvidence: 3 },
+  );
+
+  assert.equal(coverage.complete, true);
+  assert.equal(coverage.coverageRatio, 1);
+  assert.equal(coverage.evidenceDeficit, 0);
+  assert.equal(coverage.weakTerms, 0);
 });
 
 test('harvestKeywordDictionary runs dictionary-seeded searches and reports growth', async () => {
@@ -184,6 +205,7 @@ test('harvestKeywordDictionary runs dictionary-seeded searches and reports growt
     });
     assert.equal(result.growth.added, 1);
     assert.equal(result.coverage.weakTerms, 2);
+    assert.equal(result.coverageProgress.evidenceGained, 0);
     assert.deepEqual(result.state.scannedBvids, ['BV1111111111', 'BV2222222222']);
     const persisted = JSON.parse(await readFile(statePath, 'utf8'));
     assert.equal(persisted.runs.length, 1);
@@ -357,6 +379,40 @@ test('harvestKeywordDictionaryRounds keeps running new unseen queries across rou
     const state = await readKeywordHarvestState(statePath);
     assert.deepEqual(state.searchedQueries, ['seed one', 'seed two']);
     assert.deepEqual(state.scannedBvids, ['BV1111111111', 'BV2222222222']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionaryRounds stops early when evidence coverage is complete', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-covered-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const result = await harvestKeywordDictionaryRounds(
+      {
+        seedQueries: ['seed one', 'seed two'],
+        maxQueries: 1,
+        rounds: 5,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+        targetEvidence: 3,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: 'done', family: 'attack', evidenceCount: 3 }] }),
+        searchVideoKeywords: async (payload) => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: payload.searchQueries[0] === 'seed one' ? 'BV1111111111' : 'BV2222222222' }],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.equal(result.ok, true);
+    assert.equal(result.rounds.length, 1);
+    assert.equal(result.coverage.complete, true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -63,8 +63,14 @@ function reportRound(round, index, total) {
   console.log(`Dictionary terms after: ${round.growth.after}`);
   console.log(`New dictionary terms: ${round.growth.added}`);
   console.log(`Duplicate dictionary terms: ${round.growth.duplicates}`);
+  console.log(`Weak terms resolved this round: ${round.coverageProgress.weakTermsResolved}`);
+  console.log(`Zero-evidence terms resolved this round: ${round.coverageProgress.zeroEvidenceResolved}`);
+  console.log(`Evidence gained this round: ${round.coverageProgress.evidenceGained}`);
+  console.log(`Evidence deficit reduced this round: ${round.coverageProgress.evidenceDeficitReduced}`);
   console.log(`Weak evidence terms: ${round.coverage.weakTerms}`);
   console.log(`Zero evidence terms: ${round.coverage.zeroEvidenceTerms}`);
+  console.log(`Evidence deficit remaining: ${round.coverage.evidenceDeficit}`);
+  console.log(`Coverage ratio: ${(round.coverage.coverageRatio * 100).toFixed(2)}%`);
   console.log(`Average evidence per term: ${round.coverage.averageEvidence}`);
 }
 
@@ -83,6 +89,7 @@ function serializeResult(result, statePath, reportPath) {
       candidateQueries: round.candidateQueries,
       growth: round.growth,
       coverage: round.coverage,
+      coverageProgress: round.coverageProgress,
       warnings: round.warnings,
       results: round.results.map((item) => ({
         query: item.query,
@@ -149,6 +156,15 @@ if (Object.keys(result.growth?.families || {}).length) {
   console.log('Dictionary family coverage:');
   for (const [family, count] of Object.entries(result.growth.families).sort()) {
     console.log(`- ${family}: ${count}`);
+  }
+}
+
+if (result.coverage?.complete) {
+  console.log(`Coverage target reached: every dictionary term has at least ${result.coverage.targetEvidence} evidence hit(s).`);
+} else if (result.coverage?.weakSamples?.length) {
+  console.log('Next weak dictionary terms to target:');
+  for (const entry of result.coverage.weakSamples.slice(0, 10)) {
+    console.log(`- [${entry.family}] ${entry.term}: ${entry.evidenceCount}/${result.coverage.targetEvidence}`);
   }
 }
 

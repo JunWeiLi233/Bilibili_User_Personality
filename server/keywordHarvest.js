@@ -44,7 +44,7 @@ function sortEntriesForCoverage(entries) {
 }
 
 export function buildKeywordHarvestQueries(dictionary, options = {}) {
-  const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
+  const maxQueries = asPositiveInt(options.maxQueries, 12, 10000);
   const seedQueries = unique(options.seedQueries || DEFAULT_SEED_QUERIES);
   const coverageMode = String(options.coverageMode || 'balanced').trim().toLowerCase();
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
@@ -119,6 +119,7 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
   const totalEvidence = entries.reduce((sum, entry) => sum + evidenceCount(entry), 0);
   const weakEntries = entries.filter((entry) => evidenceCount(entry) < targetEvidence);
   const zeroEvidence = entries.filter((entry) => evidenceCount(entry) === 0);
+  const evidenceDeficit = weakEntries.reduce((sum, entry) => sum + Math.max(0, targetEvidence - evidenceCount(entry)), 0);
   const byFamily = {};
   for (const entry of entries) {
     const family = entry.family || 'unknown';
@@ -129,10 +130,13 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
     if (evidenceCount(entry) === 0) byFamily[family].zero += 1;
   }
   return {
+    complete: weakEntries.length === 0,
     targetEvidence,
     terms: entries.length,
     totalEvidence,
     averageEvidence: entries.length ? Number((totalEvidence / entries.length).toFixed(2)) : 0,
+    coverageRatio: entries.length ? Number(((entries.length - weakEntries.length) / entries.length).toFixed(4)) : 1,
+    evidenceDeficit,
     weakTerms: weakEntries.length,
     zeroEvidenceTerms: zeroEvidence.length,
     weakSamples: sortEntriesForCoverage(weakEntries).slice(0, 20).map((entry) => ({
@@ -140,7 +144,20 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
       family: entry.family,
       evidenceCount: evidenceCount(entry),
     })),
+    zeroEvidenceSamples: sortEntriesForCoverage(zeroEvidence).slice(0, 20).map((entry) => ({
+      term: entry.term,
+      family: entry.family,
+    })),
     byFamily,
+  };
+}
+
+function summarizeCoverageProgress(beforeCoverage, afterCoverage) {
+  return {
+    weakTermsResolved: Math.max(0, (beforeCoverage?.weakTerms || 0) - (afterCoverage?.weakTerms || 0)),
+    zeroEvidenceResolved: Math.max(0, (beforeCoverage?.zeroEvidenceTerms || 0) - (afterCoverage?.zeroEvidenceTerms || 0)),
+    evidenceGained: Math.max(0, (afterCoverage?.totalEvidence || 0) - (beforeCoverage?.totalEvidence || 0)),
+    evidenceDeficitReduced: Math.max(0, (beforeCoverage?.evidenceDeficit || 0) - (afterCoverage?.evidenceDeficit || 0)),
   };
 }
 
@@ -151,12 +168,13 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const skipSeen = options.skipSeen !== false;
   const state = options.resetState ? { version: 1, updatedAt: null, searchedQueries: [], scannedBvids: [], runs: [] } : await readKeywordHarvestState(statePath);
   const before = await readKeywordDictionary();
+  const beforeCoverage = summarizeEvidenceCoverage(before, { targetEvidence: options.targetEvidence });
   const searchedQuerySet = new Set(state.searchedQueries);
   const scannedBvidSet = new Set(state.scannedBvids);
   const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
   const candidateQueries = buildKeywordHarvestQueries(before, {
     seedQueries: options.seedQueries,
-    maxQueries: skipSeen ? Math.min(100, maxQueries + searchedQuerySet.size) : maxQueries,
+    maxQueries: skipSeen ? Math.min(10000, maxQueries + searchedQuerySet.size) : maxQueries,
     termsPerFamily: options.termsPerFamily,
     queryVariantsPerTerm: options.queryVariantsPerTerm,
     targetEvidence: options.targetEvidence,
@@ -193,6 +211,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const after = await readKeywordDictionary();
   const growth = summarizeDictionaryGrowth(before, after);
   const coverage = summarizeEvidenceCoverage(after, { targetEvidence: options.targetEvidence });
+  const coverageProgress = summarizeCoverageProgress(beforeCoverage, coverage);
   const finishedAt = new Date().toISOString();
   const nextState = {
     version: 1,
@@ -215,6 +234,10 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         dictionaryBefore: growth.before,
         dictionaryAfter: growth.after,
         dictionaryAdded: growth.added,
+        weakTermsResolved: coverageProgress.weakTermsResolved,
+        zeroEvidenceResolved: coverageProgress.zeroEvidenceResolved,
+        evidenceGained: coverageProgress.evidenceGained,
+        evidenceDeficitReduced: coverageProgress.evidenceDeficitReduced,
         weakTerms: coverage.weakTerms,
         zeroEvidenceTerms: coverage.zeroEvidenceTerms,
         warnings: warnings.length,
@@ -232,6 +255,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     warnings,
     growth,
     coverage,
+    coverageProgress,
     dictionary: after,
   };
 }
@@ -248,6 +272,7 @@ export async function harvestKeywordDictionaryRounds(options = {}, deps = {}) {
       deps,
     );
     results.push(result);
+    if ((result.coverage?.terms || 0) > 0 && result.coverage?.complete) break;
     if (result.queries.length === 0) break;
   }
   const last = results.at(-1) || null;
