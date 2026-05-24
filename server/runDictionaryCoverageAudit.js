@@ -28,7 +28,9 @@ const targetEvidence = positiveIntFromEnv('BILIBILI_HARVEST_TARGET_EVIDENCE', 3)
 const maxActions = positiveIntFromEnv('BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS', 20);
 const minCoverageRatio = numberFromEnv('BILIBILI_COVERAGE_AUDIT_MIN_RATIO', 1);
 const requireComplete = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMPLETE !== '0';
-const requireSourceBackedEvidence = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES === '1';
+const requireSourceBackedEvidence =
+  process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES === '1' ||
+  process.env.BILIBILI_HARVEST_REQUIRE_SOURCES === '1';
 const strict = process.env.BILIBILI_COVERAGE_AUDIT_STRICT === '1';
 const extraQueryTemplates = process.env.BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES || '';
 const exhaustedSuggestionTemplates = process.env.BILIBILI_HARVEST_EXHAUSTED_SUGGESTION_TEMPLATES || '';
