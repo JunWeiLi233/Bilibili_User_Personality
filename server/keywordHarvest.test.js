@@ -169,6 +169,37 @@ test('buildKeywordHarvestQueryPlan expands to untried variants for repeatedly mi
   );
 });
 
+test('buildKeywordHarvestQueryPlan prioritizes retry actions before fresh harvest actions', () => {
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [
+        { term: 'fresh', family: 'attack', evidenceCount: 0 },
+        { term: 'missed', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 2,
+      queryVariantsPerTerm: 2,
+      termAttempts: {
+        missed: {
+          term: 'missed',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: 'missed Bilibili comment meme' }],
+        },
+      },
+    },
+  );
+
+  assert.equal(plan[0].term, 'missed');
+  assert.equal(plan[0].query, 'missed Bilibili comments');
+  assert.equal(plan[0].previouslyTried, false);
+  assert.equal(plan[1].term, 'missed');
+});
+
+
 test('buildKeywordHarvestQueryPlan skips terms that exhausted every built-in query variant', () => {
   const allQueries = [
     'doge Bilibili discussion comments',

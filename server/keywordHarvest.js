@@ -109,18 +109,46 @@ function sortEntriesForCoverage(entries) {
   return [...entries].sort((a, b) => evidenceCount(a) - evidenceCount(b) || String(a.term || '').localeCompare(String(b.term || '')));
 }
 
+function coverageActionRank(action) {
+  return (
+    {
+      retry_with_new_variant: 0,
+      harvest: 1,
+      harvest_more_evidence: 2,
+      add_query_template: 3,
+      none: 9,
+    }[action] ?? 8
+  );
+}
+
 export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   const maxQueries = asPositiveInt(options.maxQueries, 12, 10000);
   const seedQueries = unique(options.seedQueries || DEFAULT_SEED_QUERIES);
   const coverageMode = String(options.coverageMode || 'balanced').trim().toLowerCase();
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
   const allEntries = sortEntriesForCoverage(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
-  const entries = coverageMode === 'all-weak' ? allEntries.filter((entry) => evidenceCount(entry) < targetEvidence) : allEntries;
+  const termAttempts = options.termAttempts && typeof options.termAttempts === 'object' ? options.termAttempts : {};
+  const actionMap = new Map(
+    buildCoverageActions(dictionary, { termAttempts }, { ...options, targetEvidence }).map((item) => [item.term, item]),
+  );
+  const entries =
+    coverageMode === 'all-weak'
+      ? allEntries
+          .filter((entry) => evidenceCount(entry) < targetEvidence)
+          .sort((a, b) => {
+            const actionA = actionMap.get(String(a.term || '').trim());
+            const actionB = actionMap.get(String(b.term || '').trim());
+            return (
+              coverageActionRank(actionA?.action) - coverageActionRank(actionB?.action) ||
+              evidenceCount(a) - evidenceCount(b) ||
+              String(a.term || '').localeCompare(String(b.term || ''))
+            );
+          })
+      : allEntries;
   const familyCounts = new Map();
   const dictionaryPlan = [];
   const variantsPerTerm = asPositiveInt(options.queryVariantsPerTerm, 2, TERM_QUERY_TEMPLATES.length);
   const templateCount = queryTemplatesFromOptions(options).length;
-  const termAttempts = options.termAttempts && typeof options.termAttempts === 'object' ? options.termAttempts : {};
 
   for (const entry of entries) {
     const term = String(entry.term || '').trim();
