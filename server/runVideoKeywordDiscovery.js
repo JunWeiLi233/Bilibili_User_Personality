@@ -24,7 +24,8 @@ function printKeyword(entry) {
 
 async function writeJson(path, payload) {
   await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+  const json = JSON.stringify(payload, null, 2).replace(/[\u007f-\uffff]/g, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+  await writeFile(path, `${json}\n`, 'utf8');
 }
 
 function summarizeRound(round) {
@@ -72,6 +73,9 @@ function reportRound(round, index, total) {
   console.log(`Evidence deficit remaining: ${round.coverage.evidenceDeficit}`);
   console.log(`Coverage ratio: ${(round.coverage.coverageRatio * 100).toFixed(2)}%`);
   console.log(`Average evidence per term: ${round.coverage.averageEvidence}`);
+  console.log(`Attempted dictionary terms: ${round.termAttemptSummary.attemptedTerms}`);
+  console.log(`Successful dictionary terms: ${round.termAttemptSummary.successfulTerms}`);
+  console.log(`Unattempted dictionary terms: ${round.termAttemptSummary.unattemptedTerms}`);
 }
 
 function serializeResult(result, statePath, reportPath) {
@@ -90,6 +94,7 @@ function serializeResult(result, statePath, reportPath) {
       growth: round.growth,
       coverage: round.coverage,
       coverageProgress: round.coverageProgress,
+      termAttemptSummary: round.termAttemptSummary,
       warnings: round.warnings,
       results: round.results.map((item) => ({
         query: item.query,
@@ -165,6 +170,14 @@ if (result.coverage?.complete) {
   console.log('Next weak dictionary terms to target:');
   for (const entry of result.coverage.weakSamples.slice(0, 10)) {
     console.log(`- [${entry.family}] ${entry.term}: ${entry.evidenceCount}/${result.coverage.targetEvidence}`);
+  }
+}
+
+if (result.termAttemptSummary?.repeatedlyMissedTerms?.length) {
+  console.log('Dictionary terms attempted without evidence yet:');
+  for (const entry of result.termAttemptSummary.repeatedlyMissedTerms.slice(0, 10)) {
+    const suffix = entry.lastError ? ` (${entry.lastError})` : '';
+    console.log(`- [${entry.family}] ${entry.term}: ${entry.attempts} attempt(s), last query "${entry.lastQuery}"${suffix}`);
   }
 }
 

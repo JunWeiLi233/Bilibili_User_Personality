@@ -6,11 +6,13 @@ import test from 'node:test';
 
 import {
   buildKeywordHarvestQueries,
+  buildKeywordHarvestQueryPlan,
   harvestKeywordDictionary,
   harvestKeywordDictionaryRounds,
   readKeywordHarvestState,
   summarizeDictionaryGrowth,
   summarizeEvidenceCoverage,
+  summarizeTermAttempts,
 } from './keywordHarvest.js';
 
 test('buildKeywordHarvestQueries prioritizes weak-evidence dictionary terms by family', () => {
@@ -92,6 +94,38 @@ test('buildKeywordHarvestQueries all-weak mode targets every weak term before br
   ]);
 });
 
+test('buildKeywordHarvestQueryPlan keeps dictionary term metadata for state tracking', () => {
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }],
+    },
+    {
+      seedQueries: ['seed topic'],
+      coverageMode: 'all-weak',
+      maxQueries: 3,
+      queryVariantsPerTerm: 2,
+    },
+  );
+
+  assert.deepEqual(plan, [
+    {
+      query: 'doge Bilibili discussion comments',
+      source: 'dictionary',
+      term: 'doge',
+      family: 'cooperation',
+      evidenceCount: 0,
+    },
+    {
+      query: 'doge Bilibili comments',
+      source: 'dictionary',
+      term: 'doge',
+      family: 'cooperation',
+      evidenceCount: 0,
+    },
+    { query: 'seed topic', source: 'seed' },
+  ]);
+});
+
 
 test('summarizeDictionaryGrowth reports new terms, families, and duplicates', () => {
   const summary = summarizeDictionaryGrowth(
@@ -155,6 +189,31 @@ test('summarizeEvidenceCoverage marks coverage complete when every term reaches 
   assert.equal(coverage.weakTerms, 0);
 });
 
+test('summarizeTermAttempts reports attempted, successful, unattempted, and missed terms', () => {
+  const summary = summarizeTermAttempts(
+    {
+      termAttempts: {
+        doge: { term: 'doge', family: 'cooperation', attempts: 2, successfulAttempts: 1 },
+        yygq: { term: 'yygq', family: 'attack', attempts: 3, successfulAttempts: 0, lastQuery: 'yygq 评论区' },
+      },
+    },
+    {
+      entries: [
+        { term: 'doge', family: 'cooperation', evidenceCount: 2 },
+        { term: 'yygq', family: 'attack', evidenceCount: 0 },
+        { term: '懂的都懂', family: 'evasion', evidenceCount: 0 },
+      ],
+    },
+  );
+
+  assert.equal(summary.attemptedTerms, 2);
+  assert.equal(summary.successfulTerms, 1);
+  assert.equal(summary.unattemptedTerms, 1);
+  assert.deepEqual(summary.unattemptedSamples.map((entry) => entry.term), ['懂的都懂']);
+  assert.deepEqual(summary.repeatedlyMissedTerms.map((entry) => entry.term), ['yygq']);
+});
+
+
 test('harvestKeywordDictionary runs dictionary-seeded searches and reports growth', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-'));
   const statePath = join(dir, 'state.json');
@@ -206,10 +265,52 @@ test('harvestKeywordDictionary runs dictionary-seeded searches and reports growt
     assert.equal(result.growth.added, 1);
     assert.equal(result.coverage.weakTerms, 2);
     assert.equal(result.coverageProgress.evidenceGained, 0);
+    assert.equal(result.termAttemptSummary.attemptedTerms, 1);
     assert.deepEqual(result.state.scannedBvids, ['BV1111111111', 'BV2222222222']);
+    const dogeAttempt = Object.values(result.state.termAttempts).find((item) => item.term === 'doge');
+    assert.equal(dogeAttempt.attempts, 1);
+    assert.equal(dogeAttempt.successfulAttempts, 0);
     const persisted = JSON.parse(await readFile(statePath, 'utf8'));
     assert.equal(persisted.runs.length, 1);
     assert.equal(persisted.runs[0].videosScanned, 2);
+    assert.equal(persisted.runs[0].attemptedTerms, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary writes ASCII-safe term attempt state for Chinese terms', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-ascii-state-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await harvestKeywordDictionary(
+      {
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 1,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: '典中典', family: 'attack', evidenceCount: 0 }] }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    const raw = await readFile(statePath, 'utf8');
+    assert.equal(/[^\x00-\x7F]/.test(raw), false);
+    const state = JSON.parse(raw);
+    const attempt = Object.values(state.termAttempts).find((item) => item.term === '典中典');
+    assert.equal(attempt.attempts, 1);
+    assert.equal(attempt.query, undefined);
+    assert.equal(attempt.lastQuery, '典中典 Bilibili comment meme');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
