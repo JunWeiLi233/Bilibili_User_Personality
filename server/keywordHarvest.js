@@ -734,7 +734,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         discoveryMode: options.discoveryMode,
         discoveryLimit: effectiveDiscoveryLimit,
         pages: effectivePages,
-        excludeBvids: skipSeen ? [...scannedBvidSet] : [],
+        excludeBvids: skipSeen && !deepenScan ? [...scannedBvidSet] : [],
       };
       if (options.existingTermsOnly !== undefined) {
         searchPayload.existingTermsOnly = options.existingTermsOnly;

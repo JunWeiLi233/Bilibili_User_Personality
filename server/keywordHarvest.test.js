@@ -1013,7 +1013,7 @@ test('harvestKeywordDictionary deepens scans for repeatedly missed terms', async
       version: 1,
       updatedAt: null,
       searchedQueries: [],
-      scannedBvids: [],
+      scannedBvids: ['BVprevious'],
       termAttempts: {
         doge: {
           term: 'doge',
@@ -1060,6 +1060,7 @@ test('harvestKeywordDictionary deepens scans for repeatedly missed terms', async
 
     assert.equal(searched[0].discoveryLimit, 5);
     assert.equal(searched[0].pages, 4);
+    assert.deepEqual(searched[0].excludeBvids, []);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
