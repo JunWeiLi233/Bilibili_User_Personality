@@ -80,6 +80,7 @@ const controversialPopularSearchOrder = String(process.env.BILIBILI_CONTROVERSIA
 const pages = positiveIntFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2, 20);
 const queryVariantsPerTerm = positiveIntFromEnv('BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM', 2, 20);
 const termsPerFamily = positiveIntFromEnv('BILIBILI_HARVEST_TERMS_PER_FAMILY', 4, 20);
+const retryBeforeUnattemptedLimit = nonNegativeIntFromEnv('BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT', 3, 20);
 const skipSeen = process.env.BILIBILI_HARVEST_SKIP_SEEN !== '0';
 const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
 const strict = process.env.BILIBILI_COVERAGE_LOOP_STRICT === '1';
@@ -94,6 +95,7 @@ const auditOptions = {
   requireSourceBackedEvidence,
   extraQueryTemplates,
   exhaustedSuggestionTemplates,
+  retryBeforeUnattemptedLimit,
 };
 
 const cycles = [];
@@ -121,6 +123,7 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     queryVariantsPerTerm,
     extraQueryTemplates,
     exhaustedSuggestionTemplates,
+    retryBeforeUnattemptedLimit,
     targetEvidence,
     coverageMode,
     requireSourceBackedEvidence,

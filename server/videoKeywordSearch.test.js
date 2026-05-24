@@ -351,6 +351,51 @@ test('searchVideoKeywords forwards existing-only training mode', async () => {
 
   assert.equal(result.ok, true);
   assert.equal(trainedPayloads[0].existingTermsOnly, true);
+  assert.equal(trainedPayloads[0].text.includes('Bilibili video context: sample video'), true);
+  assert.equal(trainedPayloads[0].source.includes('plus video context'), true);
+});
+
+test('searchVideoKeywords can train existing terms from video context when comments are empty', async () => {
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      videoLink: 'https://www.bilibili.com/video/BV19yGa61Ee6/',
+      pages: 1,
+      existingTermsOnly: true,
+    },
+    {
+      fetchJson: async (url) => {
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: '典中典 是什么梗',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return { ok: true, entries: [{ term: '典中典', family: 'attack' }], dictionary: { entries: [] } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.comments.length, 0);
+  assert.equal(result.videoContextText, 'Bilibili video context: 典中典 是什么梗');
+  assert.equal(trainedPayloads[0].text, 'Bilibili video context: 典中典 是什么梗');
+  assert.equal(result.entries[0].term, '典中典');
 });
 
 test('searchVideoKeywords scans multiple backend video links and trains one merged dictionary pass', async () => {

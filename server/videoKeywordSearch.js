@@ -79,6 +79,15 @@ function parseSet(value) {
   return new Set(parseList(value));
 }
 
+function buildVideoContextText(videos = []) {
+  return videos
+    .flatMap((video) => [video.title, video.desc, video.description])
+    .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .map((item) => `Bilibili video context: ${item}`)
+    .join('\n');
+}
+
 export async function searchVideoKeywords(payload = {}, deps = {}) {
   const videoLinks = parseList(
     payload.videoLinks ||
@@ -132,6 +141,11 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     payload.existingDictionaryTermsOnly === true ||
     deps.existingTermsOnly === true ||
     process.env.BILIBILI_HARVEST_EXISTING_TERMS_ONLY === '1';
+  const includeVideoContext =
+    payload.includeVideoContext === true ||
+    deps.includeVideoContext === true ||
+    process.env.BILIBILI_HARVEST_INCLUDE_VIDEO_CONTEXT === '1' ||
+    existingTermsOnly;
   const discoveryWarnings = [];
   let discoveredVideos = [];
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
@@ -227,6 +241,8 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   );
   const videos = scans.map((scan) => scan.video);
   const commentText = comments.map((comment) => comment.message).filter(Boolean).join('\n');
+  const videoContextText = includeVideoContext ? buildVideoContextText(videos) : '';
+  const trainingText = [commentText, videoContextText].filter((item) => item.trim()).join('\n');
   const primaryVideo = videos[0];
   const mergedScan = {
     ok: true,
@@ -244,6 +260,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     discoveryMode: videoLinks.length === 0 ? discoveryMode : 'explicit',
     comments,
     commentText,
+    videoContextText,
     source:
       videoLinks.length === 0
         ? 'Bilibili public search-discovered video comment scan'
@@ -255,7 +272,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     warnings,
   };
 
-  if (!commentText.trim()) {
+  if (!trainingText.trim()) {
     return {
       ...mergedScan,
       entries: [],
@@ -267,8 +284,8 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const trainKeywordDictionary = deps.trainKeywordDictionary || defaultTrainKeywordDictionary;
   const keywordTraining = await trainKeywordDictionary({
     uid: videos.map((video) => video.bvid).join(','),
-    text: commentText,
-    source: `${mergedScan.source}: ${videos.map((video) => video.sourceUrl).join(', ')}`,
+    text: trainingText,
+    source: `${mergedScan.source}${videoContextText ? ' plus video context' : ''}: ${videos.map((video) => video.sourceUrl).join(', ')}`,
     existingTermsOnly,
   });
 

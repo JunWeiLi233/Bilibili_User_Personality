@@ -202,6 +202,40 @@ test('buildKeywordHarvestQueryPlan prioritizes retry actions before fresh harves
   assert.equal(plan[1].term, 'missed');
 });
 
+test('buildKeywordHarvestQueryPlan rotates repeatedly missed terms behind unattempted terms', () => {
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [
+        { term: 'fresh', family: 'attack', evidenceCount: 0 },
+        { term: 'missed', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 2,
+      queryVariantsPerTerm: 2,
+      retryBeforeUnattemptedLimit: 3,
+      termAttempts: {
+        missed: {
+          term: 'missed',
+          attempts: 3,
+          successfulAttempts: 0,
+          queries: [
+            { query: 'missed 评论区 梗 热评' },
+            { query: 'missed 评论区' },
+            { query: 'missed 热评' },
+          ],
+        },
+      },
+    },
+  );
+
+  assert.equal(plan[0].term, 'fresh');
+  assert.equal(plan[0].query, 'fresh 评论区 梗 热评');
+  assert.equal(plan[1].term, 'fresh');
+});
+
 test('buildKeywordHarvestQueryPlan can prioritize source metadata gaps', () => {
   const plan = buildKeywordHarvestQueryPlan(
     {
@@ -640,6 +674,36 @@ test('buildDictionaryCoverageAudit reports gate status and next harvest actions'
   assert.equal(audit.recommendedQueries[0], 'missed \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
   assert.equal(audit.familyGaps[0].family, 'attack');
   assert.equal(audit.failureReasons.some((reason) => reason.includes('term(s) are below')), true);
+});
+
+test('buildDictionaryCoverageAudit rotates stale retries after unattempted harvest actions', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: 'fresh', family: 'attack', evidenceCount: 0 },
+        { term: 'missed', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      termAttempts: {
+        missed: {
+          term: 'missed',
+          family: 'attack',
+          attempts: 3,
+          successfulAttempts: 0,
+          queries: [
+            { query: 'missed 评论区 梗 热评' },
+            { query: 'missed 评论区' },
+            { query: 'missed 热评' },
+          ],
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 3 },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['fresh', 'missed']);
+  assert.deepEqual(audit.recommendedQueries, ['fresh 评论区 梗 热评', 'missed 弹幕']);
 });
 
 test('buildDictionaryCoverageAudit can require source-backed evidence metadata', () => {

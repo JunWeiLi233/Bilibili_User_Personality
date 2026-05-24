@@ -9,6 +9,11 @@ function positiveIntFromEnv(name, fallback) {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
 }
 
+function nonNegativeIntFromEnv(name, fallback) {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
+}
+
 function numberFromEnv(name, fallback) {
   const value = Number(process.env[name]);
   return Number.isFinite(value) ? value : fallback;
@@ -34,6 +39,7 @@ const requireSourceBackedEvidence =
 const strict = process.env.BILIBILI_COVERAGE_AUDIT_STRICT === '1';
 const extraQueryTemplates = process.env.BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES || '';
 const exhaustedSuggestionTemplates = process.env.BILIBILI_HARVEST_EXHAUSTED_SUGGESTION_TEMPLATES || '';
+const retryBeforeUnattemptedLimit = nonNegativeIntFromEnv('BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT', 3);
 
 const dictionary = await readKeywordDictionary(dictionaryPath ? { dictionaryPath } : {});
 const state = await readKeywordHarvestState(statePath);
@@ -45,6 +51,7 @@ const audit = buildDictionaryCoverageAudit(dictionary, state, {
   requireSourceBackedEvidence,
   extraQueryTemplates,
   exhaustedSuggestionTemplates,
+  retryBeforeUnattemptedLimit,
 });
 
 console.log('Dictionary coverage audit');
