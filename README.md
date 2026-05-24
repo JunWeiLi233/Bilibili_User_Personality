@@ -36,25 +36,43 @@ Research-driven prototype for evaluating whether a selected Bilibili user's publ
 
 ## Run Locally
 
-```bash
+From PowerShell:
+
+```powershell
+cd D:\Bilibili_User_Personality
 npm install
+.\set-deepseek-env.ps1
 npm run server
 ```
 
-`npm run server` starts the API server and Vite dev server. The API listens on `http://127.0.0.1:8787`; Vite proxies `/api` to it in development.
+`npm run server` starts both services:
+
+- API backend: `http://127.0.0.1:8787`
+- Vite frontend: usually `http://127.0.0.1:5191`
+
+If `5191` is already in use, Vite prints the next available local URL, for example `http://127.0.0.1:5197/`. Open the printed Vite URL in your browser.
+
+In the app:
+
+- Click `后端默认视频` to run the Bilibili link stored in backend code.
+- Or paste a UID, Bilibili video URL, or `BV` id into the `B 站 UID / 视频链接` search box.
+- The backend-owned default video link lives in `server/videoKeywordSearch.js`.
 
 For DeepSeek V4 keyword training, configure an API key before starting the server:
 
-```bash
-set DEEPSEEK_API_KEY=your_api_key
+```powershell
+$env:DEEPSEEK_API_KEY="your_api_key"
 ```
+
+This repo also supports a local helper file named `set-deepseek-env.ps1`. Keep that file uncommitted because it contains your private key.
 
 Optional model configuration:
 
-```bash
-set DEEPSEEK_BASE_URL=https://api.deepseek.com
-set DEEPSEEK_MODEL=deepseek-v4-flash
-set DEEPSEEK_REASONING_EFFORT=medium
+```powershell
+$env:DEEPSEEK_BASE_URL="https://api.deepseek.com"
+$env:DEEPSEEK_MODEL="deepseek-v4-flash"
+$env:DEEPSEEK_REASONING_EFFORT="medium"
+$env:BILIBILI_DEFAULT_VIDEO_LINK="https://www.bilibili.com/video/BV..."
 ```
 
 `DEEPSEEK_MODEL=deepseek-v4-pro` can be used when you want the stronger V4 model for dictionary extraction.
