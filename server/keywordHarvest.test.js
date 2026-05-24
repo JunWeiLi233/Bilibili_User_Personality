@@ -117,6 +117,7 @@ test('buildKeywordHarvestQueryPlan keeps dictionary term metadata for state trac
       priorAttempts: 0,
       priorSuccessfulAttempts: 0,
       variantIndex: 0,
+      builtInVariant: true,
       previouslyTried: false,
     },
     {
@@ -128,6 +129,7 @@ test('buildKeywordHarvestQueryPlan keeps dictionary term metadata for state trac
       priorAttempts: 0,
       priorSuccessfulAttempts: 0,
       variantIndex: 1,
+      builtInVariant: true,
       previouslyTried: false,
     },
     { query: 'seed topic', source: 'seed' },
@@ -203,6 +205,45 @@ test('buildKeywordHarvestQueryPlan skips terms that exhausted every built-in que
   );
 
   assert.deepEqual(plan.map((item) => item.term), ['yygq', 'yygq']);
+});
+
+test('buildKeywordHarvestQueryPlan can reopen exhausted terms with extra runtime templates', () => {
+  const allQueries = [
+    'doge Bilibili discussion comments',
+    'doge Bilibili comments',
+    'doge B站 评论区',
+    'doge 哔哩哔哩 弹幕',
+    'doge 评论 梗',
+    'doge 评论区',
+    'doge 梗',
+    'doge 发言',
+    'doge 争议',
+    'doge',
+  ];
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 1,
+      queryVariantsPerTerm: 2,
+      extraQueryTemplates: ['{term} 热评'],
+      termAttempts: {
+        doge: {
+          term: 'doge',
+          attempts: allQueries.length,
+          successfulAttempts: 0,
+          queries: allQueries.map((query) => ({ query })),
+        },
+      },
+    },
+  );
+
+  assert.equal(plan[0].query, 'doge 热评');
+  assert.equal(plan[0].builtInVariant, false);
+  assert.equal(plan[0].previouslyTried, false);
 });
 
 
@@ -328,6 +369,7 @@ test('summarizeTermAttempts reports exhausted terms after every built-in variant
   assert.equal(summary.exhaustedTerms, 1);
   assert.deepEqual(summary.exhaustedSamples.map((entry) => entry.term), ['doge']);
   assert.equal(summary.exhaustedSamples[0].variantsTried, 10);
+  assert.equal(summary.exhaustedSamples[0].suggestedQueries.includes('doge 热评'), true);
 });
 
 

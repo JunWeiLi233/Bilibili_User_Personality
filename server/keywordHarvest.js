@@ -29,6 +29,14 @@ const TERM_QUERY_TEMPLATES = [
   (term) => `${term} \u4e89\u8bae`,
   (term) => term,
 ];
+const DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES = [
+  '{term} \u70ed\u8bc4',
+  '{term} \u56de\u590d',
+  '{term} \u4e92\u52a8',
+  '{term} \u540d\u573a\u9762 \u8bc4\u8bba\u533a',
+  '{term} \u5207\u7247 \u8bc4\u8bba',
+  '{family} {term} \u8bc4\u8bba',
+];
 
 function asPositiveInt(value, fallback, max = Number.MAX_SAFE_INTEGER) {
   const number = Number(value);
@@ -57,10 +65,31 @@ function getTermAttempt(termAttempts, term) {
   return termAttempts[termAttemptKey(term)] || termAttempts[term] || null;
 }
 
-function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length) {
-  return TERM_QUERY_TEMPLATES.slice(0, limit).map((template, index) => ({
-    query: template(term, family),
+function parseTemplateList(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean);
+  return String(value || '')
+    .split(/[\r\n;|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function renderQueryTemplate(template, term, family) {
+  return String(template || '').replaceAll('{term}', term).replaceAll('{family}', family).trim();
+}
+
+function queryTemplatesFromOptions(options = {}) {
+  const extraTemplates = parseTemplateList(options.extraQueryTemplates);
+  return [
+    ...TERM_QUERY_TEMPLATES.map((template) => ({ template, builtIn: true })),
+    ...extraTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
+  ];
+}
+
+function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length, options = {}) {
+  return queryTemplatesFromOptions(options).slice(0, limit).map((item, index) => ({
+    query: item.template(term, family),
     variantIndex: index,
+    builtIn: item.builtIn,
   }));
 }
 
@@ -68,11 +97,12 @@ function attemptedVariantQueries(attempt) {
   return new Set((attempt?.queries || []).map((item) => item.query).filter(Boolean));
 }
 
-function isTermAttemptExhausted(term, family, attempt) {
+function isTermAttemptExhausted(term, family, attempt, options = {}) {
   if (!attempt || Number(attempt.successfulAttempts) > 0) return false;
   const triedQueries = attemptedVariantQueries(attempt);
   if (triedQueries.size === 0) return false;
-  return queryVariantsForTerm(term, family).every((item) => triedQueries.has(item.query));
+  const templateCount = queryTemplatesFromOptions(options).length;
+  return queryVariantsForTerm(term, family, templateCount, options).every((item) => triedQueries.has(item.query));
 }
 
 function sortEntriesForCoverage(entries) {
@@ -89,6 +119,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   const familyCounts = new Map();
   const dictionaryPlan = [];
   const variantsPerTerm = asPositiveInt(options.queryVariantsPerTerm, 2, TERM_QUERY_TEMPLATES.length);
+  const templateCount = queryTemplatesFromOptions(options).length;
   const termAttempts = options.termAttempts && typeof options.termAttempts === 'object' ? options.termAttempts : {};
 
   for (const entry of entries) {
@@ -101,13 +132,13 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
     const attempt = getTermAttempt(termAttempts, term);
     const attempts = Math.max(0, Number(attempt?.attempts) || 0);
     const successfulAttempts = Math.max(0, Number(attempt?.successfulAttempts) || 0);
-    if (coverageMode === 'all-weak' && isTermAttemptExhausted(term, family, attempt)) continue;
+    if (coverageMode === 'all-weak' && isTermAttemptExhausted(term, family, attempt, options)) continue;
     const triedQueries = attemptedVariantQueries(attempt);
     const adaptiveVariantsPerTerm =
       coverageMode === 'all-weak' && attempts > 0 && successfulAttempts === 0
-        ? Math.min(TERM_QUERY_TEMPLATES.length, Math.max(variantsPerTerm, attempts + variantsPerTerm))
+        ? Math.min(templateCount, Math.max(variantsPerTerm, attempts + variantsPerTerm))
         : variantsPerTerm;
-    const variants = queryVariantsForTerm(term, family, adaptiveVariantsPerTerm);
+    const variants = queryVariantsForTerm(term, family, adaptiveVariantsPerTerm, options);
     const orderedVariants = coverageMode === 'all-weak' ? [...variants.filter((item) => !triedQueries.has(item.query)), ...variants.filter((item) => triedQueries.has(item.query))] : variants;
     for (const variant of orderedVariants) {
       dictionaryPlan.push({
@@ -119,6 +150,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
         priorAttempts: attempts,
         priorSuccessfulAttempts: successfulAttempts,
         variantIndex: variant.variantIndex,
+        builtInVariant: variant.builtIn,
         previouslyTried: triedQueries.has(variant.query),
       });
     }
@@ -225,7 +257,15 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
   };
 }
 
-export function summarizeTermAttempts(state = {}, dictionary = {}) {
+function suggestedQueriesForExhaustedTerm(term, family, attempt, options = {}) {
+  const triedQueries = attemptedVariantQueries(attempt);
+  const templates = parseTemplateList(options.exhaustedSuggestionTemplates || DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES);
+  return unique(templates.map((template) => renderQueryTemplate(template, term, family)))
+    .filter((query) => query && !triedQueries.has(query))
+    .slice(0, 8);
+}
+
+export function summarizeTermAttempts(state = {}, dictionary = {}, options = {}) {
   const entries = Array.isArray(dictionary?.entries) ? dictionary.entries : [];
   const attempts = state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
   const attemptedTerms = Object.values(attempts).filter((item) => Number(item?.attempts) > 0);
@@ -256,7 +296,7 @@ export function summarizeTermAttempts(state = {}, dictionary = {}) {
       const attempt = getTermAttempt(attempts, term);
       return { entry, attempt, term, family };
     })
-    .filter((item) => item.term && isTermAttemptExhausted(item.term, item.family, item.attempt))
+    .filter((item) => item.term && isTermAttemptExhausted(item.term, item.family, item.attempt, options))
     .sort((a, b) => evidenceCount(a.entry) - evidenceCount(b.entry) || String(a.term).localeCompare(String(b.term)))
     .slice(0, 20)
     .map((item) => ({
@@ -264,9 +304,10 @@ export function summarizeTermAttempts(state = {}, dictionary = {}) {
       family: item.family,
       evidenceCount: evidenceCount(item.entry),
       attempts: Number(item.attempt?.attempts) || 0,
-      variantsTried: TERM_QUERY_TEMPLATES.length,
+      variantsTried: queryTemplatesFromOptions(options).length,
       lastQuery: item.attempt?.lastQuery || '',
       lastError: item.attempt?.lastError || '',
+      suggestedQueries: suggestedQueriesForExhaustedTerm(item.term, item.family, item.attempt, options),
     }));
   return {
     attemptedTerms: attemptedTerms.filter((item) => entryTerms.has(item.term)).length,
@@ -350,6 +391,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     targetEvidence: options.targetEvidence,
     coverageMode: options.coverageMode,
     termAttempts: state.termAttempts,
+    extraQueryTemplates: options.extraQueryTemplates,
   });
   const plan = (skipSeen ? candidatePlan.filter((item) => !searchedQuerySet.has(item.query)) : candidatePlan).slice(0, maxQueries);
   const candidateQueries = candidatePlan.map((item) => item.query);
@@ -391,7 +433,10 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const growth = summarizeDictionaryGrowth(before, after);
   const coverage = summarizeEvidenceCoverage(after, { targetEvidence: options.targetEvidence });
   const coverageProgress = summarizeCoverageProgress(beforeCoverage, coverage);
-  const termAttemptSummary = summarizeTermAttempts({ termAttempts }, after);
+  const termAttemptSummary = summarizeTermAttempts({ termAttempts }, after, {
+    extraQueryTemplates: options.extraQueryTemplates,
+    exhaustedSuggestionTemplates: options.exhaustedSuggestionTemplates,
+  });
   const finishedAt = new Date().toISOString();
   const nextState = {
     version: 1,

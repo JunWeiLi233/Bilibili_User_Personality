@@ -1,6 +1,7 @@
 param(
   [string[]]$SearchQuery = @(),
   [string[]]$ControversyQuery = @(),
+  [string[]]$ExtraQueryTemplate = @(),
   [int]$DiscoveryLimit = 6,
   [int]$CommentPages = 2,
   [int]$MaxQueries = 12,
@@ -36,6 +37,11 @@ if ($ControversyQuery.Count -gt 0) {
 } else {
   Remove-Item Env:\BILIBILI_CONTROVERSY_SEARCH_QUERIES -ErrorAction SilentlyContinue
 }
+if ($ExtraQueryTemplate.Count -gt 0) {
+  $env:BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES = ($ExtraQueryTemplate -join "`n")
+} else {
+  Remove-Item Env:\BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES -ErrorAction SilentlyContinue
+}
 $env:BILIBILI_VIDEO_DISCOVERY_LIMIT = [string]$DiscoveryLimit
 $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
 $env:BILIBILI_HARVEST_MAX_QUERIES = [string]$MaxQueries
@@ -70,6 +76,7 @@ Write-Host "Comment pages per video: $CommentPages"
 Write-Host "Max harvest queries: $MaxQueries"
 Write-Host "Dictionary terms per family: $TermsPerFamily"
 Write-Host "Query variants per term: $QueryVariantsPerTerm"
+Write-Host "Extra query templates: $($ExtraQueryTemplate.Count)"
 Write-Host "Target evidence per term: $TargetEvidence"
 Write-Host "Harvest rounds: $Rounds"
 Write-Host "Coverage mode: $CoverageMode"

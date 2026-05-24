@@ -119,6 +119,8 @@ function serializeResult(result, statePath, reportPath) {
 
 const seedQueries = parseList(process.env.BILIBILI_VIDEO_SEARCH_QUERIES || process.env.BILIBILI_VIDEO_SEARCH_QUERY);
 const controversyQueries = parseList(process.env.BILIBILI_CONTROVERSY_SEARCH_QUERIES || process.env.BILIBILI_CONTROVERSY_SEARCH_QUERY);
+const extraQueryTemplates = parseList(process.env.BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES);
+const exhaustedSuggestionTemplates = parseList(process.env.BILIBILI_HARVEST_EXHAUSTED_SUGGESTION_TEMPLATES);
 const maxQueries = numberFromEnv('BILIBILI_HARVEST_MAX_QUERIES', seedQueries.length || 12);
 const termsPerFamily = numberFromEnv('BILIBILI_HARVEST_TERMS_PER_FAMILY', 4);
 const queryVariantsPerTerm = numberFromEnv('BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM', 2);
@@ -139,6 +141,8 @@ const result = await harvestKeywordDictionaryRounds({
   maxQueries,
   termsPerFamily,
   queryVariantsPerTerm,
+  extraQueryTemplates,
+  exhaustedSuggestionTemplates,
   targetEvidence,
   coverageMode,
   discoveryMode,
@@ -188,6 +192,7 @@ if (result.termAttemptSummary?.exhaustedSamples?.length) {
   for (const entry of result.termAttemptSummary.exhaustedSamples.slice(0, 10)) {
     const suffix = entry.lastError ? ` (${entry.lastError})` : '';
     console.log(`- [${entry.family}] ${entry.term}: ${entry.variantsTried} variant(s), last query "${entry.lastQuery}"${suffix}`);
+    for (const query of entry.suggestedQueries || []) console.log(`  suggested: ${query}`);
   }
 }
 
