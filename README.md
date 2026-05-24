@@ -21,6 +21,10 @@ Research-driven prototype for evaluating whether a selected Bilibili user's publ
   - Discovers public submissions and dynamic posts from Bilibili public endpoints.
   - Scans comments around those public objects and filters interactions by `mid`.
   - Does not call AICU, third-party indexes, or external websites as a substitute for UID comment crawling.
+- Video-link keyword search:
+  - Accepts a Bilibili video URL or `BV` id in the same search box.
+  - Resolves the video through Bilibili public metadata, scans public top-level and nested comments, and sends the sampled text to the DeepSeek keyword trainer.
+  - Shows the learned keywords in the UI and folds them into the local analyzer dictionary.
 - DeepSeek V4 Chinese keyword training:
   - Uses the DeepSeek API for dictionary extraction, defaulting to `deepseek-v4-flash`.
   - Current config reads `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, `DEEPSEEK_REASONING_EFFORT`, and `DEEPSEEK_BASE_URL`.
@@ -62,7 +66,7 @@ npm run build
 
 ## Notes
 
-The automatic collector uses Bilibili public endpoints directly. It does not use AICU, third-party comment indexes, scraping libraries, or external websites to replace UID crawling.
+The automatic collector uses Bilibili public endpoints directly. It does not use AICU, third-party comment indexes, scraping libraries, or external websites to replace UID or video-comment crawling.
 
 The DeepSeek keyword trainer does not fine-tune model weights. It uses DeepSeek V4 as a dictionary extractor, then persists learned Chinese terms into the local dictionary used by the rule/semantic analyzer. If `DEEPSEEK_API_KEY` is missing or the API call fails, the app keeps running with the local rule fallback and reports that in the UI.
 

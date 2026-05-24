@@ -4,6 +4,7 @@ import { URL } from 'node:url';
 
 import { analyzeUid } from './bilibiliCrawler.js';
 import { getDeepSeekConfig, readKeywordDictionary, trainKeywordDictionary } from './deepseekKeywordTrainer.js';
+import { searchVideoKeywords } from './videoKeywordSearch.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const VITE_PORT = Number(process.env.VITE_PORT || 5191);
@@ -53,6 +54,15 @@ const server = createServer(async (request, response) => {
     try {
       const payload = JSON.parse((await readBody(request)) || '{}');
       return writeJson(response, 200, await analyzeUid(payload));
+    } catch (error) {
+      return writeJson(response, 500, { ok: false, error: error.message });
+    }
+  }
+
+  if (url.pathname === '/api/bilibili/video-keywords' && request.method === 'POST') {
+    try {
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      return writeJson(response, 200, await searchVideoKeywords(payload));
     } catch (error) {
       return writeJson(response, 500, { ok: false, error: error.message });
     }

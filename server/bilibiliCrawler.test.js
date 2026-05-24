@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { collectReplyForUid, dedupePublicObjects, extractDynamicRecords, parseBvidPool } from './bilibiliCrawler.js';
+import {
+  collectReplyForUid,
+  dedupePublicObjects,
+  extractBvid,
+  extractDynamicRecords,
+  fetchRepliesForVideo,
+  parseBvidPool,
+} from './bilibiliCrawler.js';
 
 test('parseBvidPool accepts whitespace, comma, and Chinese comma separators', () => {
   assert.deepEqual(parseBvidPool('BV19yGa61Ee6, BV1xx411c7mD，BVabc1234567  bad-id'), [
@@ -9,6 +16,13 @@ test('parseBvidPool accepts whitespace, comma, and Chinese comma separators', ()
     'BV1xx411c7mD',
     'BVabc1234567',
   ]);
+});
+
+test('extractBvid accepts BV ids and Bilibili video links', () => {
+  assert.equal(extractBvid('BV19yGa61Ee6'), 'BV19yGa61Ee6');
+  assert.equal(extractBvid('https://www.bilibili.com/video/BV19yGa61Ee6/?vd_source=abc'), 'BV19yGa61Ee6');
+  assert.equal(extractBvid('https://b23.tv/BV1xx411c7mD'), 'BV1xx411c7mD');
+  assert.equal(extractBvid('not-a-video'), '');
 });
 
 test('extractDynamicRecords returns commentable dynamic objects and authored text', () => {
@@ -106,4 +120,106 @@ test('dedupePublicObjects keeps unique reply targets across discovery sources', 
   assert.equal(objects.length, 2);
   assert.equal(objects[0].title, 'A');
   assert.equal(objects[1].kind, 'dynamic');
+});
+
+test('fetchRepliesForVideo collects public top-level and nested video comments', async () => {
+  const result = await fetchRepliesForVideo(
+    'BV19yGa61Ee6',
+    { pages: 1 },
+    {
+      fetchJson: async (url) => {
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: '测试视频',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 2 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 1,
+                mid: 100,
+                member: { mid: '100', uname: 'alice' },
+                content: { message: '不会真有人觉得这叫证据吧' },
+                like: 3,
+                ctime: 1710000000,
+                replies: [
+                  {
+                    rpid: 2,
+                    mid: 101,
+                    member: { mid: '101', uname: 'bob' },
+                    content: { message: '懂的都懂，自己查' },
+                    like: 1,
+                    ctime: 1710000001,
+                  },
+                ],
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.video.bvid, 'BV19yGa61Ee6');
+  assert.equal(result.comments.length, 2);
+  assert.equal(result.commentText.includes('不会真有人'), true);
+  assert.equal(result.commentText.includes('懂的都懂'), true);
+});
+
+test('fetchRepliesForVideo falls back to legacy reply pages when main cursor API is blocked', async () => {
+  const seen = [];
+  const result = await fetchRepliesForVideo(
+    'BV19yGa61Ee6',
+    { pages: 1 },
+    {
+      fetchJson: async (url) => {
+        seen.push(String(url));
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: 'fallback video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        if (String(url).includes('/x/v2/reply/main')) {
+          return { code: -352, message: '-352' };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 10,
+                mid: 100,
+                member: { mid: '100', uname: 'alice' },
+                content: { message: '典中典，自己查' },
+                like: 2,
+                ctime: 1710000000,
+              },
+            ],
+            page: { count: 1, size: 20, num: 1 },
+          },
+        };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.comments.length, 1);
+  assert.equal(result.commentText.includes('典中典'), true);
+  assert.equal(seen.some((url) => url.includes('/x/v2/reply?')), true);
 });

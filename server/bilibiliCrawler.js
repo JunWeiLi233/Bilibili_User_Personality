@@ -25,6 +25,12 @@ export function parseBvidPool(raw) {
     .filter((item) => /^BV[0-9A-Za-z]+$/.test(item));
 }
 
+export function extractBvid(input) {
+  const text = String(input || '').trim();
+  const match = text.match(/BV[0-9A-Za-z]+/);
+  return match?.[0] || '';
+}
+
 function textSnippet(text, fallback) {
   const clean = String(text || '').replace(/\s+/g, ' ').trim();
   if (!clean) return fallback;
@@ -217,8 +223,19 @@ export async function fetchRepliesForObject(object, uid, pages, deps = {}) {
   const pageCount = Math.max(1, pages);
   for (let index = 0; index < pageCount; index += 1) {
     const url = `https://api.bilibili.com/x/v2/reply/main?type=${encodeURIComponent(object.replyType || 1)}&oid=${encodeURIComponent(object.oid)}&mode=3&next=${next}&ps=20`;
-    const data = await requestJson(url, object.sourceUrl || 'https://www.bilibili.com');
-    if (data.code !== 0) break;
+    let data = await requestJson(url, object.sourceUrl || 'https://www.bilibili.com');
+    if (data.code !== 0) {
+      const legacyUrl = `https://api.bilibili.com/x/v2/reply?type=${encodeURIComponent(object.replyType || 1)}&oid=${encodeURIComponent(object.oid)}&pn=${index + 1}&ps=20&sort=2`;
+      data = await requestJson(legacyUrl, object.sourceUrl || 'https://www.bilibili.com');
+      if (data.code !== 0) break;
+      for (const reply of data.data?.replies || []) {
+        collectReplyForUid(reply, uid, object, found);
+      }
+      const page = data.data?.page;
+      if (!page || index + 1 >= Math.ceil(Number(page.count || 0) / Math.max(Number(page.size || 20), 1))) break;
+      await wait(220);
+      continue;
+    }
     for (const reply of data.data?.replies || []) {
       collectReplyForUid(reply, uid, object, found);
     }
@@ -228,6 +245,74 @@ export async function fetchRepliesForObject(object, uid, pages, deps = {}) {
     await wait(220);
   }
   return found;
+}
+
+function collectPublicReply(reply, object, bucket) {
+  if (!reply?.content || !reply?.member) return;
+  bucket.push({
+    sourceKind: object.kind,
+    bvid: object.bvid,
+    oid: String(object.oid || ''),
+    replyType: Number(object.replyType || 1),
+    sourceTitle: object.title || '',
+    sourceUrl: object.sourceUrl || '',
+    rpid: String(reply.rpid || ''),
+    like: Number(reply.like || 0),
+    ctime: Number(reply.ctime || 0),
+    uname: reply.member.uname || '',
+    mid: String(reply.mid || reply.member.mid || ''),
+    message: reply.content.message || '',
+  });
+  for (const child of reply.replies || []) {
+    collectPublicReply(child, object, bucket);
+  }
+}
+
+export async function fetchRepliesForVideo(input, options = {}, deps = {}) {
+  const bvid = extractBvid(input);
+  if (!bvid) {
+    return { ok: false, error: 'Video link must contain a valid BV id.' };
+  }
+
+  const requestJson = deps.fetchJson || fetchJson;
+  const pages = Math.max(1, Math.min(Number(options.pages || 4), 10));
+  const video = await resolveBvid(bvid, deps);
+  const comments = [];
+  let next = 0;
+  for (let index = 0; index < pages; index += 1) {
+    const url = `https://api.bilibili.com/x/v2/reply/main?type=${encodeURIComponent(video.replyType || 1)}&oid=${encodeURIComponent(video.oid)}&mode=3&next=${next}&ps=20`;
+    let data = await requestJson(url, video.sourceUrl);
+    if (data.code !== 0) {
+      const legacyUrl = `https://api.bilibili.com/x/v2/reply?type=${encodeURIComponent(video.replyType || 1)}&oid=${encodeURIComponent(video.oid)}&pn=${index + 1}&ps=20&sort=2`;
+      data = await requestJson(legacyUrl, video.sourceUrl);
+      if (data.code !== 0) break;
+      for (const reply of data.data?.replies || []) {
+        collectPublicReply(reply, video, comments);
+      }
+      const page = data.data?.page;
+      if (!page || index + 1 >= Math.ceil(Number(page.count || 0) / Math.max(Number(page.size || 20), 1))) break;
+      await wait(220);
+      continue;
+    }
+    for (const reply of data.data?.replies || []) {
+      collectPublicReply(reply, video, comments);
+    }
+    const cursor = data.data?.cursor;
+    if (!cursor || cursor.is_end || cursor.next == null) break;
+    next = cursor.next;
+    await wait(220);
+  }
+
+  const uniqueComments = uniqueByRpid(comments);
+  return {
+    ok: true,
+    video,
+    comments: uniqueComments,
+    commentText: uniqueComments.map((comment) => comment.message).filter(Boolean).join('\n'),
+    source: 'Bilibili public video comment scan',
+    confidenceHint:
+      uniqueComments.length >= 80 ? 'large video comment sample' : uniqueComments.length >= 20 ? 'medium video comment sample' : 'small video comment sample',
+  };
 }
 
 export function dedupePublicObjects(objects) {

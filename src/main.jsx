@@ -636,8 +636,9 @@ function App() {
   const [commentText, setCommentText] = React.useState(sampleTextA);
   const [fetchState, setFetchState] = React.useState({
     status: 'idle',
-    message: '输入 UID 后会直接扫描 B 站公开资料、投稿、动态和可评论对象。',
+    message: '输入 UID 或视频链接后会直接扫描 B 站公开对象，并用 DeepSeek V4 Flash medium 学习关键词。',
   });
+  const [keywordResults, setKeywordResults] = React.useState([]);
   const [analysisMode, setAnalysisMode] = React.useState('hybrid');
   const [customLexicon, setCustomLexicon] = React.useState(() => {
     try {
@@ -657,6 +658,7 @@ function App() {
     activeError === '全部'
       ? selectedUser.errors
       : selectedUser.errors.filter((error) => error.type === activeError);
+  const isVideoSearch = /BV[0-9A-Za-z]+|bilibili\.com\/video|b23\.tv/i.test(query);
 
   React.useEffect(() => {
     window.localStorage.setItem('bili-argument-lexicon', JSON.stringify(customLexicon));
@@ -682,8 +684,8 @@ function App() {
             ? {
                 ...current,
                 message: config.available
-                  ? `DeepSeek V4 模型 ${config.model}（${config.reasoningEffort || 'medium'}）已配置；输入 UID 后会抓取发言、抽取中文关键词并写入本地词典。`
-                  : '未检测到 DEEPSEEK_API_KEY；输入 UID 后仍会用本地规则提取关键词并写入本地词典。',
+                  ? `DeepSeek V4 模型 ${config.model}（${config.reasoningEffort || 'medium'}）已配置；输入 UID 或视频链接后会抓取公开文本、抽取中文关键词并写入本地词典。`
+                  : '未检测到 DEEPSEEK_API_KEY；输入 UID 或视频链接后仍会用本地规则提取关键词并写入本地词典。',
               }
             : current,
         );
@@ -706,12 +708,79 @@ function App() {
     };
   }, []);
 
+  const fetchVideoKeywords = async () => {
+    const videoLink = query.trim();
+    if (!/BV[0-9A-Za-z]+|bilibili\.com\/video|b23\.tv/i.test(videoLink)) {
+      setFetchState({ status: 'error', message: '请输入包含 BV 号的 B 站视频链接。' });
+      return;
+    }
+    setKeywordResults([]);
+    setAnalysisState('loading');
+    setFetchState({ status: 'loading', message: '正在扫描该视频的公开评论，并用 DeepSeek V4 Flash medium 提取关键词...' });
+    try {
+      const response = await fetch('/api/bilibili/video-keywords', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          videoLink,
+          pages: 5,
+        }),
+      });
+      const data = await response.json();
+      if (!data.ok) {
+        setFetchState({ status: 'error', message: data.error || '视频关键词搜索失败。' });
+        setAnalysisState('ready');
+        return;
+      }
+
+      const nextCommentText = data.commentText || '';
+      const entries = data.entries || [];
+      let learnedRuntimeLexicon = runtimeLexicon;
+      const trainData = data.keywordTraining;
+      let learnedNote = '未发现可写入本地词典的新关键词。';
+      if (trainData?.ok) {
+        const nextCustomLexicon = mergeDictionaryFamilies(customLexicon, trainData.dictionary?.families || {});
+        setCustomLexicon(nextCustomLexicon);
+        learnedRuntimeLexicon = buildRuntimeLexicon(nextCustomLexicon);
+        learnedNote = `${trainData.available ? `DeepSeek V4 ${trainData.model}（${trainData.reasoningEffort || 'medium'}）` : '本地规则'}学习 ${entries.length} 个中文关键词${trainData.usedFallback ? '（使用规则兜底）' : ''}。`;
+      }
+
+      setQuery(data.video.bvid);
+      setUid(`video ${data.video.bvid}`);
+      setCommentText(nextCommentText);
+      setKeywordResults(entries);
+      if (nextCommentText.trim()) {
+        const generated = scoreComments({
+          name: data.video.title || data.video.bvid,
+          uid: `video ${data.video.bvid}`,
+          text: nextCommentText,
+          source: data.video.sourceUrl,
+          runtimeLexicon: learnedRuntimeLexicon,
+          analysisMode,
+        });
+        setProfiles((current) => [generated, ...current.filter((item) => !item.id.startsWith('generated-'))]);
+        setSelectedId(generated.id);
+        setActiveError('全部');
+      }
+
+      setFetchState({
+        status: data.comments.length > 0 ? 'ready' : 'empty',
+        message: `扫描视频《${data.video.title}》，采集 ${data.comments.length} 条公开评论。${learnedNote}${data.confidenceHint}。`,
+      });
+      setAnalysisState('ready');
+    } catch (error) {
+      setFetchState({ status: 'error', message: `视频关键词搜索失败：${error.message}。请确认已运行 npm run server。` });
+      setAnalysisState('ready');
+    }
+  };
+
   const fetchUidComments = async () => {
     const searchUid = query.trim().match(/\d+/)?.[0] || '';
     if (!searchUid) {
       setFetchState({ status: 'error', message: '请输入数字 UID。' });
       return;
     }
+    setKeywordResults([]);
     setAnalysisState('loading');
     setFetchState({ status: 'loading', message: '正在直接扫描该 UID 的公开投稿、动态与评论互动...' });
     try {
@@ -763,6 +832,7 @@ function App() {
             const nextCustomLexicon = mergeDictionaryFamilies(customLexicon, trainData.dictionary?.families || {});
             setCustomLexicon(nextCustomLexicon);
             learnedRuntimeLexicon = buildRuntimeLexicon(nextCustomLexicon);
+            setKeywordResults(trainData.entries || []);
             learnedNote = `${trainData.available ? `DeepSeek V4 ${trainData.model}（${trainData.reasoningEffort || 'medium'}）` : '本地规则'}学习 ${trainData.entries.length} 个中文关键词${trainData.usedFallback ? '（使用规则兜底）' : ''}。`;
           } else {
             learnedNote = `DeepSeek 词典训练失败：${trainData.error || '未知错误'}。`;
@@ -818,20 +888,29 @@ function App() {
               词表只做辅助召回，核心判断转向：是否回应原命题、是否转向人身或阵营、是否转移举证责任、是否愿意修正。
             </p>
             <div className="search-row">
-              <label htmlFor="user-query">B 站 UID / mid</label>
+              <label htmlFor="user-query">B 站 UID / 视频链接</label>
               <div>
                 <input
                   id="user-query"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="例如 453244911"
+                  placeholder="例如 453244911 或 https://www.bilibili.com/video/BV..."
                 />
-                <button type="button" onClick={fetchUidComments} disabled={analysisState === 'loading'}>
+                <button type="button" onClick={isVideoSearch ? fetchVideoKeywords : fetchUidComments} disabled={analysisState === 'loading'}>
                   <Lightning size={17} weight="fill" />
-                  {analysisState === 'loading' ? '抓取中' : '搜索 UID'}
+                  {analysisState === 'loading' ? '抓取中' : isVideoSearch ? '找视频关键词' : '搜索 UID'}
                 </button>
               </div>
               <p className={`fetch-status fetch-${fetchState.status}`}>{fetchState.message}</p>
+              {keywordResults.length > 0 && (
+                <div className="keyword-results" aria-label="DeepSeek 提取关键词">
+                  {keywordResults.slice(0, 12).map((entry) => (
+                    <span className="keyword-chip" key={`${entry.family}-${entry.term}`} title={entry.meaning || entry.family}>
+                      {entry.term}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
