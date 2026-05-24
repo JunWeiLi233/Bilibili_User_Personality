@@ -5,3 +5,4 @@ dist/
 *.log
 server/localKeywordDictionary.json
 server/deepseekKeywordDictionary.json
+set-deepseek-env.ps1
