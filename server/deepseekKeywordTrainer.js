@@ -46,9 +46,18 @@ function unique(items) {
 
 function cleanTerm(term) {
   return String(term || '')
-    .replace(/[，。！？、；：,.!?;:"'“”‘’`~()[\]{}<>]/g, '')
-    .replace(/\s+/g, '')
+    .normalize('NFKC')
+    .replace(/[^\p{Script=Han}\p{Letter}\p{Number}]+/gu, '')
+    .replace(/(?<=\p{Script=Han})[A-Za-z]$/u, '')
     .trim();
+}
+
+function isNoisyTerm(term) {
+  if (!term || STOP_TERMS.has(term) || /^变体\d+$/.test(term)) return true;
+  if (/^\d+$/.test(term)) return true;
+  if (/^[A-Za-z]$/.test(term)) return true;
+  if (/^去问(?!百度|谷歌|Google|搜索|老师|客服)/i.test(term)) return true;
+  return false;
 }
 
 function normalizeFamily(family) {
@@ -102,7 +111,7 @@ export function normalizeKeywordEntries(rawEntries = []) {
     const meaning = String(item.meaning || item.reason || '').trim();
     if (!meaning || /中文含义|语用功能|^含义$|^解释$/.test(meaning)) continue;
     for (const term of terms) {
-      if (STOP_TERMS.has(term) || /^变体\d+$/.test(term)) continue;
+      if (isNoisyTerm(term)) continue;
       entries.push({
         term,
         family,

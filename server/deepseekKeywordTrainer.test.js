@@ -65,6 +65,19 @@ test('normalizes DeepSeek keyword output into supported dictionary families', ()
   ]);
 });
 
+test('normalizes noisy punctuation and rejects low-quality keyword terms', () => {
+  const entries = normalizeKeywordEntries([
+    { term: '去问地理老师的）O', family: 'evasion', meaning: '噪声样本' },
+    { term: '问百度！！', family: 'evasion', meaning: '把解释责任转移到搜索引擎' },
+    { term: '[doge]', family: 'cooperation', meaning: '表情梗' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.family]), [
+    ['问百度', 'evasion'],
+    ['doge', 'cooperation'],
+  ]);
+});
+
 test('extracts JSON object from verbose DeepSeek responses', () => {
   const parsed = extractJsonObject('```json\n{"keywords":[{"term":"典中典","family":"attack"}]}\n```');
   assert.deepEqual(parsed, { keywords: [{ term: '典中典', family: 'attack' }] });
