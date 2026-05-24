@@ -95,6 +95,47 @@ test('buildKeywordHarvestQueries uses stable search aliases for hard-to-find ter
   ]);
 });
 
+test('buildKeywordHarvestQueries uses conversational aliases for repeatedly missed terms', () => {
+  const cases = [
+    {
+      term: '\u7cbe\u795e\u5916\u56fd\u4eba',
+      family: 'attack',
+      expectedAliasQuery: '\u7cbe\u5916 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u524d\u9762\u8bf4\u91cd\u4e86',
+      family: 'correction',
+      expectedAliasQuery: '\u6211\u8bf4\u91cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a',
+    },
+    {
+      term: '\u95ee\u8001\u9a6c\u672c\u4eba',
+      family: 'evasion',
+      expectedAliasQuery: '\u95ee\u672c\u4eba \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u53ef\u4ee5\u8d34',
+      family: 'cooperation',
+      expectedAliasQuery: '\u53ef\u4ee5\u53d1 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+  ];
+
+  for (const item of cases) {
+    const queries = buildKeywordHarvestQueries(
+      {
+        entries: [{ term: item.term, family: item.family, evidenceCount: 0 }],
+      },
+      {
+        seedQueries: [],
+        coverageMode: 'all-weak',
+        maxQueries: 4,
+        queryVariantsPerTerm: 4,
+      },
+    );
+
+    assert.equal(queries.includes(item.expectedAliasQuery), true);
+  }
+});
+
 test('buildKeywordHarvestQueries all-weak mode targets every weak term before broad seeds', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -428,6 +469,49 @@ test('buildKeywordHarvestQueryPlan automatically uses exhausted fallback templat
   assert.equal(plan[0].query, 'doge \u56de\u590d');
   assert.equal(plan[0].builtInVariant, false);
   assert.equal(plan[0].previouslyTried, false);
+});
+
+test('buildKeywordHarvestQueryPlan keeps broadening after first exhausted fallback wave', () => {
+  const allQueries = [
+    'doge \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'doge \u8bc4\u8bba\u533a',
+    'doge \u70ed\u8bc4',
+    'doge \u5f39\u5e55',
+    'doge \u4e89\u8bae \u8bc4\u8bba\u533a',
+    'doge \u662f\u4ec0\u4e48\u6897',
+    'doge \u4ec0\u4e48\u610f\u601d',
+    'doge \u51fa\u5904',
+    'doge \u540d\u6897',
+    'doge \u540d\u573a\u9762 \u8bc4\u8bba\u533a',
+    'doge \u5207\u7247 \u8bc4\u8bba',
+    'doge \u8bc4\u8bba \u6897',
+    'doge B\u7ad9',
+    'doge',
+    'doge \u56de\u590d',
+    'doge \u4e92\u52a8',
+    'cooperation doge \u8bc4\u8bba',
+  ];
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 1,
+      queryVariantsPerTerm: 2,
+      termAttempts: {
+        doge: {
+          term: 'doge',
+          attempts: allQueries.length,
+          successfulAttempts: 0,
+          queries: allQueries.map((query) => ({ query })),
+        },
+      },
+    },
+  );
+
+  assert.equal(plan[0].query, 'doge \u8bc4\u8bba\u56de\u590d');
 });
 
 test('buildKeywordHarvestQueryPlan can reopen exhausted terms with extra runtime templates', () => {
