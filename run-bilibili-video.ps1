@@ -11,8 +11,14 @@ $bilibiliVideoLinks = @(
   "https://www.bilibili.com/video/BV1cLbQzKEnu/"
   "https://www.bilibili.com/video/BV1MZ421K7x8/?vd_source=d3f6474bdf9e6de8d027785f1120afd4"
   "https://www.bilibili.com/video/BV1ECF8zvEUW?spm_id_from=333.788.recommend_more_video.0&trackid=web_related_0.router-related-2479604-fc7wt.1779601733788.445&vd_source=d3f6474bdf9e6de8d027785f1120afd4"
-  “https://www.bilibili.com/video/BV1K44y1z7iu/?vd_source=d3f6474bdf9e6de8d027785f1120afd4”
-  
+  "https://www.bilibili.com/video/BV1K44y1z7iu/?vd_source=d3f6474bdf9e6de8d027785f1120afd4"
+  "https://www.bilibili.com/video/BV1ufLF6oEWT/?vd_source=d3f6474bdf9e6de8d027785f1120afd4"
+  "https://www.bilibili.com/video/BV1LtivBmEWT/?vd_source=d3f6474bdf9e6de8d027785f1120afd4"
+  "bilibili.com/video/BV1EkGV6NEAV/"
+  "https://www.bilibili.com/video/BV1xbLe6LE1o/"
+  "https://www.bilibili.com/video/BV1zpLW6zEXJ/"
+  "https://www.bilibili.com/video/BV11C5o6gEsZ/"
+  "https://www.bilibili.com/video/BV1y9FkzjE12/"
 )
 
 $env:BILIBILI_DEFAULT_VIDEO_LINKS = ($bilibiliVideoLinks -join "`n")
