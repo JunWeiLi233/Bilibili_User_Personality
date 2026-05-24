@@ -119,3 +119,76 @@ test('searchVideoKeywords scans video comments and trains keyword dictionary', a
   assert.equal(trainedPayloads[0].uid, 'BV19yGa61Ee6');
   assert.equal(trainedPayloads[0].text.includes('不会真有人'), true);
 });
+
+test('searchVideoKeywords scans multiple backend video links and trains one merged dictionary pass', async () => {
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      videoLinks: ['https://www.bilibili.com/video/BV19yGa61Ee6/', 'https://www.bilibili.com/video/BV1xx411c7mD/'],
+      pages: 1,
+    },
+    {
+      fetchJson: async (url) => {
+        const textUrl = String(url);
+        if (textUrl.includes('/x/web-interface/view')) {
+          const bvid = new URL(textUrl).searchParams.get('bvid');
+          return {
+            code: 0,
+            data: {
+              aid: bvid === 'BV19yGa61Ee6' ? 123 : 456,
+              title: bvid === 'BV19yGa61Ee6' ? 'first video' : 'second video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        const oid = new URL(textUrl).searchParams.get('oid');
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: oid,
+                mid: 100,
+                member: { mid: '100', uname: 'alice' },
+                content: { message: oid === '123' ? '单走一个6' : '问百度有什么用' },
+                like: 3,
+                ctime: 1710000000,
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return {
+          ok: true,
+          available: true,
+          model: 'deepseek-v4-flash',
+          reasoningEffort: 'medium',
+          usedFallback: false,
+          entries: [
+            { term: '单走一个6', family: 'attack', meaning: '弹幕式嘲讽', variants: [] },
+            { term: '问百度', family: 'evasion', meaning: '转移解释责任', variants: [] },
+          ],
+          dictionary: {
+            families: {
+              attack: ['单走一个6'],
+              evasion: ['问百度'],
+            },
+          },
+        };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.videos.length, 2);
+  assert.equal(result.comments.length, 2);
+  assert.equal(result.entries.length, 2);
+  assert.equal(trainedPayloads.length, 1);
+  assert.equal(trainedPayloads[0].uid, 'BV19yGa61Ee6,BV1xx411c7mD');
+  assert.equal(trainedPayloads[0].text.includes('单走一个6'), true);
+  assert.equal(trainedPayloads[0].text.includes('问百度'), true);
+});

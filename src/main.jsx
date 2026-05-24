@@ -829,7 +829,7 @@ function App() {
 
       setFetchState({
         status: data.comments.length > 0 ? 'ready' : 'empty',
-        message: `扫描视频《${data.video.title}》，采集 ${data.comments.length} 条公开评论。${learnedNote}${data.confidenceHint}。`,
+        message: `扫描 ${data.videos?.length || 1} 个视频（首个：《${data.video.title}》），采集 ${data.comments.length} 条公开评论。${learnedNote}${data.confidenceHint}。`,
       });
       setAnalysisState('ready');
     } catch (error) {
