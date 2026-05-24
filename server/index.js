@@ -6,7 +6,6 @@ const PORT = Number(process.env.PORT || 8787);
 const VITE_PORT = Number(process.env.VITE_PORT || 5191);
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36';
-const AICU_API = process.env.AICU_API || 'https://api.aicu.cc';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -99,51 +98,6 @@ function parseBvidPool(raw) {
     .filter((item) => /^BV[0-9A-Za-z]+$/.test(item));
 }
 
-async function fetchAicuReplies({ uid, pages = 2, ps = 20, keyword = '', mode = 0 }) {
-  const pageCount = Math.max(1, Math.min(Number(pages || 2), 10));
-  const pageSize = Math.max(1, Math.min(Number(ps || 20), 50));
-  const replies = [];
-  let total = 0;
-
-  for (let pn = 1; pn <= pageCount; pn += 1) {
-    const url = `${AICU_API}/api/v3/search/getreply?uid=${encodeURIComponent(uid)}&pn=${pn}&ps=${pageSize}&mode=${mode}&keyword=${encodeURIComponent(keyword)}`;
-    const data = await fetchJson(url, 'https://www.aicu.cc/');
-    if (data.code !== 0) {
-      throw new Error(data.message || `AICU returned code ${data.code}`);
-    }
-    total = Number(data.data?.cursor?.all_count || total);
-    for (const item of data.data?.replies || []) {
-      replies.push({
-        rpid: String(item.rpid || ''),
-        message: item.message || '',
-        time: Number(item.time || 0),
-        rank: Number(item.rank || 0),
-        oid: String(item.dyn?.oid || ''),
-        type: Number(item.dyn?.type || 0),
-        sourceUrl:
-          item.dyn?.type === 1 && item.dyn?.oid
-            ? `https://www.bilibili.com/video/av${item.dyn.oid}#reply${item.rpid}`
-            : '',
-      });
-    }
-    await wait(200);
-  }
-
-  const unique = [...new Map(replies.map((reply) => [reply.rpid, reply])).values()];
-  return {
-    ok: true,
-    uid: String(uid),
-    api: AICU_API,
-    total,
-    fetched: unique.length,
-    replies: unique,
-    commentText: unique.map((reply) => reply.message).filter(Boolean).join('\n'),
-    source: `AICU history index (${pageCount} page(s), ${pageSize} per page)`,
-    confidenceHint:
-      unique.length >= 30 ? 'history-index sample' : unique.length >= 10 ? 'medium history-index sample' : 'small history-index sample',
-  };
-}
-
 async function readBody(request) {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
@@ -230,17 +184,6 @@ const server = createServer(async (request, response) => {
     try {
       const payload = JSON.parse((await readBody(request)) || '{}');
       return writeJson(response, 200, await analyzeUid(payload));
-    } catch (error) {
-      return writeJson(response, 500, { ok: false, error: error.message });
-    }
-  }
-
-  if (url.pathname === '/api/aicu/replies' && request.method === 'POST') {
-    try {
-      const payload = JSON.parse((await readBody(request)) || '{}');
-      const uid = String(payload.uid || '').trim();
-      if (!/^\d+$/.test(uid)) return writeJson(response, 200, { ok: false, error: 'UID must be numeric.' });
-      return writeJson(response, 200, await fetchAicuReplies(payload));
     } catch (error) {
       return writeJson(response, 500, { ok: false, error: error.message });
     }

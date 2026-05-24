@@ -628,7 +628,8 @@ function App() {
   const [autoUid, setAutoUid] = React.useState('');
   const [bvidPool, setBvidPool] = React.useState('BV19yGa61Ee6');
   const [fetchState, setFetchState] = React.useState({ status: 'idle', message: '输入 UID 后可自动发现公开视频对象；若 B 站空间接口风控，请提供 BV 视频池。' });
-  const [aicuPages, setAicuPages] = React.useState(2);
+  const [researchKeyword, setResearchKeyword] = React.useState('');
+  const [researchFilter, setResearchFilter] = React.useState('all');
   const [analysisMode, setAnalysisMode] = React.useState('hybrid');
   const [customLexicon, setCustomLexicon] = React.useState(() => {
     try {
@@ -641,6 +642,37 @@ function App() {
 
   const runtimeLexicon = React.useMemo(() => buildRuntimeLexicon(customLexicon), [customLexicon]);
   const candidateTerms = React.useMemo(() => extractCandidateTerms(commentText, runtimeLexicon), [commentText, runtimeLexicon]);
+  const researchRows = React.useMemo(() => {
+    const comments = splitComments(commentText);
+    const total = Math.max(comments.length, 1);
+    return comments.map((message, index) => {
+      const acts = classifySpeechAct(message, index, total);
+      const lexiconEvidence = classifyLexiconError(message, index, total, runtimeLexicon);
+      const negativeActs = acts.filter((act) => !act.positive && !act.neutral);
+      const positiveActs = acts.filter((act) => act.positive);
+      return {
+        id: `local-${index}`,
+        index: index + 1,
+        message,
+        risk: negativeActs.length,
+        positive: positiveActs.length,
+        label: negativeActs[0]?.speechAct || lexiconEvidence?.speechAct || positiveActs[0]?.speechAct || '普通观点表达',
+        target: negativeActs[0]?.target || lexiconEvidence?.target || positiveActs[0]?.target || '观点',
+        source: lexiconEvidence ? '本地语义裁判 + 本地语库' : '本地语义裁判',
+      };
+    });
+  }, [commentText, runtimeLexicon]);
+  const filteredResearchRows = React.useMemo(() => {
+    return researchRows.filter((row) => {
+      const keywordMatched = !researchKeyword || row.message.includes(researchKeyword) || row.label.includes(researchKeyword);
+      const filterMatched =
+        researchFilter === 'all' ||
+        (researchFilter === 'risk' && row.risk > 0) ||
+        (researchFilter === 'positive' && row.positive > 0) ||
+        (researchFilter === 'neutral' && row.risk === 0 && row.positive === 0);
+      return keywordMatched && filterMatched;
+    });
+  }, [researchRows, researchKeyword, researchFilter]);
   const selectedUser = profiles.find((user) => user.id === selectedId) || profiles[0];
   const trollIndex = getTrollIndex(selectedUser);
   const errorTypes = ['全部', ...new Set(selectedUser.errors.map((error) => error.type))];
@@ -707,37 +739,6 @@ function App() {
       });
     } catch (error) {
       setFetchState({ status: 'error', message: `采集失败：${error.message}。请确认已运行 npm run server。` });
-    }
-  };
-
-  const fetchAicuHistory = async () => {
-    setFetchState({ status: 'loading', message: '正在从 AICU 历史索引导入评论...' });
-    try {
-      const response = await fetch('/api/aicu/replies', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          uid: autoUid,
-          pages: aicuPages,
-          ps: 20,
-          mode: 0,
-          keyword: '',
-        }),
-      });
-      const data = await response.json();
-      if (!data.ok) {
-        setFetchState({ status: 'error', message: data.error || 'AICU 历史索引导入失败。' });
-        return;
-      }
-      setQuery(`AICU UID ${data.uid}`);
-      setUid(`AICU uid ${data.uid}`);
-      setCommentText(data.commentText || '');
-      setFetchState({
-        status: data.fetched > 0 ? 'ready' : 'empty',
-        message: `AICU 索引总评论 ${data.total} 条，本次导入 ${data.fetched} 条。${data.confidenceHint}。导入后点击“生成画像”进行本地语义分析。`,
-      });
-    } catch (error) {
-      setFetchState({ status: 'error', message: `AICU 导入失败：${error.message}。` });
     }
   };
 
@@ -818,20 +819,8 @@ function App() {
                 onChange={(event) => setBvidPool(event.target.value)}
                 placeholder="例如 BV19yGa61Ee6 BVxxxx"
               />
-              <label htmlFor="aicu-pages">AICU 导入页数，每页 20 条</label>
-              <input
-                id="aicu-pages"
-                value={aicuPages}
-                min="1"
-                max="10"
-                type="number"
-                onChange={(event) => setAicuPages(event.target.value)}
-              />
               <button type="button" onClick={fetchUidComments} disabled={fetchState.status === 'loading'}>
                 {fetchState.status === 'loading' ? '抓取中' : '自动抓取公开发言'}
-              </button>
-              <button type="button" className="secondary-crawl" onClick={fetchAicuHistory} disabled={fetchState.status === 'loading'}>
-                {fetchState.status === 'loading' ? '导入中' : '使用 AICU 历史索引'}
               </button>
               <p className={`fetch-status fetch-${fetchState.status}`}>{fetchState.message}</p>
             </div>
@@ -867,6 +856,62 @@ function App() {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="research-board-section">
+        <div className="research-board">
+          <div className="research-board-head">
+            <div>
+              <span className="eyebrow"><ClipboardText size={16} /> local research panel</span>
+              <h2>本地 AICU 格式评论研究面板</h2>
+              <p>不依赖 AICU 作为评论来源。这里仅把当前本地样本、UID 公开采集结果或手动导入文本整理成便于研究的历史评论索引视图。</p>
+            </div>
+            <div className="research-stats" aria-label="本地样本统计">
+              <span><strong>{researchRows.length}</strong> 本地评论</span>
+              <span><strong>{researchRows.filter((row) => row.risk > 0).length}</strong> 风险话语</span>
+              <span><strong>{filteredResearchRows.length}</strong> 当前筛选</span>
+            </div>
+          </div>
+
+          <div className="research-toolbar">
+            <label htmlFor="research-keyword">文本或话语行为匹配</label>
+            <input
+              id="research-keyword"
+              value={researchKeyword}
+              onChange={(event) => setResearchKeyword(event.target.value)}
+              placeholder="例如 抬杠 / 人身指向 / 修正"
+            />
+            <label htmlFor="research-filter">样本类型</label>
+            <select id="research-filter" value={researchFilter} onChange={(event) => setResearchFilter(event.target.value)}>
+              <option value="all">所有评论</option>
+              <option value="risk">高风险话语</option>
+              <option value="positive">合作/修正</option>
+              <option value="neutral">普通观点</option>
+            </select>
+          </div>
+
+          <div className="research-list" aria-label="本地 AICU 格式评论列表">
+            {filteredResearchRows.length === 0 ? (
+              <p className="research-empty">当前筛选没有命中。换一个关键词，或先抓取/粘贴更多公开评论。</p>
+            ) : (
+              filteredResearchRows.slice(0, 80).map((row) => (
+                <article className="research-card" key={row.id}>
+                  <div className="research-meta">
+                    <span>#{row.index}</span>
+                    <span>本地样本</span>
+                    <span>{uid || autoUid || '未指定 UID'}</span>
+                  </div>
+                  <p>{row.message}</p>
+                  <div className="research-tags">
+                    <span className={row.risk > 0 ? 'research-chip risk' : 'research-chip'}>{row.label}</span>
+                    <span className="research-chip">目标：{row.target}</span>
+                    <span className="research-chip muted">{row.source}</span>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </div>
       </section>

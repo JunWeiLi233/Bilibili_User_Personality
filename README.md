@@ -20,10 +20,10 @@ Research-driven prototype for evaluating whether a selected Bilibili user's publ
   - Tries public UID video discovery.
   - Falls back to a user-provided BV pool.
   - Filters public comments by `mid`.
-- Optional AICU-compatible history import:
-  - Calls AICU's public history-comment endpoint shape from the local API server.
-  - Imports pages of historical comments into the local semantic analyzer.
-  - Treats AICU as an external data source, not as the judgment model.
+- Local AICU-format research panel:
+  - Does not call AICU or use it as a comment source.
+  - Formats locally pasted, imported, or UID-collected public comments into a historical-comment research view.
+  - Keeps all judgment inside the local speech-act and adaptive-lexicon analyzer.
 - Built-in public test samples from Bilibili video `BV19yGa61Ee6`.
 
 ## Run Locally
@@ -45,6 +45,6 @@ npm run build
 
 The automatic collector uses public Bilibili endpoints. Some UID space APIs may be rate-limited or blocked by Bilibili risk control; in that case, provide a BV video pool and the tool will search those public comment areas for the target `mid`.
 
-The AICU option imports a historical comment index from `https://api.aicu.cc` through the local server. It is useful for comparison because AICU has broader historical coverage than real-time public-object scanning, but the local tool still performs its own speech-act analysis.
+The local AICU-format panel is a research interface over comments already present in this tool. It deliberately avoids using AICU as a data source so the collection path remains controlled by local pasted samples, UID public-object scanning, or future local importers.
 
 The scoring language is framed as behavior-risk analysis over a bounded public comment sample, not as a clinical diagnosis or definitive personality judgment.
