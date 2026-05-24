@@ -154,6 +154,33 @@ test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', 
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-alias'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence matches bidirectional short-form aliases', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', family: 'attack', meaning: 'short sarcasm stem' },
+        { term: '\u61c2\u7684\u90fd\u61c2', family: 'evasion', meaning: 'implicit proof shift' },
+        { term: '\u5355\u8d706', family: 'attack', meaning: 'bullet-comment joke form' },
+        { term: '\u81ea\u5df1\u67e5', family: 'evasion', meaning: 'shift proof burden' },
+      ],
+    },
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u8fd8\u5728\u8fd9\u6837\u8bf4\u5427\ndddd\uff0c\u61d2\u5f97\u89e3\u91ca\n\u5355\u8d70\u4e00\u4e2a6\n\u4f60\u81ea\u5df1\u641c\u4e00\u4e0b',
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-short-alias/',
+      uid: 'BV-short-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97',
+    '\u61c2\u7684\u90fd\u61c2',
+    '\u5355\u8d706',
+    '\u81ea\u5df1\u67e5',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceCount === 1), true);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-short-alias'), true);
+});
+
 test('trainKeywordDictionary updates evidence for existing terms found in crawled comments', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-train-existing-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');

@@ -41,6 +41,25 @@ const DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES = [
   '{term} \u5207\u7247 \u8bc4\u8bba',
   '{family} {term} \u8bc4\u8bba',
 ];
+const TERM_SEARCH_ALIASES = {
+  '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97': ['\u4e0d\u4f1a\u771f\u6709\u4eba'],
+  '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427': ['\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', '\u4e0d\u4f1a\u771f\u6709\u4eba'],
+  '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427': ['\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', '\u4e0d\u4f1a\u771f\u6709\u4eba'],
+  '\u53cd\u6b63\u6211\u4eec\u8d62\u9ebb\u4e86': ['\u8d62\u9ebb\u4e86', '\u8d62\u9ebb'],
+  '\u5355\u8d706': ['\u5355\u8d70\u4e00\u4e2a6', '\u8d70\u4e00\u4e2a6'],
+  '\u5355\u8d70\u4e00\u4e2a6': ['\u5355\u8d706', '\u8d70\u4e00\u4e2a6'],
+  '\u8d70\u4e00\u4e2a6': ['\u5355\u8d706', '\u5355\u8d70\u4e00\u4e2a6'],
+  '\u6ca1\u6709\u8f66\u5bb6\u519b': ['\u8f66\u5bb6\u519b'],
+  '\u8c01\u662f\u8e6d\u6982\u5ff5': ['\u8e6d\u6982\u5ff5'],
+  '\u81ea\u5df1\u67e5': ['\u81ea\u5df1\u641c', '\u4f60\u81ea\u5df1\u641c', '\u81ea\u5df1\u67e5\u53bb'],
+  '\u81ea\u5df1\u67e5\u53bb': ['\u81ea\u5df1\u67e5', '\u81ea\u5df1\u641c'],
+  '\u81ea\u5df1\u641c': ['\u81ea\u5df1\u67e5'],
+  '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528': ['\u95ee\u767e\u5ea6'],
+  '\u61c2\u7684\u90fd\u61c2': ['dddd'],
+  dddd: ['\u61c2\u7684\u90fd\u61c2'],
+  yygq: ['\u9634\u9633\u602a\u6c14'],
+  pink: ['\u7c89\u7ea2', '\u5c0f\u7c89\u7ea2'],
+};
 
 function asPositiveInt(value, fallback, max = Number.MAX_SAFE_INTEGER) {
   const number = Number(value);
@@ -93,12 +112,28 @@ function queryTemplatesFromOptions(options = {}) {
   ];
 }
 
+function searchTermsForTerm(term) {
+  return unique([term, ...(TERM_SEARCH_ALIASES[String(term || '').trim()] || [])]);
+}
+
+function queryVariantCountForTerm(term, options = {}) {
+  return queryTemplatesFromOptions(options).length * searchTermsForTerm(term).length;
+}
+
 function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length, options = {}) {
-  return queryTemplatesFromOptions(options).slice(0, limit).map((item, index) => ({
-    query: item.template(term, family),
-    variantIndex: index,
-    builtIn: item.builtIn,
-  }));
+  const variants = [];
+  for (const item of queryTemplatesFromOptions(options)) {
+    for (const searchTerm of searchTermsForTerm(term)) {
+      variants.push({
+        query: item.template(searchTerm, family),
+        variantIndex: variants.length,
+        builtIn: item.builtIn,
+      });
+    }
+  }
+  return unique(variants.map((item) => item.query))
+    .map((query) => variants.find((item) => item.query === query))
+    .slice(0, limit);
 }
 
 function attemptedVariantQueries(attempt) {
@@ -109,8 +144,7 @@ function isTermAttemptExhausted(term, family, attempt, options = {}) {
   if (!attempt || Number(attempt.successfulAttempts) > 0) return false;
   const triedQueries = attemptedVariantQueries(attempt);
   if (triedQueries.size === 0) return false;
-  const templateCount = queryTemplatesFromOptions(options).length;
-  return queryVariantsForTerm(term, family, templateCount, options).every((item) => triedQueries.has(item.query));
+  return queryVariantsForTerm(term, family, queryVariantCountForTerm(term, options), options).every((item) => triedQueries.has(item.query));
 }
 
 function sortEntriesForCoverage(entries) {
@@ -192,8 +226,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
       : allEntries;
   const familyCounts = new Map();
   const dictionaryPlan = [];
-  const variantsPerTerm = asPositiveInt(options.queryVariantsPerTerm, 2, TERM_QUERY_TEMPLATES.length);
-  const templateCount = queryTemplatesFromOptions(options).length;
+  const variantsPerTerm = asPositiveInt(options.queryVariantsPerTerm, 2, Number.MAX_SAFE_INTEGER);
 
   for (const entry of entries) {
     const term = String(entry.term || '').trim();
@@ -209,7 +242,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
     const triedQueries = attemptedVariantQueries(attempt);
     const adaptiveVariantsPerTerm =
       coverageMode === 'all-weak' && attempts > 0 && successfulAttempts === 0
-        ? Math.min(templateCount, Math.max(variantsPerTerm, attempts + variantsPerTerm))
+        ? Math.min(queryVariantCountForTerm(term, options), Math.max(variantsPerTerm, attempts + variantsPerTerm))
         : variantsPerTerm;
     const variants = queryVariantsForTerm(term, family, adaptiveVariantsPerTerm, options);
     const orderedVariants = coverageMode === 'all-weak' ? [...variants.filter((item) => !triedQueries.has(item.query)), ...variants.filter((item) => triedQueries.has(item.query))] : variants;

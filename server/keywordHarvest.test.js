@@ -40,9 +40,9 @@ test('buildKeywordHarvestQueries prioritizes weak-evidence dictionary terms by f
     '典中典 评论区 梗 热评',
     '典中典 评论区',
     '懂的都懂 回复 评论区 热评',
-    '懂的都懂 评论区',
+    'dddd 回复 评论区 热评',
     'yygq 评论区 梗 热评',
-    'yygq 评论区',
+    '阴阳怪气 评论区 梗 热评',
     'doge 讨论 评论区 热评',
   ]);
 });
@@ -65,6 +65,33 @@ test('buildKeywordHarvestQueries can generate several Bilibili-oriented variants
     'doge 评论区',
     'doge 热评',
     'doge 弹幕',
+  ]);
+});
+
+test('buildKeywordHarvestQueries uses stable search aliases for hard-to-find terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', family: 'attack', evidenceCount: 0 },
+        { term: '\u61c2\u7684\u90fd\u61c2', family: 'evasion', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 6,
+      termsPerFamily: 2,
+      queryVariantsPerTerm: 3,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97 \u8bc4\u8bba\u533a',
+    '\u61c2\u7684\u90fd\u61c2 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'dddd \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u61c2\u7684\u90fd\u61c2 \u8bc4\u8bba\u533a',
   ]);
 });
 
