@@ -83,6 +83,78 @@ test('searchVideoKeywords skips already harvested discovered videos', async () =
   assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BV1xx411c7mD']);
 });
 
+test('searchVideoKeywords can discover popular videos without a search query', async () => {
+  const requestedUrls = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQueries: [],
+      discoveryMode: 'popular',
+      discoveryLimit: 1,
+      pages: 1,
+    },
+    {
+      discoverPopularVideos: async (limit) => {
+        assert.equal(limit, 1);
+        return [{ bvid: 'BV1popular01', sourceUrl: 'https://www.bilibili.com/video/BV1popular01/' }];
+      },
+      fetchJson: async (url) => {
+        requestedUrls.push(String(url));
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 789,
+              title: 'popular video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.discoveryMode, 'popular');
+  assert.equal(result.video.bvid, 'BV1popular01');
+  assert.equal(requestedUrls.some((url) => url.includes('bvid=BV1popular01')), true);
+});
+
+test('searchVideoKeywords mixed discovery combines search and popular sources', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: 'seed topic',
+      discoveryMode: 'mixed',
+      discoveryLimit: 2,
+      pages: 1,
+    },
+    {
+      discoverVideosByKeyword: async () => [{ bvid: 'BV1search001', sourceUrl: 'https://www.bilibili.com/video/BV1search001/' }],
+      discoverPopularVideos: async () => [{ bvid: 'BV1popular01', sourceUrl: 'https://www.bilibili.com/video/BV1popular01/' }],
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: bvid === 'BV1search001' ? 111 : 222,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.discoveryMode, 'mixed');
+  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1search001', 'BV1popular01']);
+});
+
 test('searchVideoKeywords scans video comments and trains keyword dictionary', async () => {
   const trainedPayloads = [];
   const result = await searchVideoKeywords(

@@ -1,4 +1,4 @@
-import { discoverVideosByKeyword, fetchRepliesForVideo } from './bilibiliCrawler.js';
+import { discoverPopularVideos, discoverVideosByKeyword, fetchRepliesForVideo } from './bilibiliCrawler.js';
 import { trainKeywordDictionary as defaultTrainKeywordDictionary } from './deepseekKeywordTrainer.js';
 
 export const DEFAULT_VIDEO_LINK =
@@ -53,14 +53,25 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const discoveryWarnings = [];
   let discoveredVideos = [];
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
+  const discoveryMode = String(payload.discoveryMode || deps.discoveryMode || process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'search').trim().toLowerCase();
 
   if (videoLinks.length === 0) {
-    const discoverVideos = deps.discoverVideosByKeyword || discoverVideosByKeyword;
-    for (const query of searchQueries) {
+    if (discoveryMode === 'search' || discoveryMode === 'mixed') {
+      const discoverVideos = deps.discoverVideosByKeyword || discoverVideosByKeyword;
+      for (const query of searchQueries) {
+        try {
+          discoveredVideos.push(...(await discoverVideos(query, discoveryLimit, deps)));
+        } catch (error) {
+          discoveryWarnings.push(`${query}: ${error.message}`);
+        }
+      }
+    }
+    if (discoveryMode === 'popular' || discoveryMode === 'mixed') {
+      const discoverPopular = deps.discoverPopularVideos || discoverPopularVideos;
       try {
-        discoveredVideos.push(...(await discoverVideos(query, discoveryLimit, deps)));
+        discoveredVideos.push(...(await discoverPopular(discoveryLimit, deps)));
       } catch (error) {
-        discoveryWarnings.push(`${query}: ${error.message}`);
+        discoveryWarnings.push(`popular: ${error.message}`);
       }
     }
     discoveredVideos = uniqueByKey(discoveredVideos, (video) => video.bvid)
@@ -69,7 +80,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     if (discoveredVideos.length === 0) {
       return {
         ok: false,
-        error: discoveryWarnings[0] || 'No Bilibili videos were discovered from the backend search query.',
+        error: discoveryWarnings[0] || 'No Bilibili videos were discovered from the backend discovery mode.',
         warnings: discoveryWarnings,
       };
     }
@@ -104,6 +115,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     videos,
     discoveredVideos,
     searchQueries: videoLinks.length === 0 ? searchQueries : [],
+    discoveryMode: videoLinks.length === 0 ? discoveryMode : 'explicit',
     comments,
     commentText,
     source:

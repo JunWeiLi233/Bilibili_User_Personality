@@ -7,6 +7,8 @@ param(
   [int]$QueryVariantsPerTerm = 2,
   [int]$TargetEvidence = 3,
   [int]$Rounds = 1,
+  [ValidateSet("search", "popular", "mixed")]
+  [string]$DiscoveryMode = "search",
   [switch]$ResetHarvestState
 )
 
@@ -33,6 +35,7 @@ $env:BILIBILI_HARVEST_TERMS_PER_FAMILY = [string]$TermsPerFamily
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM = [string]$QueryVariantsPerTerm
 $env:BILIBILI_HARVEST_TARGET_EVIDENCE = [string]$TargetEvidence
 $env:BILIBILI_HARVEST_ROUNDS = [string]$Rounds
+$env:BILIBILI_VIDEO_DISCOVERY_MODE = $DiscoveryMode
 if ($ResetHarvestState) {
   $env:BILIBILI_HARVEST_RESET = "1"
 } else {
@@ -52,6 +55,7 @@ Write-Host "Dictionary terms per family: $TermsPerFamily"
 Write-Host "Query variants per term: $QueryVariantsPerTerm"
 Write-Host "Target evidence per term: $TargetEvidence"
 Write-Host "Harvest rounds: $Rounds"
+Write-Host "Discovery mode: $DiscoveryMode"
 Write-Host "Reset harvest state: $ResetHarvestState"
 Write-Host ""
 Write-Host "Harvesting dictionary-seeded Bilibili videos, scanning comments, and training the local keyword dictionary..."

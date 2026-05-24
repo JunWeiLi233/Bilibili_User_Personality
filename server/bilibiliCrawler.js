@@ -320,6 +320,20 @@ function videoObjectFromSearchItem(item) {
   };
 }
 
+function videoObjectFromPopularItem(item) {
+  return {
+    id: `video-1-${item.aid || item.bvid}`,
+    kind: 'video',
+    bvid: item.bvid,
+    oid: String(item.aid || ''),
+    replyType: 1,
+    title: item.title || item.bvid,
+    authorMid: String(item.owner?.mid || item.mid || ''),
+    sourceUrl: item.short_link_v2 || `https://www.bilibili.com/video/${item.bvid}/`,
+    replyCount: Number(item.stat?.reply || item.stat?.danmaku || 0),
+  };
+}
+
 export async function resolveBvid(bvid, deps = {}) {
   const requestJson = deps.fetchJson || fetchJson;
   const data = await requestJson(`https://api.bilibili.com/x/web-interface/view?bvid=${encodeURIComponent(bvid)}`);
@@ -345,6 +359,20 @@ export async function discoverVideosByKeyword(query, limit = 6, deps = {}) {
     .filter((item) => item?.bvid)
     .slice(0, pageSize)
     .map(videoObjectFromSearchItem);
+}
+
+export async function discoverPopularVideos(limit = 6, deps = {}) {
+  const requestJson = deps.fetchJson || fetchJson;
+  const pageSize = Math.max(1, Math.min(Number(limit || 6), 20));
+  const url = `https://api.bilibili.com/x/web-interface/popular?pn=1&ps=${pageSize}`;
+  const data = await requestJson(url, 'https://www.bilibili.com/v/popular/all');
+  if (data.code !== 0) {
+    throw new Error(data.message || `popular video discovery failed with code ${data.code}`);
+  }
+  return (data.data?.list || [])
+    .filter((item) => item?.bvid)
+    .slice(0, pageSize)
+    .map(videoObjectFromPopularItem);
 }
 
 export async function fetchUserCard(uid, deps = {}) {

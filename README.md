@@ -58,7 +58,7 @@ It also persists harvest state in `server/keywordHarvestState.json` and writes t
 To change what videos are discovered:
 
 ```powershell
-.\run-bilibili-video.ps1 -SearchQuery "A圣 评论区","中文互联网 梗" -MaxQueries 20 -Rounds 3 -DiscoveryLimit 8 -CommentPages 3
+.\run-bilibili-video.ps1 -SearchQuery "A圣 评论区","中文互联网 梗" -DiscoveryMode mixed -MaxQueries 20 -Rounds 3 -DiscoveryLimit 8 -CommentPages 3
 ```
 
 To revisit previously searched queries and videos:
@@ -71,6 +71,7 @@ You can also run the same backend task through npm:
 
 ```powershell
 $env:BILIBILI_VIDEO_SEARCH_QUERIES="中文互联网 阴阳怪气`n杠精 评论区"
+$env:BILIBILI_VIDEO_DISCOVERY_MODE="mixed"
 $env:BILIBILI_HARVEST_MAX_QUERIES="12"
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY="4"
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM="2"
@@ -110,6 +111,7 @@ $env:DEEPSEEK_BASE_URL="https://api.deepseek.com"
 $env:DEEPSEEK_MODEL="deepseek-v4-flash"
 $env:DEEPSEEK_REASONING_EFFORT="medium"
 $env:BILIBILI_VIDEO_SEARCH_QUERIES="中文互联网 阴阳怪气`n杠精 评论区"
+$env:BILIBILI_VIDEO_DISCOVERY_MODE="mixed"
 $env:BILIBILI_HARVEST_MAX_QUERIES="12"
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY="4"
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM="2"
@@ -151,5 +153,7 @@ The dictionary harvester is iterative. Run it repeatedly with different seed que
 To protect dictionary quality, model-generated keywords are accepted only when the cleaned term can be found in the crawled Bilibili comment text. Accepted entries include `evidenceCount` and `evidenceSamples` so each term can be audited against source comments. Terms without direct text evidence are counted as `evidenceRejected` in the harvest report and are not merged into the dictionary.
 
 Harvest query generation prioritizes weak-evidence dictionary entries first and can generate multiple Bilibili-oriented query variants per term through `BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM`. The report includes `coverage.weakTerms`, `coverage.zeroEvidenceTerms`, and `coverage.averageEvidence`, which helps choose whether to keep harvesting broad seed queries or focus on under-supported terms.
+
+`BILIBILI_VIDEO_DISCOVERY_MODE` controls where videos come from: `search` uses dictionary/seed queries, `popular` scans Bilibili public popular videos, and `mixed` combines both. `mixed` is useful when you want fresh Bilibili comment language that may not already be represented by the current dictionary.
 
 The scoring language is framed as behavior-risk analysis over a bounded public comment sample, not as a clinical diagnosis or definitive personality judgment.

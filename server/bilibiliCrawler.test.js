@@ -5,6 +5,7 @@ import {
   collectReplyForUid,
   dedupePublicObjects,
   discoverVideosByKeyword,
+  discoverPopularVideos,
   extractBvid,
   extractDynamicRecords,
   fetchJson,
@@ -44,6 +45,36 @@ test('discoverVideosByKeyword searches Bilibili and normalizes video objects', a
   assert.equal(seenUrls[0].url.includes('/x/web-interface/search/type'), true);
   assert.equal(seenUrls[0].url.includes('search_type=video'), true);
   assert.equal(seenUrls[0].referer.includes('search.bilibili.com'), true);
+});
+
+test('discoverPopularVideos reads public popular videos and normalizes video objects', async () => {
+  const seenUrls = [];
+  const videos = await discoverPopularVideos(2, {
+    fetchJson: async (url, referer) => {
+      seenUrls.push({ url: String(url), referer });
+      return {
+        code: 0,
+        data: {
+          list: [
+            {
+              aid: 456,
+              bvid: 'BV1xx411c7mD',
+              title: 'popular sample',
+              owner: { mid: 8 },
+              stat: { reply: 22 },
+            },
+          ],
+        },
+      };
+    },
+  });
+
+  assert.equal(videos.length, 1);
+  assert.equal(videos[0].bvid, 'BV1xx411c7mD');
+  assert.equal(videos[0].title, 'popular sample');
+  assert.equal(videos[0].replyCount, 22);
+  assert.equal(seenUrls[0].url.includes('/x/web-interface/popular'), true);
+  assert.equal(seenUrls[0].referer, 'https://www.bilibili.com/v/popular/all');
 });
 
 test('parseBvidPool accepts whitespace, comma, and Chinese comma separators', () => {

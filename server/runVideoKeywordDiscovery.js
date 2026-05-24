@@ -107,6 +107,7 @@ const targetEvidence = numberFromEnv('BILIBILI_HARVEST_TARGET_EVIDENCE', 3);
 const discoveryLimit = numberFromEnv('BILIBILI_VIDEO_DISCOVERY_LIMIT', 6);
 const pages = numberFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2);
 const rounds = numberFromEnv('BILIBILI_HARVEST_ROUNDS', 1);
+const discoveryMode = String(process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'search').trim().toLowerCase();
 const statePath = process.env.BILIBILI_HARVEST_STATE_PATH || DEFAULT_HARVEST_STATE_PATH;
 const reportPath = process.env.BILIBILI_HARVEST_REPORT_PATH || join(process.cwd(), 'server', 'keywordHarvestReport.json');
 const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
@@ -118,6 +119,7 @@ const result = await harvestKeywordDictionaryRounds({
   termsPerFamily,
   queryVariantsPerTerm,
   targetEvidence,
+  discoveryMode,
   discoveryLimit,
   pages,
   rounds,

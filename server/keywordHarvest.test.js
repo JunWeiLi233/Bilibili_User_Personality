@@ -145,7 +145,7 @@ test('harvestKeywordDictionary runs dictionary-seeded searches and reports growt
     assert.equal(result.ok, true);
     assert.deepEqual(result.queries, ['seed topic', 'doge Bilibili discussion comments']);
     assert.equal(searched.length, 2);
-    assert.deepEqual(searched[0], { searchQueries: ['seed topic'], discoveryLimit: 1, pages: 1, excludeBvids: [] });
+    assert.deepEqual(searched[0], { searchQueries: ['seed topic'], discoveryMode: undefined, discoveryLimit: 1, pages: 1, excludeBvids: [] });
     assert.equal(result.growth.added, 1);
     assert.equal(result.coverage.weakTerms, 2);
     assert.deepEqual(result.state.scannedBvids, ['BV1111111111', 'BV2222222222']);
@@ -207,6 +207,41 @@ test('harvestKeywordDictionary skips seen queries and videos from persistent sta
     const state = await readKeywordHarvestState(statePath);
     assert.deepEqual(state.searchedQueries, ['new seed', 'seed topic']);
     assert.deepEqual(state.scannedBvids, ['BV1111111111', 'BV2222222222']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary forwards discovery mode to video search', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-mode-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: ['seed topic'],
+        maxQueries: 1,
+        discoveryMode: 'mixed',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [] }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BV1111111111' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.equal(payloads[0].discoveryMode, 'mixed');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
