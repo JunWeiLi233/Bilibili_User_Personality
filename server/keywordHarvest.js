@@ -52,6 +52,11 @@ function termAttemptKey(term) {
   return Buffer.from(String(term || ''), 'utf8').toString('base64url');
 }
 
+function getTermAttempt(termAttempts, term) {
+  if (!termAttempts || typeof termAttempts !== 'object') return null;
+  return termAttempts[termAttemptKey(term)] || termAttempts[term] || null;
+}
+
 function sortEntriesForCoverage(entries) {
   return [...entries].sort((a, b) => evidenceCount(a) - evidenceCount(b) || String(a.term || '').localeCompare(String(b.term || '')));
 }
@@ -66,6 +71,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   const familyCounts = new Map();
   const dictionaryPlan = [];
   const variantsPerTerm = asPositiveInt(options.queryVariantsPerTerm, 2, TERM_QUERY_TEMPLATES.length);
+  const termAttempts = options.termAttempts && typeof options.termAttempts === 'object' ? options.termAttempts : {};
 
   for (const entry of entries) {
     const term = String(entry.term || '').trim();
@@ -74,13 +80,30 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
     const count = familyCounts.get(family) || 0;
     if (coverageMode !== 'all-weak' && count >= asPositiveInt(options.termsPerFamily, 4, 20)) continue;
     familyCounts.set(family, count + 1);
-    for (const template of TERM_QUERY_TEMPLATES.slice(0, variantsPerTerm)) {
+    const attempt = getTermAttempt(termAttempts, term);
+    const attempts = Math.max(0, Number(attempt?.attempts) || 0);
+    const successfulAttempts = Math.max(0, Number(attempt?.successfulAttempts) || 0);
+    const triedQueries = new Set((attempt?.queries || []).map((item) => item.query).filter(Boolean));
+    const adaptiveVariantsPerTerm =
+      coverageMode === 'all-weak' && attempts > 0 && successfulAttempts === 0
+        ? Math.min(TERM_QUERY_TEMPLATES.length, Math.max(variantsPerTerm, attempts + variantsPerTerm))
+        : variantsPerTerm;
+    const variants = TERM_QUERY_TEMPLATES.slice(0, adaptiveVariantsPerTerm).map((template, index) => ({
+      query: template(term, family),
+      variantIndex: index,
+    }));
+    const orderedVariants = coverageMode === 'all-weak' ? [...variants.filter((item) => !triedQueries.has(item.query)), ...variants.filter((item) => triedQueries.has(item.query))] : variants;
+    for (const variant of orderedVariants) {
       dictionaryPlan.push({
-        query: template(term, family),
+        query: variant.query,
         source: 'dictionary',
         term,
         family,
         evidenceCount: evidenceCount(entry),
+        priorAttempts: attempts,
+        priorSuccessfulAttempts: successfulAttempts,
+        variantIndex: variant.variantIndex,
+        previouslyTried: triedQueries.has(variant.query),
       });
     }
   }
@@ -193,7 +216,7 @@ export function summarizeTermAttempts(state = {}, dictionary = {}) {
   const successfulTerms = attemptedTerms.filter((item) => Number(item?.successfulAttempts) > 0);
   const entryTerms = new Set(entries.map((entry) => String(entry.term || '').trim()).filter(Boolean));
   const unattemptedTerms = entries
-    .filter((entry) => entry.term && !attempts[termAttemptKey(entry.term)] && !attempts[entry.term])
+    .filter((entry) => entry.term && !getTermAttempt(attempts, entry.term))
     .map((entry) => ({
       term: entry.term,
       family: entry.family,
@@ -241,7 +264,7 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
   if (!planItem?.term) return;
   const term = String(planItem.term).trim();
   const key = termAttemptKey(term);
-  const current = termAttempts[key] || {};
+  const current = getTermAttempt(termAttempts, term) || {};
   const evidenceTerms = collectEvidenceTerms(result);
   const evidenceEntry = [...(result?.entries || []), ...(result?.keywordTraining?.dictionaryEvidenceEntries || [])].find((entry) => entry?.term === term);
   const hit = evidenceTerms.has(term);
@@ -259,6 +282,7 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
     term,
     family: planItem.family || current.family || 'unknown',
     evidenceAtPlanTime: planItem.evidenceCount ?? current.evidenceAtPlanTime ?? 0,
+    lastVariantIndex: planItem.variantIndex ?? current.lastVariantIndex ?? null,
     attempts: Math.max(0, Number(current.attempts) || 0) + 1,
     successfulAttempts: Math.max(0, Number(current.successfulAttempts) || 0) + (hit ? 1 : 0),
     lastAttemptAt: finishedAt,
@@ -288,6 +312,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     queryVariantsPerTerm: options.queryVariantsPerTerm,
     targetEvidence: options.targetEvidence,
     coverageMode: options.coverageMode,
+    termAttempts: state.termAttempts,
   });
   const plan = (skipSeen ? candidatePlan.filter((item) => !searchedQuerySet.has(item.query)) : candidatePlan).slice(0, maxQueries);
   const candidateQueries = candidatePlan.map((item) => item.query);
@@ -373,6 +398,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     state: nextState,
     candidateQueries,
     queries,
+    plan,
     results,
     warnings,
     growth,

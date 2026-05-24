@@ -114,6 +114,10 @@ test('buildKeywordHarvestQueryPlan keeps dictionary term metadata for state trac
       term: 'doge',
       family: 'cooperation',
       evidenceCount: 0,
+      priorAttempts: 0,
+      priorSuccessfulAttempts: 0,
+      variantIndex: 0,
+      previouslyTried: false,
     },
     {
       query: 'doge Bilibili comments',
@@ -121,9 +125,45 @@ test('buildKeywordHarvestQueryPlan keeps dictionary term metadata for state trac
       term: 'doge',
       family: 'cooperation',
       evidenceCount: 0,
+      priorAttempts: 0,
+      priorSuccessfulAttempts: 0,
+      variantIndex: 1,
+      previouslyTried: false,
     },
     { query: 'seed topic', source: 'seed' },
   ]);
+});
+
+test('buildKeywordHarvestQueryPlan expands to untried variants for repeatedly missed terms', () => {
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 4,
+      queryVariantsPerTerm: 2,
+      termAttempts: {
+        doge: {
+          term: 'doge',
+          attempts: 2,
+          successfulAttempts: 0,
+          queries: [{ query: 'doge Bilibili discussion comments' }, { query: 'doge Bilibili comments' }],
+        },
+      },
+    },
+  );
+
+  assert.deepEqual(
+    plan.map((item) => [item.query, item.variantIndex, item.previouslyTried]),
+    [
+      ['doge B站 评论区', 2, false],
+      ['doge 哔哩哔哩 弹幕', 3, false],
+      ['doge Bilibili discussion comments', 0, true],
+      ['doge Bilibili comments', 1, true],
+    ],
+  );
 });
 
 
@@ -270,10 +310,63 @@ test('harvestKeywordDictionary runs dictionary-seeded searches and reports growt
     const dogeAttempt = Object.values(result.state.termAttempts).find((item) => item.term === 'doge');
     assert.equal(dogeAttempt.attempts, 1);
     assert.equal(dogeAttempt.successfulAttempts, 0);
+    assert.equal(dogeAttempt.lastVariantIndex, 0);
     const persisted = JSON.parse(await readFile(statePath, 'utf8'));
     assert.equal(persisted.runs.length, 1);
     assert.equal(persisted.runs[0].videosScanned, 2);
     assert.equal(persisted.runs[0].attemptedTerms, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary uses untried query variants after prior missed attempts', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-retry-variant-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await harvestKeywordDictionary(
+      {
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }] }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    const second = await harvestKeywordDictionary(
+      {
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }] }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV2222222222' }],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.deepEqual(second.queries, ['doge Bilibili comments']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

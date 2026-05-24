@@ -109,6 +109,7 @@ function serializeResult(result, statePath, reportPath) {
         evidenceRejected: item.result?.keywordTraining?.evidenceRejected || 0,
         existingDictionaryEvidence: item.result?.keywordTraining?.dictionaryEvidenceEntries || [],
         acceptedEvidenceCount: (item.result?.entries || []).reduce((sum, entry) => sum + (Number(entry.evidenceCount) || 0), 0),
+        plan: round.plan?.find((planItem) => planItem.query === item.query) || null,
         entries: item.result?.entries || [],
       })),
     })),
