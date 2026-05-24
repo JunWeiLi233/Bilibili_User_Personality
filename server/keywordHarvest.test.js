@@ -7,6 +7,7 @@ import test from 'node:test';
 import {
   buildKeywordHarvestQueries,
   harvestKeywordDictionary,
+  harvestKeywordDictionaryRounds,
   readKeywordHarvestState,
   summarizeDictionaryGrowth,
   summarizeEvidenceCoverage,
@@ -205,6 +206,48 @@ test('harvestKeywordDictionary skips seen queries and videos from persistent sta
     assert.deepEqual(second.results[0].result.excludeBvidsEcho, ['BV1111111111']);
     const state = await readKeywordHarvestState(statePath);
     assert.deepEqual(state.searchedQueries, ['new seed', 'seed topic']);
+    assert.deepEqual(state.scannedBvids, ['BV1111111111', 'BV2222222222']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionaryRounds keeps running new unseen queries across rounds', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-rounds-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const searched = [];
+    const result = await harvestKeywordDictionaryRounds(
+      {
+        seedQueries: ['seed one', 'seed two'],
+        maxQueries: 1,
+        rounds: 3,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [] }),
+        searchVideoKeywords: async (payload) => {
+          searched.push(payload.searchQueries[0]);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: payload.searchQueries[0] === 'seed one' ? 'BV1111111111' : 'BV2222222222' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.equal(result.ok, true);
+    assert.equal(result.requestedRounds, 3);
+    assert.equal(result.rounds.length, 3);
+    assert.deepEqual(result.rounds.map((round) => round.queries), [['seed one'], ['seed two'], []]);
+    assert.deepEqual(searched, ['seed one', 'seed two']);
+    const state = await readKeywordHarvestState(statePath);
+    assert.deepEqual(state.searchedQueries, ['seed one', 'seed two']);
     assert.deepEqual(state.scannedBvids, ['BV1111111111', 'BV2222222222']);
   } finally {
     await rm(dir, { recursive: true, force: true });

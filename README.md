@@ -58,7 +58,7 @@ It also persists harvest state in `server/keywordHarvestState.json` and writes t
 To change what videos are discovered:
 
 ```powershell
-.\run-bilibili-video.ps1 -SearchQuery "A圣 评论区","中文互联网 梗" -MaxQueries 20 -DiscoveryLimit 8 -CommentPages 3
+.\run-bilibili-video.ps1 -SearchQuery "A圣 评论区","中文互联网 梗" -MaxQueries 20 -Rounds 3 -DiscoveryLimit 8 -CommentPages 3
 ```
 
 To revisit previously searched queries and videos:
@@ -75,6 +75,7 @@ $env:BILIBILI_HARVEST_MAX_QUERIES="12"
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY="4"
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM="2"
 $env:BILIBILI_HARVEST_TARGET_EVIDENCE="3"
+$env:BILIBILI_HARVEST_ROUNDS="3"
 $env:BILIBILI_HARVEST_RESET="0"
 $env:BILIBILI_VIDEO_DISCOVERY_LIMIT="6"
 $env:BILIBILI_VIDEO_COMMENT_PAGES="2"
@@ -113,6 +114,7 @@ $env:BILIBILI_HARVEST_MAX_QUERIES="12"
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY="4"
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM="2"
 $env:BILIBILI_HARVEST_TARGET_EVIDENCE="3"
+$env:BILIBILI_HARVEST_ROUNDS="3"
 $env:BILIBILI_HARVEST_STATE_PATH="server/keywordHarvestState.json"
 $env:BILIBILI_HARVEST_REPORT_PATH="server/keywordHarvestReport.json"
 $env:BILIBILI_HARVEST_SKIP_SEEN="1"
@@ -144,7 +146,7 @@ $env:BILIBILI_CRAWLER_CACHE_TTL_MS="120000"
 
 The DeepSeek keyword trainer does not fine-tune model weights. It uses DeepSeek V4 as a dictionary extractor, then persists learned Chinese terms into the local dictionary used by the rule/semantic analyzer. If `DEEPSEEK_API_KEY` is missing or the API call fails, the app keeps running with the local rule fallback and reports that in the UI.
 
-The dictionary harvester is iterative. Run it repeatedly with different seed queries or larger `BILIBILI_HARVEST_MAX_QUERIES` values to expand coverage. By default it skips queries and BV ids already recorded in the harvest state. No crawler can prove it has gathered every possible Bilibili slang term, so the practical target is continued growth with zero duplicate dictionary terms and broader family coverage.
+The dictionary harvester is iterative. Run it repeatedly with different seed queries, larger `BILIBILI_HARVEST_MAX_QUERIES` values, or `BILIBILI_HARVEST_ROUNDS` greater than `1` to expand coverage in one command. By default it skips queries and BV ids already recorded in the harvest state. No crawler can prove it has gathered every possible Bilibili slang term, so the practical target is continued growth with zero duplicate dictionary terms and broader family coverage.
 
 To protect dictionary quality, model-generated keywords are accepted only when the cleaned term can be found in the crawled Bilibili comment text. Accepted entries include `evidenceCount` and `evidenceSamples` so each term can be audited against source comments. Terms without direct text evidence are counted as `evidenceRejected` in the harvest report and are not merged into the dictionary.
 

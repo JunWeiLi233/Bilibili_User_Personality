@@ -147,15 +147,16 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const skipSeen = options.skipSeen !== false;
   const state = options.resetState ? { version: 1, updatedAt: null, searchedQueries: [], scannedBvids: [], runs: [] } : await readKeywordHarvestState(statePath);
   const before = await readKeywordDictionary();
+  const searchedQuerySet = new Set(state.searchedQueries);
+  const scannedBvidSet = new Set(state.scannedBvids);
+  const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
   const candidateQueries = buildKeywordHarvestQueries(before, {
     seedQueries: options.seedQueries,
-    maxQueries: options.maxQueries,
+    maxQueries: skipSeen ? Math.min(100, maxQueries + searchedQuerySet.size) : maxQueries,
     termsPerFamily: options.termsPerFamily,
     queryVariantsPerTerm: options.queryVariantsPerTerm,
   });
-  const searchedQuerySet = new Set(state.searchedQueries);
-  const scannedBvidSet = new Set(state.scannedBvids);
-  const queries = skipSeen ? candidateQueries.filter((query) => !searchedQuerySet.has(query)) : candidateQueries;
+  const queries = (skipSeen ? candidateQueries.filter((query) => !searchedQuerySet.has(query)) : candidateQueries).slice(0, maxQueries);
   const results = [];
   const warnings = [];
 
@@ -224,5 +225,31 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     growth,
     coverage,
     dictionary: after,
+  };
+}
+
+export async function harvestKeywordDictionaryRounds(options = {}, deps = {}) {
+  const rounds = asPositiveInt(options.rounds, 1, 100);
+  const results = [];
+  for (let index = 0; index < rounds; index += 1) {
+    const result = await harvestKeywordDictionary(
+      {
+        ...options,
+        resetState: index === 0 ? options.resetState : false,
+      },
+      deps,
+    );
+    results.push(result);
+    if (result.queries.length === 0) break;
+  }
+  const last = results.at(-1) || null;
+  return {
+    ok: results.some((result) => result.ok),
+    requestedRounds: rounds,
+    rounds: results,
+    state: last?.state || null,
+    growth: last?.growth || null,
+    coverage: last?.coverage || null,
+    dictionary: last?.dictionary || null,
   };
 }
