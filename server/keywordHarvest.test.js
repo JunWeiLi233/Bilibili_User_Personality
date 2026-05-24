@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -251,6 +251,35 @@ test('buildKeywordHarvestQueryPlan runs priority queries before automatic covera
     ['weak 评论区 梗 热评', 'dictionary'],
     ['seed topic', 'seed'],
   ]);
+});
+
+test('buildKeywordHarvestQueryPlan annotates audit priority queries with term metadata', () => {
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [{ term: 'weak', family: 'attack', evidenceCount: 0 }],
+    },
+    {
+      priorityQueries: ['weak 评论区 梗 热评'],
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 1,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(plan[0], {
+    query: 'weak 评论区 梗 热评',
+    source: 'priority',
+    term: 'weak',
+    family: 'attack',
+    evidenceCount: 0,
+    sourcedEvidence: false,
+    priorAttempts: 0,
+    priorSuccessfulAttempts: 0,
+    variantIndex: null,
+    builtInVariant: true,
+    previouslyTried: false,
+  });
 });
 
 
@@ -827,6 +856,93 @@ test('harvestKeywordDictionary skips seen queries and videos from persistent sta
     const state = await readKeywordHarvestState(statePath);
     assert.deepEqual(state.searchedQueries, ['new seed', 'seed topic']);
     assert.deepEqual(state.scannedBvids, ['BV1111111111', 'BV2222222222']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary records term attempts for audit priority queries', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-priority-attempt-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const result = await harvestKeywordDictionary(
+      {
+        priorityQueries: ['weak 评论区 梗 热评'],
+        seedQueries: [],
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: 'weak', family: 'attack', evidenceCount: 0 }] }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    const attempt = Object.values(result.state.termAttempts).find((item) => item.term === 'weak');
+    assert.equal(attempt.attempts, 1);
+    assert.equal(attempt.successfulAttempts, 0);
+    assert.equal(attempt.lastQuery, 'weak 评论区 梗 热评');
+    assert.equal(attempt.queries[0].query, 'weak 评论区 梗 热评');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary backfills searched audit queries into term attempts', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-backfill-priority-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        searchedQueries: ['weak 评论区 梗 热评'],
+        scannedBvids: [],
+        termAttempts: {},
+        runs: [],
+      }),
+      'utf8',
+    );
+
+    const result = await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: 'weak', family: 'attack', evidenceCount: 0 }] }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.equal(result.backfilledAttempts, 1);
+    assert.deepEqual(result.queries, ['weak 评论区']);
+    const attempt = Object.values(result.state.termAttempts).find((item) => item.term === 'weak');
+    assert.equal(attempt.attempts, 2);
+    assert.equal(attempt.queries[0].query, 'weak 评论区 梗 热评');
+    assert.equal(attempt.queries[0].error, 'backfilled from searched query history');
+    assert.equal(attempt.queries[1].query, 'weak 评论区');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

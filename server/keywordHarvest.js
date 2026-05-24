@@ -126,6 +126,31 @@ function coverageActionRank(action) {
   );
 }
 
+function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
+  const actions = [...actionMap.values()];
+  return priorityQueries.map((query) => {
+    const matchedAction = actions.find(
+      (action) =>
+        action.nextQuery === query ||
+        (Array.isArray(action.suggestedQueries) && action.suggestedQueries.includes(query)),
+    );
+    if (!matchedAction) return { query, source: 'priority' };
+    return {
+      query,
+      source: 'priority',
+      term: matchedAction.term,
+      family: matchedAction.family,
+      evidenceCount: matchedAction.evidenceCount,
+      sourcedEvidence: matchedAction.sourcedEvidence,
+      priorAttempts: matchedAction.attempts,
+      priorSuccessfulAttempts: matchedAction.successfulAttempts,
+      variantIndex: null,
+      builtInVariant: true,
+      previouslyTried: false,
+    };
+  });
+}
+
 export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   const maxQueries = asPositiveInt(options.maxQueries, 12, 10000);
   const priorityQueries = unique(options.priorityQueries || []);
@@ -193,7 +218,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   }
 
   const seedPlan = seedQueries.map((query) => ({ query, source: 'seed' }));
-  const priorityPlan = priorityQueries.map((query) => ({ query, source: 'priority' }));
+  const priorityPlan = priorityPlanFromCoverageActions(priorityQueries, actionMap);
   const orderedPlan =
     coverageMode === 'all-weak'
       ? [...priorityPlan, ...dictionaryPlan, ...seedPlan]
@@ -541,6 +566,55 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
   };
 }
 
+function backfillTermAttemptsFromSearchedQueries(termAttempts, dictionary, searchedQueries, options = {}) {
+  const entries = Array.isArray(dictionary?.entries) ? dictionary.entries : [];
+  const searchedQuerySet = new Set(searchedQueries);
+  const templateCount = queryTemplatesFromOptions(options).length;
+  const backfilledAt = options.backfilledAt || new Date().toISOString();
+  let backfilled = 0;
+  for (const entry of entries) {
+    const term = String(entry.term || '').trim();
+    if (!term) continue;
+    const family = String(entry.family || 'attack').trim();
+    const key = termAttemptKey(term);
+    const current = getTermAttempt(termAttempts, term) || {};
+    const triedQueries = attemptedVariantQueries(current);
+    for (const variant of queryVariantsForTerm(term, family, templateCount, options)) {
+      if (!searchedQuerySet.has(variant.query) || triedQueries.has(variant.query)) continue;
+      const queryRecord = {
+        at: current.lastAttemptAt || backfilledAt,
+        query: variant.query,
+        ok: true,
+        hit: false,
+        videos: 0,
+        comments: 0,
+        error: 'backfilled from searched query history',
+      };
+      const previousQueries = Array.isArray(current.queries) ? current.queries : [];
+      const nextQueries = [...previousQueries, queryRecord].slice(-20);
+      termAttempts[key] = {
+        key,
+        term,
+        family: current.family || family,
+        evidenceAtPlanTime: current.evidenceAtPlanTime ?? evidenceCount(entry),
+        lastVariantIndex: variant.variantIndex,
+        attempts: Math.max(0, Number(current.attempts) || 0) + 1,
+        successfulAttempts: Math.max(0, Number(current.successfulAttempts) || 0),
+        lastAttemptAt: current.lastAttemptAt || backfilledAt,
+        lastSuccessfulAt: current.lastSuccessfulAt || null,
+        lastQuery: variant.query,
+        lastError: current.lastError || '',
+        lastEvidenceCount: Number(current.lastEvidenceCount) || 0,
+        queries: nextQueries,
+      };
+      Object.assign(current, termAttempts[key]);
+      triedQueries.add(variant.query);
+      backfilled += 1;
+    }
+  }
+  return backfilled;
+}
+
 export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
   const searchVideoKeywords = deps.searchVideoKeywords || defaultSearchVideoKeywords;
@@ -552,6 +626,11 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const searchedQuerySet = new Set(state.searchedQueries);
   const scannedBvidSet = new Set(state.scannedBvids);
   const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
+  const termAttempts = { ...state.termAttempts };
+  const backfilledAttempts = backfillTermAttemptsFromSearchedQueries(termAttempts, before, searchedQuerySet, {
+    ...options,
+    backfilledAt: state.updatedAt || new Date().toISOString(),
+  });
   const candidatePlan = buildKeywordHarvestQueryPlan(before, {
     priorityQueries: options.priorityQueries,
     seedQueries: options.seedQueries,
@@ -561,7 +640,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     targetEvidence: options.targetEvidence,
     coverageMode: options.coverageMode,
     requireSourceBackedEvidence: options.requireSourceBackedEvidence,
-    termAttempts: state.termAttempts,
+    termAttempts,
     extraQueryTemplates: options.extraQueryTemplates,
   });
   const plan = (skipSeen ? candidatePlan.filter((item) => !searchedQuerySet.has(item.query)) : candidatePlan).slice(0, maxQueries);
@@ -569,7 +648,6 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const queries = plan.map((item) => item.query);
   const results = [];
   const warnings = [];
-  const termAttempts = { ...state.termAttempts };
 
   for (const planItem of plan) {
     const query = planItem.query;
@@ -655,6 +733,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         successfulTerms: termAttemptSummary.successfulTerms,
         unattemptedTerms: termAttemptSummary.unattemptedTerms,
         exhaustedTerms: termAttemptSummary.exhaustedTerms,
+        backfilledAttempts,
         weakTerms: coverage.weakTerms,
         zeroEvidenceTerms: coverage.zeroEvidenceTerms,
         warnings: warnings.length,
@@ -665,6 +744,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
 
   return {
     ok: results.some((item) => item.result?.ok),
+    backfilledAttempts,
     state: nextState,
     candidateQueries,
     queries,
