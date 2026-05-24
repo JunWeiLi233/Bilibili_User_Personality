@@ -85,12 +85,31 @@ function envFlag(value, fallback = false) {
 }
 
 function buildVideoContextText(videos = []) {
-  return videos
-    .flatMap((video) => [video.title, video.desc, video.description])
-    .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
+  return uniqueByKey(
+    videos
+      .flatMap((video) => [video.title, video.desc, video.description])
+      .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
+      .filter(Boolean),
+    (item) => item,
+  )
     .map((item) => `Bilibili video context: ${item}`)
     .join('\n');
+}
+
+function videoContextSources(videos = [], discoveredVideos = []) {
+  return uniqueByKey(
+    [...videos, ...discoveredVideos].filter(Boolean),
+    (video) => `${video.bvid || ''}\n${video.sourceUrl || ''}\n${video.title || ''}`,
+  );
+}
+
+function videoContextSourceUrls(videos = [], discoveredVideos = []) {
+  return uniqueByKey(
+    [...videos, ...discoveredVideos]
+      .map((video) => String(video?.sourceUrl || '').trim())
+      .filter(Boolean),
+    (item) => item,
+  );
 }
 
 export async function searchVideoKeywords(payload = {}, deps = {}) {
@@ -162,6 +181,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     envFlag(process.env.BILIBILI_CONTROVERSIAL_INCLUDE_GENERIC_POPULAR, false);
   const discoveryWarnings = [];
   let discoveredVideos = [];
+  let discoveryContextVideos = [];
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
   const discoveryMode = String(payload.discoveryMode || deps.discoveryMode || process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial')
     .trim()
@@ -223,6 +243,10 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
         discoveryWarnings.push(`popular: ${error.message}`);
       }
     }
+    discoveryContextVideos = uniqueByKey(
+      discoveryGroups.flatMap((group) => group),
+      (video) => video.bvid || video.sourceUrl || video.title,
+    );
     discoveredVideos = roundRobinUnique(
       discoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
       discoveryLimit,
@@ -259,7 +283,8 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   );
   const videos = scans.map((scan) => scan.video);
   const commentText = comments.map((comment) => comment.message).filter(Boolean).join('\n');
-  const videoContextText = includeVideoContext ? buildVideoContextText(videos) : '';
+  const contextVideos = videoContextSources(videos, discoveryContextVideos.length ? discoveryContextVideos : discoveredVideos);
+  const videoContextText = includeVideoContext ? buildVideoContextText(contextVideos) : '';
   const trainingText = [commentText, videoContextText].filter((item) => item.trim()).join('\n');
   const primaryVideo = videos[0];
   const mergedScan = {
@@ -267,6 +292,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     video: primaryVideo,
     videos,
     discoveredVideos,
+    discoveryContextVideos,
     searchQueries: videoLinks.length === 0 ? searchQueries : [],
     controversyQueries: videoLinks.length === 0 && discoveryMode === 'controversial' ? controversyQueries : [],
     controversialPopularQueries:
@@ -300,10 +326,11 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   }
 
   const trainKeywordDictionary = deps.trainKeywordDictionary || defaultTrainKeywordDictionary;
+  const contextSourceUrls = videoContextSourceUrls(contextVideos);
   const keywordTraining = await trainKeywordDictionary({
     uid: videos.map((video) => video.bvid).join(','),
     text: trainingText,
-    source: `${mergedScan.source}${videoContextText ? ' plus video context' : ''}: ${videos.map((video) => video.sourceUrl).join(', ')}`,
+    source: `${mergedScan.source}${videoContextText ? ' plus video context' : ''}: ${contextSourceUrls.join(', ')}`,
     existingTermsOnly,
   });
 
