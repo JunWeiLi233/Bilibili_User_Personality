@@ -9,6 +9,20 @@ export const DEFAULT_VIDEO_SEARCH_QUERY =
   process.env.BILIBILI_VIDEO_SEARCH_QUERIES ||
   process.env.BILIBILI_VIDEO_SEARCH_QUERY ||
   '\u4e2d\u6587\u4e92\u8054\u7f51 \u9634\u9633\u602a\u6c14';
+export const DEFAULT_CONTROVERSY_SEARCH_QUERIES =
+  process.env.BILIBILI_CONTROVERSY_SEARCH_QUERIES ||
+  [
+    '\u65f6\u653f \u8bc4\u8bba\u533a',
+    '\u56fd\u9645\u653f\u6cbb \u8bc4\u8bba\u533a',
+    '\u793e\u4f1a\u4e8b\u4ef6 \u8bc4\u8bba\u533a',
+    '\u6e38\u620f \u8282\u594f \u8bc4\u8bba\u533a',
+    '\u539f\u795e \u8282\u594f',
+    '\u9ed1\u795e\u8bdd \u4e89\u8bae',
+    '\u7537\u5973\u5bf9\u7acb \u8bc4\u8bba\u533a',
+    '\u996d\u5708 \u4e89\u8bae',
+    '\u5386\u53f2\u4e89\u8bae \u8bc4\u8bba\u533a',
+    '\u79d1\u6280\u516c\u53f8 \u4e89\u8bae',
+  ].join('\n');
 
 function parseList(value) {
   if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean);
@@ -20,6 +34,25 @@ function parseList(value) {
 
 function uniqueByKey(items, keyFn) {
   return [...new Map(items.filter(Boolean).map((item) => [keyFn(item), item])).values()];
+}
+
+function roundRobinUnique(groups, limit, keyFn) {
+  const seen = new Set();
+  const results = [];
+  const buckets = groups.map((group) => group.filter(Boolean));
+  const maxLength = Math.max(0, ...buckets.map((group) => group.length));
+  for (let index = 0; index < maxLength && results.length < limit; index += 1) {
+    for (const group of buckets) {
+      const item = group[index];
+      if (!item) continue;
+      const key = keyFn(item);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      results.push(item);
+      if (results.length >= limit) break;
+    }
+  }
+  return results;
 }
 
 function parseSet(value) {
@@ -46,6 +79,13 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       deps.defaultSearchQuery ||
       DEFAULT_VIDEO_SEARCH_QUERY,
   );
+  const controversyQueries = parseList(
+    payload.controversyQueries ||
+      payload.controversyQuery ||
+      deps.defaultControversyQueries ||
+      deps.defaultControversyQuery ||
+      DEFAULT_CONTROVERSY_SEARCH_QUERIES,
+  );
   const discoveryLimit = Math.max(
     1,
     Math.min(Number(payload.discoveryLimit || deps.discoveryLimit || process.env.BILIBILI_VIDEO_DISCOVERY_LIMIT || 6), 20),
@@ -53,30 +93,57 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const discoveryWarnings = [];
   let discoveredVideos = [];
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
-  const discoveryMode = String(payload.discoveryMode || deps.discoveryMode || process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'search').trim().toLowerCase();
+  const discoveryMode = String(payload.discoveryMode || deps.discoveryMode || process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial')
+    .trim()
+    .toLowerCase();
 
   if (videoLinks.length === 0) {
+    const discoveryGroups = [];
     if (discoveryMode === 'search' || discoveryMode === 'mixed') {
       const discoverVideos = deps.discoverVideosByKeyword || discoverVideosByKeyword;
+      const group = [];
       for (const query of searchQueries) {
         try {
-          discoveredVideos.push(...(await discoverVideos(query, discoveryLimit, deps)));
+          group.push(...(await discoverVideos(query, discoveryLimit, deps)));
         } catch (error) {
           discoveryWarnings.push(`${query}: ${error.message}`);
         }
       }
+      discoveryGroups.push(group);
     }
-    if (discoveryMode === 'popular' || discoveryMode === 'mixed') {
+    if (discoveryMode === 'controversial') {
+      const discoverVideos = deps.discoverVideosByKeyword || discoverVideosByKeyword;
+      const controversyGroup = [];
+      const searchGroup = [];
+      for (const query of controversyQueries) {
+        try {
+          controversyGroup.push(...(await discoverVideos(query, discoveryLimit, deps)));
+        } catch (error) {
+          discoveryWarnings.push(`${query}: ${error.message}`);
+        }
+      }
+      for (const query of searchQueries) {
+        try {
+          searchGroup.push(...(await discoverVideos(query, discoveryLimit, deps)));
+        } catch (error) {
+          discoveryWarnings.push(`${query}: ${error.message}`);
+        }
+      }
+      discoveryGroups.push(controversyGroup, searchGroup);
+    }
+    if (discoveryMode === 'popular' || discoveryMode === 'mixed' || discoveryMode === 'controversial') {
       const discoverPopular = deps.discoverPopularVideos || discoverPopularVideos;
       try {
-        discoveredVideos.push(...(await discoverPopular(discoveryLimit, deps)));
+        discoveryGroups.push(await discoverPopular(discoveryLimit, deps));
       } catch (error) {
         discoveryWarnings.push(`popular: ${error.message}`);
       }
     }
-    discoveredVideos = uniqueByKey(discoveredVideos, (video) => video.bvid)
-      .filter((video) => !excludeBvids.has(video.bvid))
-      .slice(0, discoveryLimit);
+    discoveredVideos = roundRobinUnique(
+      discoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
+      discoveryLimit,
+      (video) => video.bvid,
+    );
     if (discoveredVideos.length === 0) {
       return {
         ok: false,
@@ -115,6 +182,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     videos,
     discoveredVideos,
     searchQueries: videoLinks.length === 0 ? searchQueries : [],
+    controversyQueries: videoLinks.length === 0 && discoveryMode === 'controversial' ? controversyQueries : [],
     discoveryMode: videoLinks.length === 0 ? discoveryMode : 'explicit',
     comments,
     commentText,

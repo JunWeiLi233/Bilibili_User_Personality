@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { DEFAULT_VIDEO_LINK, DEFAULT_VIDEO_SEARCH_QUERY, searchVideoKeywords } from './videoKeywordSearch.js';
+import { DEFAULT_CONTROVERSY_SEARCH_QUERIES, DEFAULT_VIDEO_LINK, DEFAULT_VIDEO_SEARCH_QUERY, searchVideoKeywords } from './videoKeywordSearch.js';
 
 test('searchVideoKeywords discovers backend videos when no video link is provided', async () => {
   const requestedUrls = [];
   const result = await searchVideoKeywords(
-    { pages: 1, discoveryLimit: 1 },
+    { pages: 1, discoveryLimit: 1, discoveryMode: 'search' },
     {
       discoverVideosByKeyword: async (query, limit) => {
         assert.equal(query, DEFAULT_VIDEO_SEARCH_QUERY);
@@ -50,6 +50,7 @@ test('searchVideoKeywords skips already harvested discovered videos', async () =
   const result = await searchVideoKeywords(
     {
       searchQuery: 'seed topic',
+      discoveryMode: 'search',
       discoveryLimit: 2,
       excludeBvids: ['BV19yGa61Ee6'],
       pages: 1,
@@ -153,6 +154,56 @@ test('searchVideoKeywords mixed discovery combines search and popular sources', 
   assert.equal(result.ok, true);
   assert.equal(result.discoveryMode, 'mixed');
   assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1search001', 'BV1popular01']);
+});
+
+test('searchVideoKeywords controversial discovery mixes controversy seeds, search, and popular videos', async () => {
+  const queried = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: 'dictionary term comments',
+      controversyQueries: ['politics debate', 'game drama'],
+      discoveryMode: 'controversial',
+      discoveryLimit: 3,
+      pages: 1,
+    },
+    {
+      discoverVideosByKeyword: async (query) => {
+        queried.push(query);
+        if (query === 'politics debate') return [{ bvid: 'BV1politics1', sourceUrl: 'https://www.bilibili.com/video/BV1politics1/' }];
+        if (query === 'game drama') return [{ bvid: 'BV1gameDrama', sourceUrl: 'https://www.bilibili.com/video/BV1gameDrama/' }];
+        return [{ bvid: 'BV1dictionary', sourceUrl: 'https://www.bilibili.com/video/BV1dictionary/' }];
+      },
+      discoverPopularVideos: async () => [{ bvid: 'BV1popular01', sourceUrl: 'https://www.bilibili.com/video/BV1popular01/' }],
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.discoveryMode, 'controversial');
+  assert.deepEqual(queried, ['politics debate', 'game drama', 'dictionary term comments']);
+  assert.deepEqual(result.controversyQueries, ['politics debate', 'game drama']);
+  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1politics1', 'BV1dictionary', 'BV1popular01']);
+});
+
+test('default controversy seed list includes debate-heavy Bilibili topics', () => {
+  const seeds = DEFAULT_CONTROVERSY_SEARCH_QUERIES.split('\n');
+  assert.equal(seeds.some((seed) => seed.includes('\u65f6\u653f')), true);
+  assert.equal(seeds.some((seed) => seed.includes('\u6e38\u620f')), true);
+  assert.equal(seeds.some((seed) => seed.includes('\u4e89\u8bae') || seed.includes('\u8282\u594f')), true);
 });
 
 test('searchVideoKeywords scans video comments and trains keyword dictionary', async () => {

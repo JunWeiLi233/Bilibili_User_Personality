@@ -164,6 +164,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     try {
       const result = await searchVideoKeywords({
         searchQueries: [query],
+        controversyQueries: options.controversyQueries,
         discoveryMode: options.discoveryMode,
         discoveryLimit: options.discoveryLimit,
         pages: options.pages,

@@ -1,5 +1,6 @@
 param(
   [string[]]$SearchQuery = @(),
+  [string[]]$ControversyQuery = @(),
   [int]$DiscoveryLimit = 6,
   [int]$CommentPages = 2,
   [int]$MaxQueries = 12,
@@ -7,8 +8,8 @@ param(
   [int]$QueryVariantsPerTerm = 2,
   [int]$TargetEvidence = 3,
   [int]$Rounds = 1,
-  [ValidateSet("search", "popular", "mixed")]
-  [string]$DiscoveryMode = "search",
+  [ValidateSet("search", "popular", "mixed", "controversial")]
+  [string]$DiscoveryMode = "controversial",
   [switch]$ResetHarvestState
 )
 
@@ -27,6 +28,11 @@ if ($SearchQuery.Count -gt 0) {
   $env:BILIBILI_VIDEO_SEARCH_QUERIES = ($SearchQuery -join "`n")
 } else {
   Remove-Item Env:\BILIBILI_VIDEO_SEARCH_QUERIES -ErrorAction SilentlyContinue
+}
+if ($ControversyQuery.Count -gt 0) {
+  $env:BILIBILI_CONTROVERSY_SEARCH_QUERIES = ($ControversyQuery -join "`n")
+} else {
+  Remove-Item Env:\BILIBILI_CONTROVERSY_SEARCH_QUERIES -ErrorAction SilentlyContinue
 }
 $env:BILIBILI_VIDEO_DISCOVERY_LIMIT = [string]$DiscoveryLimit
 $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
@@ -47,6 +53,14 @@ if ($SearchQuery.Count -gt 0) {
   $SearchQuery | ForEach-Object { Write-Host " - $_" }
 } else {
   Write-Host " - using backend default search query"
+}
+if ($DiscoveryMode -eq "controversial") {
+  Write-Host "Controversy discovery queries:"
+  if ($ControversyQuery.Count -gt 0) {
+    $ControversyQuery | ForEach-Object { Write-Host " - $_" }
+  } else {
+    Write-Host " - using backend default controversy seeds"
+  }
 }
 Write-Host "Discovery limit: $DiscoveryLimit"
 Write-Host "Comment pages per video: $CommentPages"

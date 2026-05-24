@@ -51,11 +51,23 @@ cd D:\Bilibili_User_Personality
 .\run-bilibili-video.ps1
 ```
 
-The script does not require video links. It reads the current local dictionary, turns existing terms into Bilibili search queries, discovers videos, scans public comments, trains the keyword dictionary, and prints a coverage/growth report.
+The script does not require video links. By default it uses backend `controversial` discovery: debate-heavy Bilibili search seeds such as politics/current affairs, games, social issues, fandom disputes, and tech-company disputes are mixed with dictionary-generated queries and public popular videos. It then scans public comments, trains the keyword dictionary, and prints a coverage/growth report.
 
 It also persists harvest state in `server/keywordHarvestState.json` and writes the latest report to `server/keywordHarvestReport.json`. These local files are ignored by Git because they are run-specific data.
 
 To change what videos are discovered:
+
+```powershell
+.\run-bilibili-video.ps1 -ControversyQuery "时政 评论区","游戏 节奏 评论区","社会事件 评论区" -MaxQueries 20 -Rounds 3 -DiscoveryLimit 8 -CommentPages 3
+```
+
+You can also combine your own dictionary-oriented search queries with the controversy seeds:
+
+```powershell
+.\run-bilibili-video.ps1 -SearchQuery "阴阳怪气 评论区","杠精 评论区" -ControversyQuery "国际政治 评论区","原神 节奏","黑神话 争议" -DiscoveryMode controversial
+```
+
+Legacy `mixed` mode is still available when you only want dictionary/seed search plus public popular videos:
 
 ```powershell
 .\run-bilibili-video.ps1 -SearchQuery "A圣 评论区","中文互联网 梗" -DiscoveryMode mixed -MaxQueries 20 -Rounds 3 -DiscoveryLimit 8 -CommentPages 3
@@ -71,7 +83,8 @@ You can also run the same backend task through npm:
 
 ```powershell
 $env:BILIBILI_VIDEO_SEARCH_QUERIES="中文互联网 阴阳怪气`n杠精 评论区"
-$env:BILIBILI_VIDEO_DISCOVERY_MODE="mixed"
+$env:BILIBILI_CONTROVERSY_SEARCH_QUERIES="时政 评论区`n游戏 节奏 评论区`n社会事件 评论区"
+$env:BILIBILI_VIDEO_DISCOVERY_MODE="controversial"
 $env:BILIBILI_HARVEST_MAX_QUERIES="12"
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY="4"
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM="2"
@@ -94,7 +107,7 @@ In the app:
 
 - Click `后端默认视频` to run backend video discovery or the configured backend video links.
 - Or paste a UID, Bilibili video URL, or `BV` id into the `B 站 UID / 视频链接` search box.
-- If no explicit backend video link is configured, default video discovery uses `BILIBILI_VIDEO_SEARCH_QUERY` or `BILIBILI_VIDEO_SEARCH_QUERIES`.
+- If no explicit backend video link is configured, default video discovery uses `controversial` mode. It reads `BILIBILI_CONTROVERSY_SEARCH_QUERIES` for debate-heavy topics and `BILIBILI_VIDEO_SEARCH_QUERY` / `BILIBILI_VIDEO_SEARCH_QUERIES` for extra dictionary-oriented queries.
 
 For DeepSeek V4 keyword training, configure an API key before starting the server:
 
@@ -111,7 +124,8 @@ $env:DEEPSEEK_BASE_URL="https://api.deepseek.com"
 $env:DEEPSEEK_MODEL="deepseek-v4-flash"
 $env:DEEPSEEK_REASONING_EFFORT="medium"
 $env:BILIBILI_VIDEO_SEARCH_QUERIES="中文互联网 阴阳怪气`n杠精 评论区"
-$env:BILIBILI_VIDEO_DISCOVERY_MODE="mixed"
+$env:BILIBILI_CONTROVERSY_SEARCH_QUERIES="时政 评论区`n游戏 节奏 评论区`n社会事件 评论区"
+$env:BILIBILI_VIDEO_DISCOVERY_MODE="controversial"
 $env:BILIBILI_HARVEST_MAX_QUERIES="12"
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY="4"
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM="2"
@@ -154,6 +168,6 @@ To protect dictionary quality, model-generated keywords are accepted only when t
 
 Harvest query generation prioritizes weak-evidence dictionary entries first and can generate multiple Bilibili-oriented query variants per term through `BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM`. The report includes `coverage.weakTerms`, `coverage.zeroEvidenceTerms`, and `coverage.averageEvidence`, which helps choose whether to keep harvesting broad seed queries or focus on under-supported terms.
 
-`BILIBILI_VIDEO_DISCOVERY_MODE` controls where videos come from: `search` uses dictionary/seed queries, `popular` scans Bilibili public popular videos, and `mixed` combines both. `mixed` is useful when you want fresh Bilibili comment language that may not already be represented by the current dictionary.
+`BILIBILI_VIDEO_DISCOVERY_MODE` controls where videos come from: `search` uses dictionary/seed queries, `popular` scans Bilibili public popular videos, `mixed` combines both, and `controversial` rotates across controversy-topic searches, dictionary/seed queries, and public popular videos. `controversial` is the script default because it is better for finding fast-changing argument language from politics/current affairs, games, social issues, fandom disputes, and other debate-heavy areas. Override the default seeds with `BILIBILI_CONTROVERSY_SEARCH_QUERIES` or the PowerShell `-ControversyQuery` parameter.
 
 The scoring language is framed as behavior-risk analysis over a bounded public comment sample, not as a clinical diagnosis or definitive personality judgment.

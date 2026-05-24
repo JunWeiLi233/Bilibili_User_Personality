@@ -100,6 +100,7 @@ function serializeResult(result, statePath, reportPath) {
 }
 
 const seedQueries = parseList(process.env.BILIBILI_VIDEO_SEARCH_QUERIES || process.env.BILIBILI_VIDEO_SEARCH_QUERY);
+const controversyQueries = parseList(process.env.BILIBILI_CONTROVERSY_SEARCH_QUERIES || process.env.BILIBILI_CONTROVERSY_SEARCH_QUERY);
 const maxQueries = numberFromEnv('BILIBILI_HARVEST_MAX_QUERIES', seedQueries.length || 12);
 const termsPerFamily = numberFromEnv('BILIBILI_HARVEST_TERMS_PER_FAMILY', 4);
 const queryVariantsPerTerm = numberFromEnv('BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM', 2);
@@ -107,7 +108,7 @@ const targetEvidence = numberFromEnv('BILIBILI_HARVEST_TARGET_EVIDENCE', 3);
 const discoveryLimit = numberFromEnv('BILIBILI_VIDEO_DISCOVERY_LIMIT', 6);
 const pages = numberFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2);
 const rounds = numberFromEnv('BILIBILI_HARVEST_ROUNDS', 1);
-const discoveryMode = String(process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'search').trim().toLowerCase();
+const discoveryMode = String(process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial').trim().toLowerCase();
 const statePath = process.env.BILIBILI_HARVEST_STATE_PATH || DEFAULT_HARVEST_STATE_PATH;
 const reportPath = process.env.BILIBILI_HARVEST_REPORT_PATH || join(process.cwd(), 'server', 'keywordHarvestReport.json');
 const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
@@ -115,6 +116,7 @@ const skipSeen = process.env.BILIBILI_HARVEST_SKIP_SEEN !== '0';
 
 const result = await harvestKeywordDictionaryRounds({
   seedQueries,
+  controversyQueries,
   maxQueries,
   termsPerFamily,
   queryVariantsPerTerm,
