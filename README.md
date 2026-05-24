@@ -20,7 +20,6 @@ Research-driven prototype for evaluating whether a selected Bilibili user's publ
   - Reads Bilibili public profile/card data for the UID.
   - Discovers public submissions and dynamic posts from Bilibili public endpoints.
   - Scans comments around those public objects and filters interactions by `mid`.
-  - Accepts an optional BV seed pool only as extra Bilibili public objects.
   - Does not call AICU, third-party indexes, or external websites as a substitute for UID comment crawling.
 - Built-in public test samples from Bilibili video `BV19yGa61Ee6`.
 
@@ -41,6 +40,6 @@ npm run build
 
 ## Notes
 
-The automatic collector uses Bilibili public endpoints directly. It does not use AICU, third-party comment indexes, scraping libraries, or external websites to replace UID crawling. If Bilibili rate-limits a public endpoint, the optional BV seed pool can add more public Bilibili objects for the same local scanner.
+The automatic collector uses Bilibili public endpoints directly. It does not use AICU, third-party comment indexes, scraping libraries, or external websites to replace UID crawling.
 
 The scoring language is framed as behavior-risk analysis over a bounded public comment sample, not as a clinical diagnosis or definitive personality judgment.

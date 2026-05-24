@@ -622,14 +622,12 @@ function App() {
   const [profiles, setProfiles] = React.useState(defaultUsers);
   const [selectedId, setSelectedId] = React.useState(defaultUsers[0].id);
   const [activeError, setActiveError] = React.useState('全部');
-  const [query, setQuery] = React.useState('山前反证员');
+  const [query, setQuery] = React.useState('');
   const [uid, setUid] = React.useState('UID 349872641');
   const [commentText, setCommentText] = React.useState(sampleTextA);
-  const [autoUid, setAutoUid] = React.useState('');
-  const [bvidPool, setBvidPool] = React.useState('');
   const [fetchState, setFetchState] = React.useState({
     status: 'idle',
-    message: '输入 UID 后会直接扫描 B 站公开资料、投稿、动态和可评论对象；BV 视频池只是可选补充种子。',
+    message: '输入 UID 后会直接扫描 B 站公开资料、投稿、动态和可评论对象。',
   });
   const [analysisMode, setAnalysisMode] = React.useState('hybrid');
   const [customLexicon, setCustomLexicon] = React.useState(() => {
@@ -642,7 +640,6 @@ function App() {
   const [analysisState, setAnalysisState] = React.useState('ready');
 
   const runtimeLexicon = React.useMemo(() => buildRuntimeLexicon(customLexicon), [customLexicon]);
-  const candidateTerms = React.useMemo(() => extractCandidateTerms(commentText, runtimeLexicon), [commentText, runtimeLexicon]);
   const selectedUser = profiles.find((user) => user.id === selectedId) || profiles[0];
   const trollIndex = getTrollIndex(selectedUser);
   const errorTypes = ['全部', ...new Set(selectedUser.errors.map((error) => error.type))];
@@ -655,39 +652,21 @@ function App() {
     window.localStorage.setItem('bili-argument-lexicon', JSON.stringify(customLexicon));
   }, [customLexicon]);
 
-  const addTermToLexicon = (family, term) => {
-    setCustomLexicon((current) => {
-      const nextTerms = [...new Set([...(current[family] || []), term])];
-      return { ...current, [family]: nextTerms };
-    });
-  };
-
-  const runAnalysis = () => {
-    setAnalysisState('loading');
-    window.setTimeout(() => {
-      const generated = scoreComments({ name: query, uid, text: commentText, runtimeLexicon, analysisMode });
-      setProfiles((current) => [generated, ...current.filter((item) => !item.id.startsWith('generated-'))]);
-      setSelectedId(generated.id);
-      setActiveError('全部');
-      setAnalysisState('ready');
-    }, 360);
-  };
-
-  const loadSample = (sample, profile) => {
-    setQuery(profile.name);
-    setUid(profile.uid);
-    setCommentText(sample);
-  };
-
   const fetchUidComments = async () => {
+    const searchUid = query.trim().match(/\d+/)?.[0] || '';
+    if (!searchUid) {
+      setFetchState({ status: 'error', message: '请输入数字 UID。' });
+      return;
+    }
+    setAnalysisState('loading');
     setFetchState({ status: 'loading', message: '正在直接扫描该 UID 的公开投稿、动态与评论互动...' });
     try {
       const response = await fetch('/api/bilibili/analyze-uid', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          uid: autoUid,
-          bvidPool,
+          uid: searchUid,
+          bvidPool: '',
           objectLimit: 12,
           dynamicLimit: 12,
           pagesPerObject: 5,
@@ -699,20 +678,36 @@ function App() {
           status: 'error',
           message: `${data.error}${data.details ? ` (${data.details})` : ''}`,
         });
+        setAnalysisState('ready');
         return;
       }
-      setQuery(data.uname || `UID ${data.uid}`);
+      setQuery(data.uid);
       setUid(`mid ${data.uid}`);
-      setCommentText(data.commentText || '');
+      const nextCommentText = data.commentText || '';
+      setCommentText(nextCommentText);
       const statementCount = data.statements?.length ?? data.comments.length;
       const dynamicCount = data.dynamics?.length ?? 0;
       const postCount = data.authoredPosts?.length ?? 0;
+      if (statementCount > 0) {
+        const generated = scoreComments({
+          name: data.uname || `UID ${data.uid}`,
+          uid: `mid ${data.uid}`,
+          text: nextCommentText,
+          runtimeLexicon,
+          analysisMode,
+        });
+        setProfiles((current) => [generated, ...current.filter((item) => !item.id.startsWith('generated-'))]);
+        setSelectedId(generated.id);
+        setActiveError('全部');
+      }
       setFetchState({
         status: statementCount > 0 ? 'ready' : 'empty',
         message: `扫描 ${data.objects?.length ?? data.videos.length} 个公开对象（视频 ${data.videos.length} / 动态 ${dynamicCount}），采集 ${postCount} 条公开动态原文与 ${data.comments.length} 条该 UID 评论互动。${data.confidenceHint}。${data.warnings?.length ? `警告：${data.warnings.join('；')}` : ''}`,
       });
+      setAnalysisState('ready');
     } catch (error) {
       setFetchState({ status: 'error', message: `采集失败：${error.message}。请确认已运行 npm run server。` });
+      setAnalysisState('ready');
     }
   };
 
@@ -736,23 +731,24 @@ function App() {
             <div className="eyebrow"><MagnifyingGlass size={16} /> research first</div>
             <h1>用话语行为而不是静态词表识别“杠精倾向”。</h1>
             <p>
-              新版把中文梗、谐音、反讽当作动态语境问题处理。词表只做辅助召回，核心判断转向：
-              是否回应原命题、是否转向人身或阵营、是否转移举证责任、是否愿意修正。
+              输入 UID 后直接扫描 B 站公开资料、投稿、动态和评论互动，再用话语行为模型生成画像。
+              词表只做辅助召回，核心判断转向：是否回应原命题、是否转向人身或阵营、是否转移举证责任、是否愿意修正。
             </p>
             <div className="search-row">
-              <label htmlFor="user-query">目标用户</label>
+              <label htmlFor="user-query">B 站 UID / mid</label>
               <div>
                 <input
                   id="user-query"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="输入 UID、昵称或样本标签"
+                  placeholder="例如 453244911"
                 />
-                <button type="button" onClick={runAnalysis}>
+                <button type="button" onClick={fetchUidComments} disabled={analysisState === 'loading'}>
                   <Lightning size={17} weight="fill" />
-                  {analysisState === 'loading' ? '分析中' : '生成画像'}
+                  {analysisState === 'loading' ? '抓取中' : '搜索 UID'}
                 </button>
               </div>
+              <p className={`fetch-status fetch-${fetchState.status}`}>{fetchState.message}</p>
             </div>
           </section>
 
@@ -772,108 +768,6 @@ function App() {
         </div>
       </section>
 
-      <section className="input-section">
-        <div className="input-grid">
-          <div>
-            <span className="eyebrow"><ClipboardText size={16} /> sample intake</span>
-            <h2>输入 UID，自动围绕公开对象抓取发言</h2>
-            <p>系统会直接请求 B 站公开接口：读取 UID 的公开资料、投稿、动态，再围绕这些对象扫描评论区并过滤该 UID 的公开互动；额外 BV 只作为补充种子。</p>
-            <div className="crawler-box">
-              <label htmlFor="auto-uid">B 站 UID / mid</label>
-              <input
-                id="auto-uid"
-                value={autoUid}
-                onChange={(event) => setAutoUid(event.target.value)}
-                placeholder="例如 1438219989"
-              />
-              <label htmlFor="bvid-pool">可选 BV 补充种子，空格或逗号分隔</label>
-              <textarea
-                id="bvid-pool"
-                value={bvidPool}
-                onChange={(event) => setBvidPool(event.target.value)}
-                placeholder="可留空；例如 BV19yGa61Ee6 BVxxxx"
-              />
-              <button type="button" onClick={fetchUidComments} disabled={fetchState.status === 'loading'}>
-                {fetchState.status === 'loading' ? '抓取中' : '自动抓取公开发言'}
-              </button>
-              <p className={`fetch-status fetch-${fetchState.status}`}>{fetchState.message}</p>
-            </div>
-            <div className="mode-selector" role="tablist" aria-label="分析模式">
-              {analysisModes.map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  className={analysisMode === mode.id ? 'active' : ''}
-                  onClick={() => setAnalysisMode(mode.id)}
-                >
-                  <strong>{mode.label}</strong>
-                  <span>{mode.description}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="comment-form">
-            <label htmlFor="uid-input">UID 或来源说明</label>
-            <input id="uid-input" value={uid} onChange={(event) => setUid(event.target.value)} />
-            <label htmlFor="comment-input">评论样本</label>
-            <textarea id="comment-input" value={commentText} onChange={(event) => setCommentText(event.target.value)} />
-            <div className="sample-actions">
-              <button type="button" onClick={() => loadSample(sampleTextA, { name: '山前反证员', uid: 'UID 349872641' })}>
-                载入高风险样本
-              </button>
-              <button type="button" onClick={() => loadSample(sampleTextB, { name: '冷启动观测站', uid: 'UID 68190422' })}>
-                载入混合样本
-              </button>
-              {bilibiliFetchedSamples.map((sample) => (
-                <button key={sample.uid} type="button" onClick={() => loadSample(sample.text, sample)}>
-                  载入{sample.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="lexicon-section">
-        <div className="lexicon-grid">
-          <div>
-            <span className="eyebrow"><Brain size={16} /> adaptive lexicon</span>
-            <h2>智能语库降级为辅助证据</h2>
-            <p>
-              系统仍会追踪梗、谐音和近义变体，但它们只进入“风险提示”。真正影响最高权重的是话语行为：
-              攻击对象、举证责任、命题回应和修正意愿。
-            </p>
-          </div>
-          <div className="family-list">
-            {lexiconFamilies.map((family) => (
-              <article key={family.key}>
-                <strong>{family.label}</strong>
-                <p>{family.description}</p>
-                <span>{[...family.examples, ...(customLexicon[family.key] || [])].slice(0, 8).join(' / ')}</span>
-              </article>
-            ))}
-          </div>
-          <div className="candidate-panel">
-            <div className="section-title">
-              <WarningCircle size={18} />
-              <span>样本内疑似新词</span>
-            </div>
-            <div className="candidate-list">
-              {candidateTerms.length === 0 ? (
-                <p>当前样本没有明显新词候选。可以继续粘贴更多评论提高召回率。</p>
-              ) : (
-                candidateTerms.map((item) => (
-                  <button key={`${item.term}-${item.family}`} type="button" onClick={() => addTermToLexicon(item.family, item.term)}>
-                    <strong>{item.term}</strong>
-                    <span>加入{lexiconFamilies.find((family) => family.key === item.family)?.label}</span>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="workspace">
         <aside className="user-rail">
           <div className="rail-title">
@@ -888,7 +782,7 @@ function App() {
               onClick={() => {
                 setSelectedId(user.id);
                 setActiveError('全部');
-                setQuery(user.name);
+                setQuery(user.uid.match(/\d+/)?.[0] || '');
                 setUid(user.uid);
               }}
             >
