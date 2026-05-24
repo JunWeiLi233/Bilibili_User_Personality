@@ -75,6 +75,33 @@ const lexicons = {
   fallacy: ['所以你就是', '其实就是', '哪个不是', '都一个样', '不然不会', '还谈', '根本不是'],
 };
 
+const lexiconFamilies = [
+  {
+    key: 'attack',
+    label: '攻击/嘲讽语义族',
+    description: '不只抓脏词，也抓“资格审查、阴阳怪气、二人称羞辱、阵营标签”。',
+    examples: ['你急了', '典', '孝', '洗地', '懂哥'],
+  },
+  {
+    key: 'absolutes',
+    label: '绝对化断言语义族',
+    description: '用于识别高认知闭合：全称判断、必然化、零例外表达。',
+    examples: ['全是', '必然', '根本', '没有一个', '早就'],
+  },
+  {
+    key: 'evasion',
+    label: '举证回避语义族',
+    description: '关注“把证明责任推给对方”的话术，而不是单个固定短语。',
+    examples: ['自己查', '懂的都懂', '不解释', '这还用问'],
+  },
+  {
+    key: 'cooperation',
+    label: '合作性修正语义族',
+    description: '保留反向证据，避免把正常反驳误判成杠。',
+    examples: ['可能', '不一定', '我说重了', '可以补充'],
+  },
+];
+
 const fallacyRules = [
   {
     type: '逻辑错误',
@@ -115,6 +142,15 @@ const fallacyRules = [
 
 const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
 
+function buildRuntimeLexicon(customLexicon = {}) {
+  return Object.fromEntries(
+    Object.entries(lexicons).map(([key, terms]) => {
+      const customTerms = customLexicon[key] || [];
+      return [key, [...new Set([...terms, ...customTerms])]];
+    }),
+  );
+}
+
 function countMatches(text, terms) {
   return terms.reduce((sum, term) => sum + (text.split(term).length - 1), 0);
 }
@@ -146,6 +182,41 @@ function classifyError(comment, index, totalComments) {
   return null;
 }
 
+function inferCandidateFamily(term, sourceLine) {
+  if (/[都全根必肯没无]/.test(term) || /(所有|全部|根本|肯定|必然)/.test(sourceLine)) return 'absolutes';
+  if (/(搜|查|解释|懂)/.test(term) || /(你自己搜|懂的都懂|懒得解释)/.test(sourceLine)) return 'evasion';
+  if (/(可能|如果|数据|来源|补充|更正)/.test(sourceLine)) return 'cooperation';
+  return 'attack';
+}
+
+function extractCandidateTerms(text, runtimeLexicon) {
+  const known = new Set(Object.values(runtimeLexicon).flat());
+  const stop = new Set(['这个', '不是', '就是', '一下', '观点', '评论', '数据', '来源', '如果', '可以', '没有', '因为']);
+  const candidates = new Map();
+  splitComments(text).forEach((line) => {
+    const compact = line.replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g, '');
+    for (let size = 2; size <= 4; size += 1) {
+      for (let index = 0; index <= compact.length - size; index += 1) {
+        const term = compact.slice(index, index + size);
+        if (known.has(term) || stop.has(term) || /^\d+$/.test(term)) continue;
+        const contextBoost = /你|都|全|洗|急|懂|孝|典|赢|绷|乐|搜|查|根|肯/.test(term) ? 2 : 1;
+        const item = candidates.get(term) || {
+          term,
+          score: 0,
+          sourceLine: line,
+          family: inferCandidateFamily(term, line),
+        };
+        item.score += contextBoost;
+        candidates.set(term, item);
+      }
+    }
+  });
+  return [...candidates.values()]
+    .filter((item) => item.score >= 2)
+    .sort((a, b) => b.score - a.score || b.term.length - a.term.length)
+    .slice(0, 8);
+}
+
 function normalizeForRisk(score) {
   return INVERSE_AXES.has(score.axis) ? 100 - score.value : score.value;
 }
@@ -170,7 +241,7 @@ function getTrollIndex(user) {
   );
 }
 
-function scoreComments({ name, uid, text }) {
+function scoreComments({ name, uid, text, runtimeLexicon = lexicons }) {
   const comments = splitComments(text);
   const joined = comments.join('\n');
   const total = Math.max(comments.length, 1);
@@ -178,12 +249,12 @@ function scoreComments({ name, uid, text }) {
   const density = (terms) => countMatches(joined, terms) / total;
   const perThousand = (terms) => (countMatches(joined, terms) / chars) * 1000;
 
-  const attack = density(lexicons.attack);
-  const closure = density(lexicons.absolutes);
-  const evidence = density(lexicons.evidence);
-  const evasion = density(lexicons.evasion);
-  const cooperation = density(lexicons.cooperation);
-  const correction = density(lexicons.correction);
+  const attack = density(runtimeLexicon.attack);
+  const closure = density(runtimeLexicon.absolutes);
+  const evidence = density(runtimeLexicon.evidence);
+  const evasion = density(runtimeLexicon.evasion);
+  const cooperation = density(runtimeLexicon.cooperation);
+  const correction = density(runtimeLexicon.correction);
   const fallacyCount = comments.reduce((sum, comment) => {
     return sum + fallacyRules.filter((rule) => rule.pattern.test(comment)).length;
   }, 0);
@@ -210,19 +281,19 @@ function scoreComments({ name, uid, text }) {
       axis: '对抗性动机',
       value: clamp(28 + attack * 24 + perThousand(lexicons.attack) * 2.8),
       benchmark: 52,
-      note: `攻击/讥讽词密度 ${perThousand(lexicons.attack).toFixed(1)} / 千字。`,
+      note: `攻击/讥讽语义族密度 ${perThousand(runtimeLexicon.attack).toFixed(1)} / 千字。`,
     },
     {
       axis: '认知闭合',
       value: clamp(30 + closure * 18 + perThousand(lexicons.absolutes) * 2.2),
       benchmark: 49,
-      note: `绝对化表达密度 ${perThousand(lexicons.absolutes).toFixed(1)} / 千字。`,
+      note: `绝对化语义族密度 ${perThousand(runtimeLexicon.absolutes).toFixed(1)} / 千字。`,
     },
     {
       axis: '证据敏感',
       value: clamp(55 + evidence * 16 - evasion * 22),
       benchmark: 58,
-      note: `证据词 ${countMatches(joined, lexicons.evidence)} 次，举证回避 ${countMatches(joined, lexicons.evasion)} 次。`,
+      note: `证据词 ${countMatches(joined, runtimeLexicon.evidence)} 次，举证回避 ${countMatches(joined, runtimeLexicon.evasion)} 次。`,
     },
     {
       axis: '逻辑一致',
@@ -234,13 +305,13 @@ function scoreComments({ name, uid, text }) {
       axis: '合作讨论',
       value: clamp(46 + cooperation * 18 - attack * 16 - evasion * 12),
       benchmark: 55,
-      note: `澄清、让步或条件化表达 ${countMatches(joined, lexicons.cooperation)} 次。`,
+      note: `澄清、让步或条件化表达 ${countMatches(joined, runtimeLexicon.cooperation)} 次。`,
     },
     {
       axis: '修正意愿',
       value: clamp(36 + correction * 28 + cooperation * 8 - evasion * 12),
       benchmark: 46,
-      note: `修正或承认表达 ${countMatches(joined, lexicons.correction)} 次。`,
+      note: `修正或承认表达 ${countMatches(joined, runtimeLexicon.correction)} 次。`,
     },
   ].map((score) => ({ ...score, value: Math.round(score.value) }));
 
@@ -359,8 +430,17 @@ function App() {
   const [query, setQuery] = React.useState('山前反证员');
   const [uid, setUid] = React.useState('UID 349872641');
   const [commentText, setCommentText] = React.useState(sampleTextA);
+  const [customLexicon, setCustomLexicon] = React.useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem('bili-argument-lexicon') || '{}');
+    } catch {
+      return {};
+    }
+  });
   const [analysisState, setAnalysisState] = React.useState('ready');
 
+  const runtimeLexicon = React.useMemo(() => buildRuntimeLexicon(customLexicon), [customLexicon]);
+  const candidateTerms = React.useMemo(() => extractCandidateTerms(commentText, runtimeLexicon), [commentText, runtimeLexicon]);
   const selectedUser = profiles.find((user) => user.id === selectedId) || profiles[0];
   const trollIndex = getTrollIndex(selectedUser);
   const errorTypes = ['全部', ...new Set(selectedUser.errors.map((error) => error.type))];
@@ -369,10 +449,21 @@ function App() {
       ? selectedUser.errors
       : selectedUser.errors.filter((error) => error.type === activeError);
 
+  React.useEffect(() => {
+    window.localStorage.setItem('bili-argument-lexicon', JSON.stringify(customLexicon));
+  }, [customLexicon]);
+
+  const addTermToLexicon = (family, term) => {
+    setCustomLexicon((current) => {
+      const nextTerms = [...new Set([...(current[family] || []), term])];
+      return { ...current, [family]: nextTerms };
+    });
+  };
+
   const runAnalysis = () => {
     setAnalysisState('loading');
     window.setTimeout(() => {
-      const generated = scoreComments({ name: query, uid, text: commentText });
+      const generated = scoreComments({ name: query, uid, text: commentText, runtimeLexicon });
       setProfiles((current) => [generated, ...current.filter((item) => !item.id.startsWith('generated-'))]);
       setSelectedId(generated.id);
       setActiveError('全部');
@@ -461,6 +552,46 @@ function App() {
               <button type="button" onClick={() => loadSample(sampleTextB, { name: '冷启动观测站', uid: 'UID 68190422' })}>
                 载入混合样本
               </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lexicon-section">
+        <div className="lexicon-grid">
+          <div>
+            <span className="eyebrow"><Brain size={16} /> adaptive lexicon</span>
+            <h2>智能语库：用语义族追踪梗、谐音和近义变体</h2>
+            <p>
+              规则不再只依赖固定词。系统把词放进“攻击、绝对化、举证回避、合作修正”等语义族，
+              同时从当前样本挖掘高频候选词，允许人工加入本地语库后重新生成画像。
+            </p>
+          </div>
+          <div className="family-list">
+            {lexiconFamilies.map((family) => (
+              <article key={family.key}>
+                <strong>{family.label}</strong>
+                <p>{family.description}</p>
+                <span>{[...family.examples, ...(customLexicon[family.key] || [])].slice(0, 8).join(' / ')}</span>
+              </article>
+            ))}
+          </div>
+          <div className="candidate-panel">
+            <div className="section-title">
+              <WarningCircle size={18} />
+              <span>样本内疑似新词</span>
+            </div>
+            <div className="candidate-list">
+              {candidateTerms.length === 0 ? (
+                <p>当前样本没有明显新词候选。可以继续粘贴更多评论提高召回率。</p>
+              ) : (
+                candidateTerms.map((item) => (
+                  <button key={`${item.term}-${item.family}`} type="button" onClick={() => addTermToLexicon(item.family, item.term)}>
+                    <strong>{item.term}</strong>
+                    <span>加入{lexiconFamilies.find((family) => family.key === item.family)?.label}</span>
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>

@@ -256,6 +256,12 @@ h1 {
   padding: 28px clamp(18px, 4vw, 54px) 0;
 }
 
+.lexicon-section {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 14px clamp(18px, 4vw, 54px) 0;
+}
+
 .input-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.72fr) minmax(360px, 1fr);
@@ -324,6 +330,98 @@ h1 {
   padding: 8px 10px;
   border-radius: 4px;
   font-size: 13px;
+}
+
+.lexicon-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(360px, 1fr) minmax(280px, 0.72fr);
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  background: #20231f;
+  color: #f4f1ea;
+}
+
+.lexicon-grid h2 {
+  margin-top: 8px;
+  font-size: clamp(24px, 2.8vw, 36px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.lexicon-grid > div > p,
+.candidate-list p {
+  margin-top: 12px;
+  color: #cbc4b5;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.family-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.family-list article {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.family-list strong {
+  display: block;
+  font-size: 14px;
+}
+
+.family-list p {
+  margin-top: 7px;
+  color: #c8c0ae;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.family-list span {
+  display: block;
+  margin-top: 9px;
+  color: #edd27a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.candidate-panel {
+  min-width: 0;
+}
+
+.candidate-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.candidate-list button {
+  min-width: 0;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f1ea;
+  border-radius: 4px;
+}
+
+.candidate-list button strong,
+.candidate-list button span {
+  display: block;
+}
+
+.candidate-list button strong {
+  font-size: 15px;
+}
+
+.candidate-list button span {
+  margin-top: 4px;
+  color: #bda96e;
+  font-size: 12px;
 }
 
 .user-rail,
@@ -784,7 +882,12 @@ mark {
   .hero-grid,
   .workspace,
   .input-grid,
+  .lexicon-grid,
   .radar-card {
+    grid-template-columns: 1fr;
+  }
+
+  .family-list {
     grid-template-columns: 1fr;
   }
 
