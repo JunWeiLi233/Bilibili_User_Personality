@@ -14,6 +14,7 @@ Research-driven frontend prototype for evaluating whether a selected Bilibili us
   - 修正意愿
 - A dedicated comment-error highlight area for logic errors, factual errors, semantic substitution, emotional framing, and unsupported assertions.
 - A research-first interface connecting online disinhibition, motivated reasoning, need for cognitive closure, and pragma-dialectical fallacy analysis to UI evidence.
+- A local sample intake area: paste one Bilibili comment per line, enter a UID or label, and generate a new radar profile with evidence-backed error highlights.
 
 ## Run Locally
 
@@ -30,4 +31,4 @@ npm run build
 
 ## Notes
 
-This prototype uses mock Bilibili comment samples. The scoring language is intentionally framed as behavior-risk analysis over a bounded comment sample, not as a clinical diagnosis or definitive personality judgment.
+This prototype ships with mock Bilibili comment samples and also supports pasted local samples. The scoring language is intentionally framed as behavior-risk analysis over a bounded comment sample, not as a clinical diagnosis or definitive personality judgment.

@@ -250,6 +250,82 @@ h1 {
   padding: 28px clamp(18px, 4vw, 54px);
 }
 
+.input-section {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 28px clamp(18px, 4vw, 54px) 0;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(360px, 1fr);
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.input-grid h2 {
+  margin-top: 8px;
+  color: #1d1c1a;
+  font-size: clamp(26px, 3.2vw, 42px);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.input-grid p {
+  margin-top: 14px;
+  color: #5a544b;
+  line-height: 1.65;
+}
+
+.comment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-form label {
+  color: #4c473f;
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.comment-form input,
+.comment-form textarea {
+  width: 100%;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  outline: 0;
+  background: #fffdf7;
+  color: #1c1c1b;
+  padding: 12px;
+}
+
+.comment-form input:focus,
+.comment-form textarea:focus {
+  border-color: #2f5d50;
+}
+
+.comment-form textarea {
+  min-height: 150px;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.sample-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sample-actions button {
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  background: transparent;
+  color: #4f4a42;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
 .user-rail,
 .analysis-core,
 .error-panel {
@@ -448,6 +524,15 @@ h1 {
   color: #635d53;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.score-row em {
+  display: block;
+  margin-top: 5px;
+  color: #8a3f33;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
 }
 
 .score-row b {
@@ -698,6 +783,7 @@ mark {
 
   .hero-grid,
   .workspace,
+  .input-grid,
   .radar-card {
     grid-template-columns: 1fr;
   }

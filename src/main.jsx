@@ -17,136 +17,11 @@ import {
 } from '@phosphor-icons/react';
 import './styles.css';
 
-const researchFrames = [
-  {
-    label: '线上去抑制',
-    source: 'Suler, 2004',
-    claim: '匿名性、不可见性与异步反馈会降低自我约束，使挑衅更容易发生。',
-  },
-  {
-    label: '动机性推理',
-    source: 'Kunda / confirmation bias literature',
-    claim: '个体会选择性寻找支持自身立场的信息，并更苛刻地处理反证。',
-  },
-  {
-    label: '认知闭合需求',
-    source: 'Webster & Kruglanski, 1994',
-    claim: '高闭合需求者倾向快速定论，回避歧义和条件化解释。',
-  },
-  {
-    label: '语用论辩',
-    source: 'van Eemeren & Grootendorst',
-    claim: '谬误可视为破坏批判性讨论规则的语言行动。',
-  },
-];
-
-const users = [
-  {
-    id: 'u-4771',
-    uid: 'UID 349872641',
-    name: '山前反证员',
-    bio: '科技区、社会议题高频评论者',
-    sampleSize: 186,
-    analyzed: 142,
-    confidence: 0.82,
-    stanceSwitchRate: 0.08,
-    disagreementRate: 0.71,
-    scores: [
-      { axis: '对抗性动机', value: 84, benchmark: 52, note: '否定式开场和二人称指责显著高于样本基线。' },
-      { axis: '认知闭合', value: 76, benchmark: 49, note: '较少使用条件限定，倾向把复杂问题压缩成单一原因。' },
-      { axis: '证据敏感', value: 31, benchmark: 58, note: '被要求给证据时，多次转向反问或资格审查。' },
-      { axis: '逻辑一致', value: 38, benchmark: 61, note: '常见偷换概念、稻草人和以偏概全。' },
-      { axis: '合作讨论', value: 27, benchmark: 55, note: '少有澄清问题，更多是重申立场或转移焦点。' },
-      { axis: '修正意愿', value: 18, benchmark: 46, note: '被指出事实错误后，承认或修正比例偏低。' },
-    ],
-    errors: [
-      {
-        id: 'e-01',
-        type: '逻辑错误',
-        severity: '高',
-        comment: '你连这个都不懂还谈产业？国产替代就是骗补，哪个不是 PPT 项目？',
-        highlight: '哪个不是 PPT 项目',
-        diagnosis: '以偏概全 + 人身资格攻击。把部分失败案例扩展为全称判断，同时用“你懂不懂”替代论证。',
-        evidence: '同主题 19 条评论中，15 条使用全称词，只有 2 条给出可核验案例。',
-        confidence: 0.88,
-      },
-      {
-        id: 'e-02',
-        type: '事实错误',
-        severity: '中',
-        comment: 'B 站早就没有长视频创作者了，都是切片号。',
-        highlight: '早就没有长视频创作者',
-        diagnosis: '事实断言缺证。绝对化描述与平台仍存在长视频投稿的可观察事实冲突。',
-        evidence: '评论未附来源；相邻回复中被要求给数据后转向“你自己搜”。',
-        confidence: 0.74,
-      },
-      {
-        id: 'e-03',
-        type: '语义偷换',
-        severity: '高',
-        comment: '你说要看数据，其实就是给资本洗地。',
-        highlight: '看数据 = 给资本洗地',
-        diagnosis: '将方法论要求偷换成立场归属，破坏共同检验命题的讨论条件。',
-        evidence: '近 30 天内 11 次把“证据/数据/来源”改写成阵营标签。',
-        confidence: 0.91,
-      },
-      {
-        id: 'e-04',
-        type: '情绪化表达',
-        severity: '中',
-        comment: '笑死，这种观点也有人信，真是被营销洗傻了。',
-        highlight: '洗傻了',
-        diagnosis: '羞辱性标签提高冲突收益，降低被讨论对象的可反驳性。',
-        evidence: '嘲讽词密度为 6.4 / 千字，高于对照评论集 P85。',
-        confidence: 0.79,
-      },
-    ],
-  },
-  {
-    id: 'u-9210',
-    uid: 'UID 68190422',
-    name: '冷启动观测站',
-    bio: '数码区、游戏区混合评论者',
-    sampleSize: 94,
-    analyzed: 87,
-    confidence: 0.69,
-    stanceSwitchRate: 0.21,
-    disagreementRate: 0.48,
-    scores: [
-      { axis: '对抗性动机', value: 53, benchmark: 52, note: '反驳频率偏高，但羞辱性语言不突出。' },
-      { axis: '认知闭合', value: 45, benchmark: 49, note: '偶尔快速定论，也会接受局部条件。' },
-      { axis: '证据敏感', value: 62, benchmark: 58, note: '经常要求来源，并能回应部分反证。' },
-      { axis: '逻辑一致', value: 57, benchmark: 61, note: '存在类比过强问题，但主张结构大体清晰。' },
-      { axis: '合作讨论', value: 64, benchmark: 55, note: '有澄清和让步，讨论推进性较好。' },
-      { axis: '修正意愿', value: 49, benchmark: 46, note: '修正意愿接近样本均值。' },
-    ],
-    errors: [
-      {
-        id: 'e-11',
-        type: '逻辑错误',
-        severity: '低',
-        comment: '这个优化像上次那款一样翻车，所以估计也撑不了多久。',
-        highlight: '像上次那款一样',
-        diagnosis: '弱类比。两个案例的硬件、版本和用户群差异未被控制。',
-        evidence: '同类类比错误 4 次，均出现在游戏性能讨论中。',
-        confidence: 0.61,
-      },
-      {
-        id: 'e-12',
-        type: '缺证断言',
-        severity: '中',
-        comment: '厂家肯定偷偷降规格了，不然不会这样。',
-        highlight: '肯定偷偷降规格',
-        diagnosis: '把单一结果直接归因到隐藏动机，缺少排除性证据。',
-        evidence: '未比较批次、固件、使用环境；后续承认“只是猜测”。',
-        confidence: 0.67,
-      },
-    ],
-  },
-];
+const AXES = ['对抗性动机', '认知闭合', '证据敏感', '逻辑一致', '合作讨论', '修正意愿'];
+const INVERSE_AXES = new Set(['证据敏感', '逻辑一致', '合作讨论', '修正意愿']);
 
 const axisDescriptions = {
-  对抗性动机: '从否定式开场、挑衅动词、二人称攻击和冲突升级词估计。',
+  对抗性动机: '从否定式开场、挑衅动词、二人称攻击、讥讽和冲突升级词估计。',
   认知闭合: '从绝对化副词、单因归因、拒绝歧义与快速定论模式估计。',
   证据敏感: '从来源引用、反证回应、数据修正和“你自己搜”回避率估计，数值越低风险越高。',
   逻辑一致: '从谬误标签、概念稳定性、前后矛盾和论证链完整度估计，数值越低风险越高。',
@@ -154,9 +29,131 @@ const axisDescriptions = {
   修正意愿: '从被纠错后的承认、补充、沉默、转移话题和反击比例估计，数值越低风险越高。',
 };
 
+const researchFrames = [
+  {
+    label: '线上去抑制',
+    source: 'Suler, 2004',
+    claim: '匿名性、不可见性与异步反馈会降低自我约束，使挑衅和羞辱性表达更容易出现。',
+  },
+  {
+    label: '动机性推理',
+    source: 'Kunda, 1990',
+    claim: '人会选择性寻找支持自身立场的信息，并对反证采用更高的怀疑门槛。',
+  },
+  {
+    label: '认知闭合需求',
+    source: 'Webster & Kruglanski, 1994',
+    claim: '高闭合需求者倾向快速定论，回避歧义、条件限定和多因解释。',
+  },
+  {
+    label: '语用论辩',
+    source: 'van Eemeren & Grootendorst',
+    claim: '谬误可视为破坏批判性讨论规则的语言行动，而不是单纯“说话难听”。',
+  },
+];
+
+const sampleTextA = `你连这个都不懂还谈产业？国产替代就是骗补，哪个不是 PPT 项目？
+B 站早就没有长视频创作者了，都是切片号。
+你说要看数据，其实就是给资本洗地。
+笑死，这种观点也有人信，真是被营销洗傻了。
+别扯什么来源，你自己搜一下不就知道了。
+所有支持这个观点的人都一个样，根本不是讨论问题。`;
+
+const sampleTextB = `这个优化像上次那款一样翻车，所以估计也撑不了多久。
+厂家肯定偷偷降规格了，不然不会这样。
+我看了一下评测数据，可能是固件版本不同，前面那句我说重了。
+如果有更完整的来源可以贴一下，我愿意改结论。
+这个类比不一定准确，但目前样本里确实有两个相似案例。`;
+
+const lexicons = {
+  attack: ['你懂', '洗傻', '笑死', '智商', '脑子', '蠢', '跪', '急了', '别扯', '装', '洗地', '你连'],
+  absolutes: ['所有', '全部', '都是', '从来', '永远', '肯定', '必然', '早就没有', '哪个不是', '根本'],
+  evidence: ['数据', '来源', '论文', '报告', '统计', '样本', '链接', '证据', '评测', '引用'],
+  evasion: ['你自己搜', '这还用说', '懂的都懂', '懒得解释', '不解释', '自己查'],
+  cooperation: ['如果', '可能', '不一定', '我理解', '你是说', '能否', '可以贴', '我愿意', '补充', '限定'],
+  correction: ['我错了', '我说重了', '更正', '修正', '前面那句', '改结论', '承认', '确实'],
+  fallacy: ['所以你就是', '其实就是', '哪个不是', '都一个样', '不然不会', '还谈', '根本不是'],
+};
+
+const fallacyRules = [
+  {
+    type: '逻辑错误',
+    severity: '高',
+    pattern: /(哪个不是|所有|全部|都一个样|都是).{0,18}/,
+    label: '以偏概全',
+    diagnosis: '把有限观察扩展成全称判断，未说明样本边界和例外条件。',
+  },
+  {
+    type: '语义偷换',
+    severity: '高',
+    pattern: /(其实就是|所以你就是).{0,18}/,
+    label: '立场归因',
+    diagnosis: '把方法论要求或局部观点改写成阵营身份，降低命题本身的可讨论性。',
+  },
+  {
+    type: '事实错误',
+    severity: '中',
+    pattern: /(早就没有|从来没有|不可能|必然).{0,18}/,
+    label: '绝对化事实断言',
+    diagnosis: '使用强事实断言但未给出处，容易与可观察反例冲突。',
+  },
+  {
+    type: '缺证断言',
+    severity: '中',
+    pattern: /(肯定|不然不会|懂的都懂|你自己搜).{0,18}/,
+    label: '证据转移',
+    diagnosis: '把举证责任推给对方，或把猜测包装成确定结论。',
+  },
+  {
+    type: '情绪化表达',
+    severity: '中',
+    pattern: /(笑死|洗傻|智商|脑子|蠢|急了).{0,18}/,
+    label: '羞辱性标签',
+    diagnosis: '用贬损标签替代论证，提高冲突收益但降低讨论推进性。',
+  },
+];
+
+const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
+
+function countMatches(text, terms) {
+  return terms.reduce((sum, term) => sum + (text.split(term).length - 1), 0);
+}
+
+function splitComments(text) {
+  return text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function classifyError(comment, index, totalComments) {
+  for (const rule of fallacyRules) {
+    const match = comment.match(rule.pattern);
+    if (match) {
+      const highlight = match[0].trim();
+      return {
+        id: `generated-${index}`,
+        type: rule.type,
+        severity: rule.severity,
+        comment,
+        highlight,
+        diagnosis: `${rule.label}。${rule.diagnosis}`,
+        evidence: `该片段来自第 ${index + 1}/${totalComments} 条评论；同类规则命中表示需要人工复核原语境。`,
+        confidence: rule.severity === '高' ? 0.84 : 0.72,
+      };
+    }
+  }
+  return null;
+}
+
 function normalizeForRisk(score) {
-  const inverse = new Set(['证据敏感', '逻辑一致', '合作讨论', '修正意愿']);
-  return inverse.has(score.axis) ? 100 - score.value : score.value;
+  return INVERSE_AXES.has(score.axis) ? 100 - score.value : score.value;
+}
+
+function getRiskBand(index) {
+  if (index >= 70) return '高风险对抗型';
+  if (index >= 45) return '混合争辩型';
+  return '低风险讨论型';
 }
 
 function getTrollIndex(user) {
@@ -173,6 +170,103 @@ function getTrollIndex(user) {
   );
 }
 
+function scoreComments({ name, uid, text }) {
+  const comments = splitComments(text);
+  const joined = comments.join('\n');
+  const total = Math.max(comments.length, 1);
+  const chars = Math.max(joined.length, 1);
+  const density = (terms) => countMatches(joined, terms) / total;
+  const perThousand = (terms) => (countMatches(joined, terms) / chars) * 1000;
+
+  const attack = density(lexicons.attack);
+  const closure = density(lexicons.absolutes);
+  const evidence = density(lexicons.evidence);
+  const evasion = density(lexicons.evasion);
+  const cooperation = density(lexicons.cooperation);
+  const correction = density(lexicons.correction);
+  const fallacyCount = comments.reduce((sum, comment) => {
+    return sum + fallacyRules.filter((rule) => rule.pattern.test(comment)).length;
+  }, 0);
+
+  const errors = comments.map((comment, index) => classifyError(comment, index, total)).filter(Boolean);
+  const fallbackErrors =
+    errors.length > 0
+      ? errors
+      : [
+          {
+            id: 'generated-empty',
+            type: '未检出高风险错误',
+            severity: '低',
+            comment: comments[0] || '当前样本为空或缺少可分析评论。',
+            highlight: comments[0] || '当前样本为空或缺少可分析评论。',
+            diagnosis: '当前规则没有检出典型谬误。低风险不等于观点正确，只表示此样本缺少高冲突语言证据。',
+            evidence: `已检查 ${comments.length} 条评论，未命中高风险错误规则。`,
+            confidence: 0.58,
+          },
+        ];
+
+  const scores = [
+    {
+      axis: '对抗性动机',
+      value: clamp(28 + attack * 24 + perThousand(lexicons.attack) * 2.8),
+      benchmark: 52,
+      note: `攻击/讥讽词密度 ${perThousand(lexicons.attack).toFixed(1)} / 千字。`,
+    },
+    {
+      axis: '认知闭合',
+      value: clamp(30 + closure * 18 + perThousand(lexicons.absolutes) * 2.2),
+      benchmark: 49,
+      note: `绝对化表达密度 ${perThousand(lexicons.absolutes).toFixed(1)} / 千字。`,
+    },
+    {
+      axis: '证据敏感',
+      value: clamp(55 + evidence * 16 - evasion * 22),
+      benchmark: 58,
+      note: `证据词 ${countMatches(joined, lexicons.evidence)} 次，举证回避 ${countMatches(joined, lexicons.evasion)} 次。`,
+    },
+    {
+      axis: '逻辑一致',
+      value: clamp(68 - (fallacyCount / total) * 42 - perThousand(lexicons.fallacy) * 1.5),
+      benchmark: 61,
+      note: `谬误规则命中 ${fallacyCount} 次，需结合上下文人工复核。`,
+    },
+    {
+      axis: '合作讨论',
+      value: clamp(46 + cooperation * 18 - attack * 16 - evasion * 12),
+      benchmark: 55,
+      note: `澄清、让步或条件化表达 ${countMatches(joined, lexicons.cooperation)} 次。`,
+    },
+    {
+      axis: '修正意愿',
+      value: clamp(36 + correction * 28 + cooperation * 8 - evasion * 12),
+      benchmark: 46,
+      note: `修正或承认表达 ${countMatches(joined, lexicons.correction)} 次。`,
+    },
+  ].map((score) => ({ ...score, value: Math.round(score.value) }));
+
+  const disagreementProxy = clamp((attack + closure + fallacyCount / total) / 3, 0, 1);
+  const confidence = clamp(0.48 + Math.min(total, 30) / 100 + Math.min(errors.length, 10) / 80, 0.45, 0.9);
+
+  return {
+    id: `generated-${Date.now()}`,
+    uid: uid || '自定义样本',
+    name: name || '自定义 B 站用户',
+    bio: '由粘贴评论样本即时生成',
+    sampleSize: comments.length,
+    analyzed: comments.length,
+    confidence,
+    stanceSwitchRate: clamp((correction + cooperation * 0.35) / Math.max(total, 1), 0, 1),
+    disagreementRate: disagreementProxy,
+    scores,
+    errors: fallbackErrors,
+  };
+}
+
+const users = [
+  scoreComments({ name: '山前反证员', uid: 'UID 349872641', text: sampleTextA }),
+  scoreComments({ name: '冷启动观测站', uid: 'UID 68190422', text: sampleTextB }),
+];
+
 function RadarChart({ scores }) {
   const size = 360;
   const center = size / 2;
@@ -185,7 +279,9 @@ function RadarChart({ scores }) {
     return [center + Math.cos(angle) * distance, center + Math.sin(angle) * distance];
   };
   const polygon = scores.map((score, index) => point(index, normalizeForRisk(score)).join(',')).join(' ');
-  const baseline = scores.map((score, index) => point(index, normalizeForRisk({ ...score, value: score.benchmark })).join(',')).join(' ');
+  const baseline = scores
+    .map((score, index) => point(index, normalizeForRisk({ ...score, value: score.benchmark })).join(','))
+    .join(' ');
 
   return (
     <svg className="radar" viewBox={`0 0 ${size} ${size}`} role="img" aria-label="杠精倾向雷达图">
@@ -216,7 +312,8 @@ function RadarChart({ scores }) {
 }
 
 function ErrorComment({ item }) {
-  const parts = item.comment.split(item.highlight);
+  const hasHighlight = item.highlight && item.comment.includes(item.highlight);
+  const parts = hasHighlight ? item.comment.split(item.highlight) : [item.comment];
   return (
     <article className="error-item">
       <div className="error-head">
@@ -224,9 +321,15 @@ function ErrorComment({ item }) {
         <span>{item.type}</span>
       </div>
       <p className="comment-text">
-        {parts[0]}
-        <mark>{item.highlight}</mark>
-        {parts.slice(1).join(item.highlight)}
+        {hasHighlight ? (
+          <>
+            {parts[0]}
+            <mark>{item.highlight}</mark>
+            {parts.slice(1).join(item.highlight)}
+          </>
+        ) : (
+          item.comment
+        )}
       </p>
       <div className="diagnosis-grid">
         <div>
@@ -250,11 +353,15 @@ function ErrorComment({ item }) {
 }
 
 function App() {
+  const [profiles, setProfiles] = React.useState(users);
   const [selectedId, setSelectedId] = React.useState(users[0].id);
   const [activeError, setActiveError] = React.useState('全部');
   const [query, setQuery] = React.useState('山前反证员');
+  const [uid, setUid] = React.useState('UID 349872641');
+  const [commentText, setCommentText] = React.useState(sampleTextA);
   const [analysisState, setAnalysisState] = React.useState('ready');
-  const selectedUser = users.find((user) => user.id === selectedId);
+
+  const selectedUser = profiles.find((user) => user.id === selectedId) || profiles[0];
   const trollIndex = getTrollIndex(selectedUser);
   const errorTypes = ['全部', ...new Set(selectedUser.errors.map((error) => error.type))];
   const visibleErrors =
@@ -264,7 +371,19 @@ function App() {
 
   const runAnalysis = () => {
     setAnalysisState('loading');
-    window.setTimeout(() => setAnalysisState('ready'), 700);
+    window.setTimeout(() => {
+      const generated = scoreComments({ name: query, uid, text: commentText });
+      setProfiles((current) => [generated, ...current.filter((item) => !item.id.startsWith('generated-'))]);
+      setSelectedId(generated.id);
+      setActiveError('全部');
+      setAnalysisState('ready');
+    }, 360);
+  };
+
+  const loadSample = (sample, profile) => {
+    setQuery(profile.name);
+    setUid(profile.uid);
+    setCommentText(sample);
   };
 
   return (
@@ -277,7 +396,7 @@ function App() {
           </div>
           <div className="nav-metrics">
             <span>评论样本 {selectedUser.sampleSize}</span>
-            <span>模型版本 PDI-0.4</span>
+            <span>模型版本 PDI-0.5</span>
             <span>中文社区语境</span>
           </div>
         </nav>
@@ -297,7 +416,7 @@ function App() {
                   id="user-query"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="输入 UID、昵称或粘贴评论样本"
+                  placeholder="输入 UID、昵称或样本标签"
                 />
                 <button type="button" onClick={runAnalysis}>
                   <Lightning size={17} weight="fill" />
@@ -323,13 +442,37 @@ function App() {
         </div>
       </section>
 
+      <section className="input-section">
+        <div className="input-grid">
+          <div>
+            <span className="eyebrow"><ClipboardText size={16} /> sample intake</span>
+            <h2>粘贴目标用户的 B 站评论样本</h2>
+            <p>每行一条评论。评分引擎会统计冲突词、绝对化表达、证据词、回避举证、合作性和修正表达，并把高风险片段回放到错误高亮区。</p>
+          </div>
+          <div className="comment-form">
+            <label htmlFor="uid-input">UID 或来源说明</label>
+            <input id="uid-input" value={uid} onChange={(event) => setUid(event.target.value)} />
+            <label htmlFor="comment-input">评论样本</label>
+            <textarea id="comment-input" value={commentText} onChange={(event) => setCommentText(event.target.value)} />
+            <div className="sample-actions">
+              <button type="button" onClick={() => loadSample(sampleTextA, { name: '山前反证员', uid: 'UID 349872641' })}>
+                载入高风险样本
+              </button>
+              <button type="button" onClick={() => loadSample(sampleTextB, { name: '冷启动观测站', uid: 'UID 68190422' })}>
+                载入混合样本
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="workspace">
         <aside className="user-rail">
           <div className="rail-title">
             <ClipboardText size={18} />
             <span>用户样本</span>
           </div>
-          {users.map((user) => (
+          {profiles.map((user) => (
             <button
               className={`user-card ${user.id === selectedId ? 'active' : ''}`}
               key={user.id}
@@ -338,6 +481,7 @@ function App() {
                 setSelectedId(user.id);
                 setActiveError('全部');
                 setQuery(user.name);
+                setUid(user.uid);
               }}
             >
               <strong>{user.name}</strong>
@@ -361,7 +505,7 @@ function App() {
             <div className="score-block">
               <span>杠精指数</span>
               <strong>{trollIndex}</strong>
-              <small>{trollIndex >= 70 ? '高风险对抗型' : trollIndex >= 45 ? '混合争辩型' : '低风险讨论型'}</small>
+              <small>{getRiskBand(trollIndex)}</small>
             </div>
           </div>
 
@@ -375,6 +519,7 @@ function App() {
                   <div>
                     <strong>{score.axis}</strong>
                     <span>{axisDescriptions[score.axis]}</span>
+                    <em>{score.note}</em>
                   </div>
                   <b>{normalizeForRisk(score)}</b>
                 </div>
@@ -436,7 +581,7 @@ function App() {
           <article>
             <FlagBanner size={24} />
             <strong>1. 语料清洗</strong>
-            <p>去除重复、表情噪声和纯转发，只保留带有主张或评价的评论。</p>
+            <p>按行切分评论，去除空白和重复噪声，只保留带有主张、评价或反驳的文本片段。</p>
           </article>
           <article>
             <WarningCircle size={24} />
@@ -451,7 +596,7 @@ function App() {
           <article>
             <CheckCircle size={24} />
             <strong>4. 证据回放</strong>
-            <p>每个评分必须能回到原评论片段，避免只给抽象标签。</p>
+            <p>每个评分都保留可追溯评论片段，避免只给抽象标签或主观印象。</p>
           </article>
         </div>
       </section>
