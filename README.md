@@ -1,6 +1,6 @@
 # Bilibili User Personality
 
-Research-driven frontend prototype for evaluating whether a selected Bilibili user's comments show a high "argumentative trolling" tendency.
+Research-driven prototype for evaluating whether a selected Bilibili user's public comments show a high argumentative-trolling tendency.
 
 ## What It Shows
 
@@ -12,22 +12,24 @@ Research-driven frontend prototype for evaluating whether a selected Bilibili us
   - 逻辑一致
   - 合作讨论
   - 修正意愿
-- A dedicated comment-error highlight area for logic errors, factual errors, semantic substitution, emotional framing, and unsupported assertions.
-- A research-first interface connecting online disinhibition, motivated reasoning, need for cognitive closure, and pragma-dialectical fallacy analysis to UI evidence.
-- A local sample intake area: paste one Bilibili comment per line, enter a UID or label, and generate a new radar profile with evidence-backed error highlights.
-- An adaptive lexicon panel that groups terms by semantic families and mines suspicious new slang or meme variants from the current sample.
 - Three analysis modes:
   - Hybrid mode: semantic speech-act judging with adaptive lexicon evidence.
   - Semantic judge mode: evaluates target, evidence burden, proposition response, and correction behavior.
   - Lexicon mode: transparent semantic-family matching for auditability.
-- Built-in public test samples from Bilibili video `BV19yGa61Ee6`, grouped from public top comments and replies for quick testing.
+- UID-based automatic sampling:
+  - Tries public UID video discovery.
+  - Falls back to a user-provided BV pool.
+  - Filters public comments by `mid`.
+- Built-in public test samples from Bilibili video `BV19yGa61Ee6`.
 
 ## Run Locally
 
 ```bash
 npm install
-npm run dev
+npm run server
 ```
+
+`npm run server` starts the API server and Vite dev server. The API listens on `http://127.0.0.1:8787`; Vite proxies `/api` to it in development.
 
 ## Build
 
@@ -37,4 +39,6 @@ npm run build
 
 ## Notes
 
-This prototype ships with mock Bilibili comment samples, public video-derived test samples, and support for pasted local samples. The adaptive lexicon is stored locally in the browser so newly added slang variants can influence the next generated profile, but lexicon hits are treated as auxiliary evidence rather than final judgment. The scoring language is intentionally framed as behavior-risk analysis over a bounded comment sample, not as a clinical diagnosis or definitive personality judgment.
+The automatic collector uses public Bilibili endpoints. Some UID space APIs may be rate-limited or blocked by Bilibili risk control; in that case, provide a BV video pool and the tool will search those public comment areas for the target `mid`.
+
+The scoring language is framed as behavior-risk analysis over a bounded public comment sample, not as a clinical diagnosis or definitive personality judgment.

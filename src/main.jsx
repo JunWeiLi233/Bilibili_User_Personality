@@ -625,6 +625,9 @@ function App() {
   const [query, setQuery] = React.useState('山前反证员');
   const [uid, setUid] = React.useState('UID 349872641');
   const [commentText, setCommentText] = React.useState(sampleTextA);
+  const [autoUid, setAutoUid] = React.useState('');
+  const [bvidPool, setBvidPool] = React.useState('BV19yGa61Ee6');
+  const [fetchState, setFetchState] = React.useState({ status: 'idle', message: '输入 UID 后可自动发现公开视频对象；若 B 站空间接口风控，请提供 BV 视频池。' });
   const [analysisMode, setAnalysisMode] = React.useState('hybrid');
   const [customLexicon, setCustomLexicon] = React.useState(() => {
     try {
@@ -671,6 +674,39 @@ function App() {
     setQuery(profile.name);
     setUid(profile.uid);
     setCommentText(sample);
+  };
+
+  const fetchUidComments = async () => {
+    setFetchState({ status: 'loading', message: '正在抓取公开对象并过滤该 UID 的评论...' });
+    try {
+      const response = await fetch('/api/bilibili/analyze-uid', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          uid: autoUid,
+          bvidPool,
+          videoLimit: 8,
+          pagesPerVideo: 4,
+        }),
+      });
+      const data = await response.json();
+      if (!data.ok) {
+        setFetchState({
+          status: 'error',
+          message: `${data.error}${data.details ? ` (${data.details})` : ''}`,
+        });
+        return;
+      }
+      setQuery(data.uname || `UID ${data.uid}`);
+      setUid(`mid ${data.uid}`);
+      setCommentText(data.commentText || '');
+      setFetchState({
+        status: data.comments.length > 0 ? 'ready' : 'empty',
+        message: `扫描 ${data.videos.length} 个公开视频，命中 ${data.comments.length} 条该 UID 评论。${data.confidenceHint}。${data.warnings?.length ? `警告：${data.warnings.join('；')}` : ''}`,
+      });
+    } catch (error) {
+      setFetchState({ status: 'error', message: `采集失败：${error.message}。请确认已运行 npm run server。` });
+    }
   };
 
   return (
@@ -733,8 +769,28 @@ function App() {
         <div className="input-grid">
           <div>
             <span className="eyebrow"><ClipboardText size={16} /> sample intake</span>
-            <h2>粘贴目标用户的 B 站评论样本</h2>
-            <p>每行一条评论。混合模式先做话语行为裁判，再参考动态语库；词表命中只作为证据提示，不再直接定性。</p>
+            <h2>输入 UID，自动围绕公开对象抓取发言</h2>
+            <p>系统会先尝试从 UID 的公开投稿发现视频对象；如果空间接口被风控，就使用你提供的 BV 视频池，在这些公开评论区中过滤该 UID 的发言。</p>
+            <div className="crawler-box">
+              <label htmlFor="auto-uid">B 站 UID / mid</label>
+              <input
+                id="auto-uid"
+                value={autoUid}
+                onChange={(event) => setAutoUid(event.target.value)}
+                placeholder="例如 1438219989"
+              />
+              <label htmlFor="bvid-pool">BV 视频池，空格或逗号分隔</label>
+              <textarea
+                id="bvid-pool"
+                value={bvidPool}
+                onChange={(event) => setBvidPool(event.target.value)}
+                placeholder="例如 BV19yGa61Ee6 BVxxxx"
+              />
+              <button type="button" onClick={fetchUidComments} disabled={fetchState.status === 'loading'}>
+                {fetchState.status === 'loading' ? '抓取中' : '自动抓取公开发言'}
+              </button>
+              <p className={`fetch-status fetch-${fetchState.status}`}>{fetchState.message}</p>
+            </div>
             <div className="mode-selector" role="tablist" aria-label="分析模式">
               {analysisModes.map((mode) => (
                 <button

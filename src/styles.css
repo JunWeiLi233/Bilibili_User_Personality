@@ -317,6 +317,71 @@ h1 {
   line-height: 1.55;
 }
 
+.crawler-box {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  background: rgba(255, 253, 247, 0.62);
+}
+
+.crawler-box label {
+  color: #4c473f;
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.crawler-box input,
+.crawler-box textarea {
+  width: 100%;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  outline: 0;
+  background: #fffdf7;
+  color: #1c1c1b;
+  padding: 10px;
+}
+
+.crawler-box textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.crawler-box button {
+  width: max-content;
+  max-width: 100%;
+  border: 0;
+  background: #2f5d50;
+  color: #f8f5ee;
+  padding: 10px 13px;
+  border-radius: 4px;
+  font-weight: 760;
+}
+
+.crawler-box button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.fetch-status {
+  margin-top: 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(23, 23, 23, 0.1);
+  font-size: 13px;
+}
+
+.fetch-error {
+  color: #8a3f33;
+}
+
+.fetch-ready {
+  color: #2f5d50;
+}
+
+.fetch-empty {
+  color: #a26a2d;
+}
+
 .sample-actions {
   display: flex;
   flex-wrap: wrap;
