@@ -6,6 +6,7 @@ const PORT = Number(process.env.PORT || 8787);
 const VITE_PORT = Number(process.env.VITE_PORT || 5191);
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36';
+const AICU_API = process.env.AICU_API || 'https://api.aicu.cc';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -98,6 +99,51 @@ function parseBvidPool(raw) {
     .filter((item) => /^BV[0-9A-Za-z]+$/.test(item));
 }
 
+async function fetchAicuReplies({ uid, pages = 2, ps = 20, keyword = '', mode = 0 }) {
+  const pageCount = Math.max(1, Math.min(Number(pages || 2), 10));
+  const pageSize = Math.max(1, Math.min(Number(ps || 20), 50));
+  const replies = [];
+  let total = 0;
+
+  for (let pn = 1; pn <= pageCount; pn += 1) {
+    const url = `${AICU_API}/api/v3/search/getreply?uid=${encodeURIComponent(uid)}&pn=${pn}&ps=${pageSize}&mode=${mode}&keyword=${encodeURIComponent(keyword)}`;
+    const data = await fetchJson(url, 'https://www.aicu.cc/');
+    if (data.code !== 0) {
+      throw new Error(data.message || `AICU returned code ${data.code}`);
+    }
+    total = Number(data.data?.cursor?.all_count || total);
+    for (const item of data.data?.replies || []) {
+      replies.push({
+        rpid: String(item.rpid || ''),
+        message: item.message || '',
+        time: Number(item.time || 0),
+        rank: Number(item.rank || 0),
+        oid: String(item.dyn?.oid || ''),
+        type: Number(item.dyn?.type || 0),
+        sourceUrl:
+          item.dyn?.type === 1 && item.dyn?.oid
+            ? `https://www.bilibili.com/video/av${item.dyn.oid}#reply${item.rpid}`
+            : '',
+      });
+    }
+    await wait(200);
+  }
+
+  const unique = [...new Map(replies.map((reply) => [reply.rpid, reply])).values()];
+  return {
+    ok: true,
+    uid: String(uid),
+    api: AICU_API,
+    total,
+    fetched: unique.length,
+    replies: unique,
+    commentText: unique.map((reply) => reply.message).filter(Boolean).join('\n'),
+    source: `AICU history index (${pageCount} page(s), ${pageSize} per page)`,
+    confidenceHint:
+      unique.length >= 30 ? 'history-index sample' : unique.length >= 10 ? 'medium history-index sample' : 'small history-index sample',
+  };
+}
+
 async function readBody(request) {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
@@ -117,7 +163,7 @@ function writeJson(response, status, payload) {
 async function analyzeUid(payload) {
   const uid = String(payload.uid || '').trim();
   if (!/^\d+$/.test(uid)) {
-    return { ok: false, error: 'UID 必须是纯数字 mid。' };
+    return { ok: false, error: 'UID must be a numeric Bilibili mid.' };
   }
 
   const limit = Math.max(1, Math.min(Number(payload.videoLimit || 5), 12));
@@ -141,7 +187,7 @@ async function analyzeUid(payload) {
     } catch (error) {
       return {
         ok: false,
-        error: 'B 站空间投稿接口被风控或暂不可用。请提供 BV 视频池作为公开对象入口。',
+        error: 'Bilibili space video discovery is blocked or unavailable. Provide a BV pool as public-object input.',
         details: error.message,
         needsBvidPool: true,
       };
@@ -166,10 +212,9 @@ async function analyzeUid(payload) {
     videos,
     comments: unique,
     commentText: unique.map((comment) => comment.message).join('\n'),
-    source: bvidPool.length > 0 ? '用户提供 BV 视频池公开评论区过滤' : 'UID 公开视频投稿评论区过滤',
+    source: bvidPool.length > 0 ? 'BV pool public comment filter' : 'UID public-upload comment filter',
     warnings,
-    confidenceHint:
-      unique.length >= 8 ? '样本较充分' : unique.length >= 3 ? '低到中等置信度' : '样本不足，建议扩大视频池',
+    confidenceHint: unique.length >= 8 ? 'sample sufficient' : unique.length >= 3 ? 'low-medium confidence' : 'sample insufficient',
   };
 }
 
@@ -183,8 +228,19 @@ const server = createServer(async (request, response) => {
 
   if (url.pathname === '/api/bilibili/analyze-uid' && request.method === 'POST') {
     try {
-      const payload = JSON.parse(await readBody(request) || '{}');
+      const payload = JSON.parse((await readBody(request)) || '{}');
       return writeJson(response, 200, await analyzeUid(payload));
+    } catch (error) {
+      return writeJson(response, 500, { ok: false, error: error.message });
+    }
+  }
+
+  if (url.pathname === '/api/aicu/replies' && request.method === 'POST') {
+    try {
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      const uid = String(payload.uid || '').trim();
+      if (!/^\d+$/.test(uid)) return writeJson(response, 200, { ok: false, error: 'UID must be numeric.' });
+      return writeJson(response, 200, await fetchAicuReplies(payload));
     } catch (error) {
       return writeJson(response, 500, { ok: false, error: error.message });
     }

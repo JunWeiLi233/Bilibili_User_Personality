@@ -358,6 +358,10 @@ h1 {
   font-weight: 760;
 }
 
+.crawler-box .secondary-crawl {
+  background: #20231f;
+}
+
 .crawler-box button:disabled {
   cursor: wait;
   opacity: 0.72;

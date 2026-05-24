@@ -279,7 +279,7 @@ function classifySpeechAct(comment, index, totalComments) {
           evidence: `第 ${index + 1}/${totalComments} 条评论未命中高风险话语行为规则。`,
           confidence: 0.54,
           deltas: {},
-          positive: true,
+          neutral: true,
         },
       ];
 }
@@ -392,7 +392,7 @@ function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons,
   const total = Math.max(comments.length, 1);
   const density = (terms) => countMatches(joined, terms) / total;
   const semanticActs = comments.flatMap((comment, index) => classifySpeechAct(comment, index, total));
-  const negativeActs = semanticActs.filter((act) => !act.positive);
+  const negativeActs = semanticActs.filter((act) => !act.positive && !act.neutral);
   const positiveActs = semanticActs.filter((act) => act.positive);
   const lexiconErrors = comments
     .map((comment, index) => classifyLexiconError(comment, index, total, runtimeLexicon))
@@ -628,6 +628,7 @@ function App() {
   const [autoUid, setAutoUid] = React.useState('');
   const [bvidPool, setBvidPool] = React.useState('BV19yGa61Ee6');
   const [fetchState, setFetchState] = React.useState({ status: 'idle', message: '输入 UID 后可自动发现公开视频对象；若 B 站空间接口风控，请提供 BV 视频池。' });
+  const [aicuPages, setAicuPages] = React.useState(2);
   const [analysisMode, setAnalysisMode] = React.useState('hybrid');
   const [customLexicon, setCustomLexicon] = React.useState(() => {
     try {
@@ -709,6 +710,37 @@ function App() {
     }
   };
 
+  const fetchAicuHistory = async () => {
+    setFetchState({ status: 'loading', message: '正在从 AICU 历史索引导入评论...' });
+    try {
+      const response = await fetch('/api/aicu/replies', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          uid: autoUid,
+          pages: aicuPages,
+          ps: 20,
+          mode: 0,
+          keyword: '',
+        }),
+      });
+      const data = await response.json();
+      if (!data.ok) {
+        setFetchState({ status: 'error', message: data.error || 'AICU 历史索引导入失败。' });
+        return;
+      }
+      setQuery(`AICU UID ${data.uid}`);
+      setUid(`AICU uid ${data.uid}`);
+      setCommentText(data.commentText || '');
+      setFetchState({
+        status: data.fetched > 0 ? 'ready' : 'empty',
+        message: `AICU 索引总评论 ${data.total} 条，本次导入 ${data.fetched} 条。${data.confidenceHint}。导入后点击“生成画像”进行本地语义分析。`,
+      });
+    } catch (error) {
+      setFetchState({ status: 'error', message: `AICU 导入失败：${error.message}。` });
+    }
+  };
+
   return (
     <main>
       <section className="hero-shell">
@@ -786,8 +818,20 @@ function App() {
                 onChange={(event) => setBvidPool(event.target.value)}
                 placeholder="例如 BV19yGa61Ee6 BVxxxx"
               />
+              <label htmlFor="aicu-pages">AICU 导入页数，每页 20 条</label>
+              <input
+                id="aicu-pages"
+                value={aicuPages}
+                min="1"
+                max="10"
+                type="number"
+                onChange={(event) => setAicuPages(event.target.value)}
+              />
               <button type="button" onClick={fetchUidComments} disabled={fetchState.status === 'loading'}>
                 {fetchState.status === 'loading' ? '抓取中' : '自动抓取公开发言'}
+              </button>
+              <button type="button" className="secondary-crawl" onClick={fetchAicuHistory} disabled={fetchState.status === 'loading'}>
+                {fetchState.status === 'loading' ? '导入中' : '使用 AICU 历史索引'}
               </button>
               <p className={`fetch-status fetch-${fetchState.status}`}>{fetchState.message}</p>
             </div>
