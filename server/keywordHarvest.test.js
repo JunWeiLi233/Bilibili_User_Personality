@@ -290,6 +290,10 @@ test('buildKeywordHarvestQueryPlan skips terms that exhausted every built-in que
     'doge \u70ed\u8bc4',
     'doge \u5f39\u5e55',
     'doge \u4e89\u8bae \u8bc4\u8bba\u533a',
+    'doge \u662f\u4ec0\u4e48\u6897',
+    'doge \u4ec0\u4e48\u610f\u601d',
+    'doge \u51fa\u5904',
+    'doge \u540d\u6897',
     'doge \u540d\u573a\u9762 \u8bc4\u8bba\u533a',
     'doge \u5207\u7247 \u8bc4\u8bba',
     'doge \u8bc4\u8bba \u6897',
@@ -329,6 +333,10 @@ test('buildKeywordHarvestQueryPlan can reopen exhausted terms with extra runtime
     'doge \u70ed\u8bc4',
     'doge \u5f39\u5e55',
     'doge \u4e89\u8bae \u8bc4\u8bba\u533a',
+    'doge \u662f\u4ec0\u4e48\u6897',
+    'doge \u4ec0\u4e48\u610f\u601d',
+    'doge \u51fa\u5904',
+    'doge \u540d\u6897',
     'doge \u540d\u573a\u9762 \u8bc4\u8bba\u533a',
     'doge \u5207\u7247 \u8bc4\u8bba',
     'doge \u8bc4\u8bba \u6897',
@@ -466,6 +474,10 @@ test('summarizeTermAttempts reports exhausted terms after every built-in variant
     'doge \u70ed\u8bc4',
     'doge \u5f39\u5e55',
     'doge \u4e89\u8bae \u8bc4\u8bba\u533a',
+    'doge \u662f\u4ec0\u4e48\u6897',
+    'doge \u4ec0\u4e48\u610f\u601d',
+    'doge \u51fa\u5904',
+    'doge \u540d\u6897',
     'doge \u540d\u573a\u9762 \u8bc4\u8bba\u533a',
     'doge \u5207\u7247 \u8bc4\u8bba',
     'doge \u8bc4\u8bba \u6897',
@@ -492,7 +504,7 @@ test('summarizeTermAttempts reports exhausted terms after every built-in variant
 
   assert.equal(summary.exhaustedTerms, 1);
   assert.deepEqual(summary.exhaustedSamples.map((entry) => entry.term), ['doge']);
-  assert.equal(summary.exhaustedSamples[0].variantsTried, 10);
+  assert.equal(summary.exhaustedSamples[0].variantsTried, 14);
   assert.equal(summary.exhaustedSamples[0].suggestedQueries.includes('doge \u56de\u590d'), true);
 });
 
@@ -503,6 +515,10 @@ test('buildCoverageActions classifies covered, unattempted, missed, partial, and
     'doge \u70ed\u8bc4',
     'doge \u5f39\u5e55',
     'doge \u4e89\u8bae \u8bc4\u8bba\u533a',
+    'doge \u662f\u4ec0\u4e48\u6897',
+    'doge \u4ec0\u4e48\u610f\u601d',
+    'doge \u51fa\u5904',
+    'doge \u540d\u6897',
     'doge \u540d\u573a\u9762 \u8bc4\u8bba\u533a',
     'doge \u5207\u7247 \u8bc4\u8bba',
     'doge \u8bc4\u8bba \u6897',
