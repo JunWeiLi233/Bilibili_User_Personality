@@ -6,8 +6,11 @@ import {
   dedupePublicObjects,
   extractBvid,
   extractDynamicRecords,
+  fetchJson,
   fetchRepliesForVideo,
+  isBilibiliBlockResponse,
   parseBvidPool,
+  resetBilibiliRequestState,
 } from './bilibiliCrawler.js';
 
 test('parseBvidPool accepts whitespace, comma, and Chinese comma separators', () => {
@@ -23,6 +26,77 @@ test('extractBvid accepts BV ids and Bilibili video links', () => {
   assert.equal(extractBvid('https://www.bilibili.com/video/BV19yGa61Ee6/?vd_source=abc'), 'BV19yGa61Ee6');
   assert.equal(extractBvid('https://b23.tv/BV1xx411c7mD'), 'BV1xx411c7mD');
   assert.equal(extractBvid('not-a-video'), '');
+});
+
+test('isBilibiliBlockResponse detects Bilibili block and rate-limit payloads', () => {
+  assert.equal(isBilibiliBlockResponse({ code: -352 }), true);
+  assert.equal(isBilibiliBlockResponse({ code: -412 }), true);
+  assert.equal(isBilibiliBlockResponse({ code: 0 }), false);
+});
+
+test('fetchJson spaces requests and cools down after Bilibili block responses', async () => {
+  resetBilibiliRequestState();
+  let now = 1000;
+  const waits = [];
+  const responses = [{ code: 0, data: { ok: 1 } }, { code: -352, message: '-352' }, { code: 0, data: { ok: 2 } }];
+
+  const options = {
+    env: {},
+    config: {
+      minDelayMs: 100,
+      jitterMs: 0,
+      blockCooldownMs: 1000,
+      cacheTtlMs: 0,
+    },
+    nowFn: () => now,
+    randomFn: () => 0,
+    waitFn: async (ms) => {
+      waits.push(ms);
+      now += ms;
+    },
+    fetchImpl: async () => ({
+      ok: true,
+      json: async () => responses.shift(),
+    }),
+  };
+
+  await fetchJson('https://api.bilibili.com/one', 'https://www.bilibili.com', options);
+  await fetchJson('https://api.bilibili.com/two', 'https://www.bilibili.com', options);
+  await fetchJson('https://api.bilibili.com/three', 'https://www.bilibili.com', options);
+
+  assert.deepEqual(waits, [100, 1000]);
+  resetBilibiliRequestState();
+});
+
+test('fetchJson caches successful Bilibili JSON responses for repeated reads', async () => {
+  resetBilibiliRequestState();
+  let calls = 0;
+  const options = {
+    env: {},
+    config: {
+      minDelayMs: 0,
+      jitterMs: 0,
+      blockCooldownMs: 0,
+      cacheTtlMs: 1000,
+    },
+    nowFn: () => 1000,
+    randomFn: () => 0,
+    waitFn: async () => {},
+    fetchImpl: async () => {
+      calls += 1;
+      return {
+        ok: true,
+        json: async () => ({ code: 0, data: { calls } }),
+      };
+    },
+  };
+
+  const first = await fetchJson('https://api.bilibili.com/cache', 'https://www.bilibili.com', options);
+  const second = await fetchJson('https://api.bilibili.com/cache', 'https://www.bilibili.com', options);
+
+  assert.equal(calls, 1);
+  assert.deepEqual(first, second);
+  resetBilibiliRequestState();
 });
 
 test('extractDynamicRecords returns commentable dynamic objects and authored text', () => {

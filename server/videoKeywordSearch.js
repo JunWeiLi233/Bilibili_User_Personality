@@ -2,8 +2,8 @@ import { fetchRepliesForVideo } from './bilibiliCrawler.js';
 import { trainKeywordDictionary as defaultTrainKeywordDictionary } from './deepseekKeywordTrainer.js';
 
 export const DEFAULT_VIDEO_LINK =
-  process.env.BILIBILI_DEFAULT_VIDEO_LINK ||
   process.env.BILIBILI_DEFAULT_VIDEO_LINKS ||
+  process.env.BILIBILI_DEFAULT_VIDEO_LINK ||
   'https://www.bilibili.com/video/BV19yGa61Ee6/?vd_source=d3f6474bdf9e6de8d027785f1120afd4';
 
 function parseVideoLinks(value) {

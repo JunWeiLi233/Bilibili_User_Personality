@@ -787,7 +787,7 @@ function App() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           ...(videoLink ? { videoLink } : {}),
-          pages: 5,
+          pages: 2,
         }),
       });
       const data = await response.json();
@@ -854,9 +854,9 @@ function App() {
         body: JSON.stringify({
           uid: searchUid,
           bvidPool: '',
-          objectLimit: 12,
-          dynamicLimit: 12,
-          pagesPerObject: 5,
+          objectLimit: 8,
+          dynamicLimit: 8,
+          pagesPerObject: 2,
         }),
       });
       const data = await response.json();

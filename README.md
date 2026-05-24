@@ -97,6 +97,15 @@ npm run build
 
 The automatic collector uses Bilibili public endpoints directly. It does not use AICU, third-party comment indexes, scraping libraries, or external websites to replace UID or video-comment crawling.
 
+The crawler is intentionally conservative: requests are sequential, successful API responses are cached briefly, page limits are capped, and Bilibili block/rate-limit responses trigger a cooldown instead of rapid retries. You can tune the pacing with:
+
+```powershell
+$env:BILIBILI_CRAWLER_MIN_DELAY_MS="900"
+$env:BILIBILI_CRAWLER_JITTER_MS="700"
+$env:BILIBILI_CRAWLER_BLOCK_COOLDOWN_MS="45000"
+$env:BILIBILI_CRAWLER_CACHE_TTL_MS="120000"
+```
+
 The DeepSeek keyword trainer does not fine-tune model weights. It uses DeepSeek V4 as a dictionary extractor, then persists learned Chinese terms into the local dictionary used by the rule/semantic analyzer. If `DEEPSEEK_API_KEY` is missing or the API call fails, the app keeps running with the local rule fallback and reports that in the UI.
 
 The scoring language is framed as behavior-risk analysis over a bounded public comment sample, not as a clinical diagnosis or definitive personality judgment.

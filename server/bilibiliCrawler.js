@@ -1,10 +1,62 @@
 const USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36';
+const BLOCK_CODES = new Set([-352, -412, -509, -799]);
+const responseCache = new Map();
+let nextRequestAt = 0;
+let cooldownUntil = 0;
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function fetchJson(url, referer = 'https://www.bilibili.com') {
-  const response = await fetch(url, {
+function readCrawlerConfig(env = process.env) {
+  return {
+    minDelayMs: Math.max(0, Number(env.BILIBILI_CRAWLER_MIN_DELAY_MS || 900)),
+    jitterMs: Math.max(0, Number(env.BILIBILI_CRAWLER_JITTER_MS || 700)),
+    blockCooldownMs: Math.max(0, Number(env.BILIBILI_CRAWLER_BLOCK_COOLDOWN_MS || 45000)),
+    cacheTtlMs: Math.max(0, Number(env.BILIBILI_CRAWLER_CACHE_TTL_MS || 120000)),
+  };
+}
+
+export function isBilibiliBlockResponse(payload) {
+  return BLOCK_CODES.has(Number(payload?.code));
+}
+
+export function resetBilibiliRequestState() {
+  responseCache.clear();
+  nextRequestAt = 0;
+  cooldownUntil = 0;
+}
+
+function cacheKey(url, referer) {
+  return `${referer || ''} ${String(url)}`;
+}
+
+async function scheduleBilibiliRequest(options = {}) {
+  const config = { ...readCrawlerConfig(options.env), ...(options.config || {}) };
+  const nowFn = options.nowFn || Date.now;
+  const waitFn = options.waitFn || wait;
+  const randomFn = options.randomFn || Math.random;
+  const now = nowFn();
+  const waitUntil = Math.max(cooldownUntil, nextRequestAt);
+  if (waitUntil > now) {
+    await waitFn(waitUntil - now);
+  }
+  const jitter = Math.floor(randomFn() * config.jitterMs);
+  nextRequestAt = nowFn() + config.minDelayMs + jitter;
+  return config;
+}
+
+export async function fetchJson(url, referer = 'https://www.bilibili.com', options = {}) {
+  const config = { ...readCrawlerConfig(options.env), ...(options.config || {}) };
+  const key = cacheKey(url, referer);
+  const nowFn = options.nowFn || Date.now;
+  const cached = responseCache.get(key);
+  if (cached && config.cacheTtlMs > 0 && cached.expiresAt > nowFn()) {
+    return cached.payload;
+  }
+
+  await scheduleBilibiliRequest({ ...options, config });
+  const fetchImpl = options.fetchImpl || fetch;
+  const response = await fetchImpl(url, {
     headers: {
       'user-agent': USER_AGENT,
       referer,
@@ -12,9 +64,21 @@ export async function fetchJson(url, referer = 'https://www.bilibili.com') {
     },
   });
   if (!response.ok) {
+    if ([403, 429, 503].includes(Number(response.status))) {
+      cooldownUntil = nowFn() + config.blockCooldownMs;
+    }
     throw new Error(`HTTP ${response.status} from ${url}`);
   }
-  return response.json();
+  const payload = await response.json();
+  if (isBilibiliBlockResponse(payload)) {
+    cooldownUntil = nowFn() + config.blockCooldownMs;
+  } else if (payload?.code === 0 && config.cacheTtlMs > 0) {
+    responseCache.set(key, {
+      expiresAt: nowFn() + config.cacheTtlMs,
+      payload,
+    });
+  }
+  return payload;
 }
 
 export function parseBvidPool(raw) {
@@ -275,7 +339,7 @@ export async function fetchRepliesForVideo(input, options = {}, deps = {}) {
   }
 
   const requestJson = deps.fetchJson || fetchJson;
-  const pages = Math.max(1, Math.min(Number(options.pages || 4), 10));
+  const pages = Math.max(1, Math.min(Number(options.pages || 2), 5));
   const video = await resolveBvid(bvid, deps);
   const comments = [];
   let next = 0;
@@ -341,9 +405,9 @@ export async function analyzeUid(payload, deps = {}) {
     return { ok: false, error: 'UID must be a numeric Bilibili mid.' };
   }
 
-  const objectLimit = Math.max(1, Math.min(Number(payload.objectLimit || payload.videoLimit || 10), 24));
-  const dynamicLimit = Math.max(0, Math.min(Number(payload.dynamicLimit ?? 12), 24));
-  const pagesPerObject = Math.max(1, Math.min(Number(payload.pagesPerObject || payload.pagesPerVideo || 4), 10));
+  const objectLimit = Math.max(1, Math.min(Number(payload.objectLimit || payload.videoLimit || 8), 12));
+  const dynamicLimit = Math.max(0, Math.min(Number(payload.dynamicLimit ?? 8), 12));
+  const pagesPerObject = Math.max(1, Math.min(Number(payload.pagesPerObject || payload.pagesPerVideo || 2), 5));
   const warnings = [];
   const discoveredObjects = [];
   const authoredPosts = [];

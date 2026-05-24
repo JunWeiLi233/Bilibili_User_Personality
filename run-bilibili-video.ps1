@@ -3,7 +3,16 @@
 
 $bilibiliVideoLinks = @(
   "https://www.bilibili.com/video/BV19yGa61Ee6/?vd_source=d3f6474bdf9e6de8d027785f1120afd4"
-  # "https://www.bilibili.com/video/BVxxxxxxxxxx/"
+  "https://www.bilibili.com/video/BV18SLt6qEp9/?vd_source=d3f6474bdf9e6de8d027785f1120afd4"
+  "https://www.bilibili.com/video/BV12MABzGEZq/"
+  "https://www.bilibili.com/video/BV1S1W1zQEcq/"
+  "https://www.bilibili.com/video/BV125nMzqEsM/"
+  "https://www.bilibili.com/video/BV1sKhRzdEBD/"
+  "https://www.bilibili.com/video/BV1cLbQzKEnu/"
+  "https://www.bilibili.com/video/BV1MZ421K7x8/?vd_source=d3f6474bdf9e6de8d027785f1120afd4"
+  "https://www.bilibili.com/video/BV1ECF8zvEUW?spm_id_from=333.788.recommend_more_video.0&trackid=web_related_0.router-related-2479604-fc7wt.1779601733788.445&vd_source=d3f6474bdf9e6de8d027785f1120afd4"
+  “https://www.bilibili.com/video/BV1K44y1z7iu/?vd_source=d3f6474bdf9e6de8d027785f1120afd4”
+  
 )
 
 $env:BILIBILI_DEFAULT_VIDEO_LINKS = ($bilibiliVideoLinks -join "`n")
