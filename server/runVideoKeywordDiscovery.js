@@ -15,6 +15,11 @@ function numberFromEnv(name, fallback) {
   return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
 }
 
+function nonNegativeNumberFromEnv(name, fallback) {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
+}
+
 function printKeyword(entry) {
   const family = entry.family || 'unknown';
   const term = entry.term || '';
@@ -111,6 +116,8 @@ function serializeResult(result, statePath, reportPath) {
         evidenceRejected: item.result?.keywordTraining?.evidenceRejected || 0,
         existingDictionaryEvidence: item.result?.keywordTraining?.dictionaryEvidenceEntries || [],
         acceptedEvidenceCount: (item.result?.entries || []).reduce((sum, entry) => sum + (Number(entry.evidenceCount) || 0), 0),
+        controversialPopularQueries: item.result?.controversialPopularQueries || [],
+        controversialPopularSearchOrder: item.result?.controversialPopularSearchOrder || null,
         plan: round.plan?.find((planItem) => planItem.query === item.query) || null,
         entries: item.result?.entries || [],
       })),
@@ -131,6 +138,8 @@ const discoveryLimit = numberFromEnv('BILIBILI_VIDEO_DISCOVERY_LIMIT', 6);
 const pages = numberFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2);
 const rounds = numberFromEnv('BILIBILI_HARVEST_ROUNDS', 1);
 const discoveryMode = String(process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial').trim().toLowerCase();
+const controversialPopularQueryLimit = nonNegativeNumberFromEnv('BILIBILI_CONTROVERSIAL_POPULAR_QUERY_LIMIT', 4);
+const controversialPopularSearchOrder = String(process.env.BILIBILI_CONTROVERSIAL_POPULAR_SEARCH_ORDER || 'click').trim().toLowerCase();
 const statePath = process.env.BILIBILI_HARVEST_STATE_PATH || DEFAULT_HARVEST_STATE_PATH;
 const reportPath = process.env.BILIBILI_HARVEST_REPORT_PATH || join(process.cwd(), 'server', 'keywordHarvestReport.json');
 const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
@@ -148,6 +157,8 @@ const result = await harvestKeywordDictionaryRounds({
   coverageMode,
   discoveryMode,
   discoveryLimit,
+  controversialPopularQueryLimit,
+  controversialPopularSearchOrder,
   pages,
   rounds,
   statePath,

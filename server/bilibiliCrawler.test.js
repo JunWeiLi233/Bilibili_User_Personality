@@ -47,6 +47,21 @@ test('discoverVideosByKeyword searches Bilibili and normalizes video objects', a
   assert.equal(seenUrls[0].referer.includes('search.bilibili.com'), true);
 });
 
+test('discoverVideosByKeyword can request a search order for popular controversial seeds', async () => {
+  const seenUrls = [];
+  await discoverVideosByKeyword('游戏 节奏 评论区', 2, {
+    searchOrder: 'click',
+    fetchJson: async (url, referer) => {
+      seenUrls.push({ url: String(url), referer });
+      return { code: 0, data: { result: [] } };
+    },
+  });
+
+  const parsed = new URL(seenUrls[0].url);
+  assert.equal(parsed.searchParams.get('keyword'), '游戏 节奏 评论区');
+  assert.equal(parsed.searchParams.get('order'), 'click');
+});
+
 test('discoverPopularVideos reads public popular videos and normalizes video objects', async () => {
   const seenUrls = [];
   const videos = await discoverPopularVideos(2, {

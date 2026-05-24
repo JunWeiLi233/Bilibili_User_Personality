@@ -3,6 +3,8 @@ param(
   [string[]]$ControversyQuery = @(),
   [string[]]$ExtraQueryTemplate = @(),
   [int]$DiscoveryLimit = 6,
+  [int]$ControversialPopularQueryLimit = 4,
+  [string]$ControversialPopularSearchOrder = "click",
   [int]$CommentPages = 2,
   [int]$MaxQueries = 12,
   [int]$TermsPerFamily = 4,
@@ -43,6 +45,8 @@ if ($ExtraQueryTemplate.Count -gt 0) {
   Remove-Item Env:\BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES -ErrorAction SilentlyContinue
 }
 $env:BILIBILI_VIDEO_DISCOVERY_LIMIT = [string]$DiscoveryLimit
+$env:BILIBILI_CONTROVERSIAL_POPULAR_QUERY_LIMIT = [string]$ControversialPopularQueryLimit
+$env:BILIBILI_CONTROVERSIAL_POPULAR_SEARCH_ORDER = $ControversialPopularSearchOrder
 $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
 $env:BILIBILI_HARVEST_MAX_QUERIES = [string]$MaxQueries
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY = [string]$TermsPerFamily
@@ -72,6 +76,8 @@ if ($DiscoveryMode -eq "controversial") {
   }
 }
 Write-Host "Discovery limit: $DiscoveryLimit"
+Write-Host "Controversial popular query limit: $ControversialPopularQueryLimit"
+Write-Host "Controversial popular search order: $ControversialPopularSearchOrder"
 Write-Host "Comment pages per video: $CommentPages"
 Write-Host "Max harvest queries: $MaxQueries"
 Write-Host "Dictionary terms per family: $TermsPerFamily"

@@ -163,12 +163,18 @@ test('searchVideoKeywords controversial discovery mixes controversy seeds, searc
       searchQuery: 'dictionary term comments',
       controversyQueries: ['politics debate', 'game drama'],
       discoveryMode: 'controversial',
-      discoveryLimit: 3,
+      discoveryLimit: 4,
       pages: 1,
     },
     {
-      discoverVideosByKeyword: async (query) => {
-        queried.push(query);
+      discoverVideosByKeyword: async (query, _limit, options = {}) => {
+        queried.push({ query, order: options.searchOrder || '' });
+        if (options.searchOrder === 'click' && query === 'politics debate') {
+          return [{ bvid: 'BV1hotPolitics', sourceUrl: 'https://www.bilibili.com/video/BV1hotPolitics/' }];
+        }
+        if (options.searchOrder === 'click' && query === 'game drama') {
+          return [{ bvid: 'BV1hotGames1', sourceUrl: 'https://www.bilibili.com/video/BV1hotGames1/' }];
+        }
         if (query === 'politics debate') return [{ bvid: 'BV1politics1', sourceUrl: 'https://www.bilibili.com/video/BV1politics1/' }];
         if (query === 'game drama') return [{ bvid: 'BV1gameDrama', sourceUrl: 'https://www.bilibili.com/video/BV1gameDrama/' }];
         return [{ bvid: 'BV1dictionary', sourceUrl: 'https://www.bilibili.com/video/BV1dictionary/' }];
@@ -194,9 +200,17 @@ test('searchVideoKeywords controversial discovery mixes controversy seeds, searc
 
   assert.equal(result.ok, true);
   assert.equal(result.discoveryMode, 'controversial');
-  assert.deepEqual(queried, ['politics debate', 'game drama', 'dictionary term comments']);
+  assert.deepEqual(queried, [
+    { query: 'politics debate', order: 'click' },
+    { query: 'game drama', order: 'click' },
+    { query: 'politics debate', order: '' },
+    { query: 'game drama', order: '' },
+    { query: 'dictionary term comments', order: '' },
+  ]);
   assert.deepEqual(result.controversyQueries, ['politics debate', 'game drama']);
-  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1politics1', 'BV1dictionary', 'BV1popular01']);
+  assert.deepEqual(result.controversialPopularQueries, ['politics debate', 'game drama']);
+  assert.equal(result.controversialPopularSearchOrder, 'click');
+  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1hotPolitics', 'BV1politics1', 'BV1dictionary', 'BV1popular01']);
 });
 
 test('default controversy seed list includes debate-heavy Bilibili topics', () => {

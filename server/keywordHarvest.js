@@ -481,14 +481,21 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     const query = planItem.query;
     const attemptFinishedAt = new Date().toISOString();
     try {
-      const result = await searchVideoKeywords({
+      const searchPayload = {
         searchQueries: [query],
         controversyQueries: options.controversyQueries,
         discoveryMode: options.discoveryMode,
         discoveryLimit: options.discoveryLimit,
         pages: options.pages,
         excludeBvids: skipSeen ? [...scannedBvidSet] : [],
-      });
+      };
+      if (options.controversialPopularQueryLimit !== undefined) {
+        searchPayload.controversialPopularQueryLimit = options.controversialPopularQueryLimit;
+      }
+      if (options.controversialPopularSearchOrder !== undefined) {
+        searchPayload.controversialPopularSearchOrder = options.controversialPopularSearchOrder;
+      }
+      const result = await searchVideoKeywords(searchPayload);
       results.push({ query, result });
       if (!result.ok) warnings.push(`${query}: ${result.error}`);
       for (const warning of result.warnings || []) warnings.push(`${query}: ${warning}`);

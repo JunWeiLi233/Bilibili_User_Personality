@@ -346,11 +346,13 @@ export async function discoverVideosByKeyword(query, limit = 6, deps = {}) {
   if (!keyword) return [];
   const requestJson = deps.fetchJson || fetchJson;
   const pageSize = Math.max(1, Math.min(Number(limit || 6), 20));
+  const order = String(deps.searchOrder || '').trim();
   const url = new URL('https://api.bilibili.com/x/web-interface/search/type');
   url.searchParams.set('search_type', 'video');
   url.searchParams.set('keyword', keyword);
   url.searchParams.set('page', '1');
   url.searchParams.set('page_size', String(pageSize));
+  if (order) url.searchParams.set('order', order);
   const data = await requestJson(url.toString(), `https://search.bilibili.com/all?keyword=${encodeURIComponent(keyword)}`);
   if (data.code !== 0) {
     throw new Error(data.message || `video search failed with code ${data.code}`);

@@ -23,6 +23,8 @@ export const DEFAULT_CONTROVERSY_SEARCH_QUERIES =
     '\u5386\u53f2\u4e89\u8bae \u8bc4\u8bba\u533a',
     '\u79d1\u6280\u516c\u53f8 \u4e89\u8bae',
   ].join('\n');
+export const DEFAULT_CONTROVERSIAL_POPULAR_SEARCH_ORDER =
+  process.env.BILIBILI_CONTROVERSIAL_POPULAR_SEARCH_ORDER || 'click';
 
 function parseList(value) {
   if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean);
@@ -31,6 +33,19 @@ function parseList(value) {
     .map((item) => item.trim())
     .filter(Boolean);
 }
+
+function boundedInt(value, fallback, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(Math.floor(number), max));
+}
+
+export const DEFAULT_CONTROVERSIAL_POPULAR_QUERY_LIMIT = boundedInt(
+  process.env.BILIBILI_CONTROVERSIAL_POPULAR_QUERY_LIMIT ?? 4,
+  4,
+  0,
+  20,
+);
 
 function uniqueByKey(items, keyFn) {
   return [...new Map(items.filter(Boolean).map((item) => [keyFn(item), item])).values()];
@@ -90,6 +105,23 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     1,
     Math.min(Number(payload.discoveryLimit || deps.discoveryLimit || process.env.BILIBILI_VIDEO_DISCOVERY_LIMIT || 6), 20),
   );
+  const controversialPopularQueryLimit = boundedInt(
+    payload.controversialPopularQueryLimit ??
+      deps.controversialPopularQueryLimit ??
+      process.env.BILIBILI_CONTROVERSIAL_POPULAR_QUERY_LIMIT ??
+      DEFAULT_CONTROVERSIAL_POPULAR_QUERY_LIMIT,
+    DEFAULT_CONTROVERSIAL_POPULAR_QUERY_LIMIT,
+    0,
+    20,
+  );
+  const controversialPopularSearchOrder = String(
+    payload.controversialPopularSearchOrder ||
+      deps.controversialPopularSearchOrder ||
+      process.env.BILIBILI_CONTROVERSIAL_POPULAR_SEARCH_ORDER ||
+      DEFAULT_CONTROVERSIAL_POPULAR_SEARCH_ORDER,
+  )
+    .trim()
+    .toLowerCase();
   const discoveryWarnings = [];
   let discoveredVideos = [];
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
@@ -113,8 +145,18 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     }
     if (discoveryMode === 'controversial') {
       const discoverVideos = deps.discoverVideosByKeyword || discoverVideosByKeyword;
+      const controversialPopularGroup = [];
       const controversyGroup = [];
       const searchGroup = [];
+      for (const query of controversyQueries.slice(0, controversialPopularQueryLimit)) {
+        try {
+          controversialPopularGroup.push(
+            ...(await discoverVideos(query, discoveryLimit, { ...deps, searchOrder: controversialPopularSearchOrder })),
+          );
+        } catch (error) {
+          discoveryWarnings.push(`${query} (${controversialPopularSearchOrder || 'popular'}): ${error.message}`);
+        }
+      }
       for (const query of controversyQueries) {
         try {
           controversyGroup.push(...(await discoverVideos(query, discoveryLimit, deps)));
@@ -129,7 +171,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
           discoveryWarnings.push(`${query}: ${error.message}`);
         }
       }
-      discoveryGroups.push(controversyGroup, searchGroup);
+      discoveryGroups.push(controversialPopularGroup, controversyGroup, searchGroup);
     }
     if (discoveryMode === 'popular' || discoveryMode === 'mixed' || discoveryMode === 'controversial') {
       const discoverPopular = deps.discoverPopularVideos || discoverPopularVideos;
@@ -183,6 +225,12 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     discoveredVideos,
     searchQueries: videoLinks.length === 0 ? searchQueries : [],
     controversyQueries: videoLinks.length === 0 && discoveryMode === 'controversial' ? controversyQueries : [],
+    controversialPopularQueries:
+      videoLinks.length === 0 && discoveryMode === 'controversial'
+        ? controversyQueries.slice(0, controversialPopularQueryLimit)
+        : [],
+    controversialPopularSearchOrder:
+      videoLinks.length === 0 && discoveryMode === 'controversial' ? controversialPopularSearchOrder : null,
     discoveryMode: videoLinks.length === 0 ? discoveryMode : 'explicit',
     comments,
     commentText,
