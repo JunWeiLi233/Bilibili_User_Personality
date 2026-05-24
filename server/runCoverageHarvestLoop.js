@@ -63,6 +63,8 @@ const extraQueryTemplates = parseList(process.env.BILIBILI_HARVEST_EXTRA_QUERY_T
 const exhaustedSuggestionTemplates = parseList(process.env.BILIBILI_HARVEST_EXHAUSTED_SUGGESTION_TEMPLATES);
 const discoveryMode = String(process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial').trim().toLowerCase();
 const discoveryLimit = positiveIntFromEnv('BILIBILI_VIDEO_DISCOVERY_LIMIT', 6, 20);
+const controversialPopularQueryLimit = nonNegativeIntFromEnv('BILIBILI_CONTROVERSIAL_POPULAR_QUERY_LIMIT', 4, 20);
+const controversialPopularSearchOrder = String(process.env.BILIBILI_CONTROVERSIAL_POPULAR_SEARCH_ORDER || 'click').trim().toLowerCase();
 const pages = positiveIntFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2, 20);
 const queryVariantsPerTerm = positiveIntFromEnv('BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM', 2, 20);
 const termsPerFamily = positiveIntFromEnv('BILIBILI_HARVEST_TERMS_PER_FAMILY', 4, 20);
@@ -84,12 +86,16 @@ const auditOptions = {
 
 const cycles = [];
 let audit = await buildAudit(auditOptions);
+let stopReason = audit.ok ? 'coverage_gate_passed' : maxCycles === 0 ? 'cycle_limit' : '';
 console.log('Coverage harvest loop');
 console.log(`Initial coverage: ${(audit.coverage.coverageRatio * 100).toFixed(2)}%, weak ${audit.coverage.weakTerms}, zero ${audit.coverage.zeroEvidenceTerms}`);
 
 for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
   const priorityQueries = audit.recommendedQueries.slice(0, maxQueries);
-  if (priorityQueries.length === 0) break;
+  if (priorityQueries.length === 0) {
+    stopReason = 'no_recommended_queries';
+    break;
+  }
   console.log(`\nCycle ${cycle}/${maxCycles}`);
   console.log(`Priority queries: ${priorityQueries.length}`);
   for (const query of priorityQueries.slice(0, 8)) console.log(`- ${query}`);
@@ -108,6 +114,8 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     requireSourceBackedEvidence,
     discoveryMode,
     discoveryLimit,
+    controversialPopularQueryLimit,
+    controversialPopularSearchOrder,
     pages,
     rounds: roundsPerCycle,
     statePath,
@@ -115,13 +123,14 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     skipSeen,
   });
   const nextAudit = await buildAudit(auditOptions);
+  const executedQueries = harvest.rounds.flatMap((round) => round.queries);
   cycles.push({
     cycle,
     priorityQueries,
     harvest: {
       ok: harvest.ok,
       rounds: harvest.rounds.length,
-      queries: harvest.rounds.flatMap((round) => round.queries),
+      queries: executedQueries,
       warnings: harvest.rounds.flatMap((round) => round.warnings || []),
       coverageProgress: harvest.rounds.map((round) => round.coverageProgress),
     },
@@ -129,13 +138,30 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     coverageAfter: nextAudit.coverage,
   });
   console.log(`Coverage after cycle: ${(nextAudit.coverage.coverageRatio * 100).toFixed(2)}%, weak ${nextAudit.coverage.weakTerms}, zero ${nextAudit.coverage.zeroEvidenceTerms}`);
+  if (executedQueries.length === 0) {
+    stopReason = 'no_queries_run';
+    audit = nextAudit;
+    break;
+  }
+  const progressed =
+    nextAudit.coverage.evidenceDeficit < audit.coverage.evidenceDeficit ||
+    nextAudit.coverage.zeroEvidenceTerms < audit.coverage.zeroEvidenceTerms ||
+    nextAudit.coverage.sourcedEvidenceTerms > audit.coverage.sourcedEvidenceTerms;
+  if (!progressed && process.env.BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS === '1') {
+    stopReason = 'no_coverage_progress';
+    audit = nextAudit;
+    break;
+  }
   audit = nextAudit;
 }
+
+if (!stopReason) stopReason = audit.ok ? 'coverage_gate_passed' : 'cycle_limit';
 
 const report = {
   generatedAt: new Date().toISOString(),
   maxCycles,
   roundsPerCycle,
+  stopReason,
   finalOk: audit.ok,
   finalAudit: audit,
   cycles,
@@ -144,6 +170,7 @@ await writeJson(reportPath, report);
 console.log(`\nFinal coverage: ${(audit.coverage.coverageRatio * 100).toFixed(2)}%`);
 console.log(`Weak terms: ${audit.coverage.weakTerms}`);
 console.log(`Zero-evidence terms: ${audit.coverage.zeroEvidenceTerms}`);
+console.log(`Stop reason: ${stopReason}`);
 console.log(`Coverage loop report: ${reportPath}`);
 
 if (strict && !audit.ok) {

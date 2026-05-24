@@ -125,6 +125,7 @@ npm run dictionary:auto
 ```
 
 The loop audits coverage, runs the recommended queries as priority harvest queries, audits again, and stops when the coverage gate passes, there are no recommended queries, or the cycle limit is reached. It writes `server/keywordCoverageLoopReport.json`.
+Set `BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS=1` when you want the loop to stop early if a cycle runs queries but does not reduce the evidence deficit, clear a zero-evidence term, or add source-backed evidence.
 
 `npm run server` starts both services:
 
