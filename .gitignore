@@ -9,4 +9,5 @@ server/keywordHarvestState.json
 server/keywordHarvestReport.json
 server/keywordCoverageAudit.json
 server/keywordCoverageQueries.txt
+server/keywordCoverageLoopReport.json
 set-deepseek-env.ps1

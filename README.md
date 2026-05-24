@@ -116,6 +116,16 @@ To run the next audit-recommended queries first:
 .\run-bilibili-video.ps1 -PriorityQueryFile server\keywordCoverageQueries.txt -RequireEvidenceSources
 ```
 
+To run a bounded audit-harvest loop without manually copying query files:
+
+```powershell
+$env:BILIBILI_COVERAGE_LOOP_MAX_CYCLES="3"
+$env:BILIBILI_COVERAGE_LOOP_ROUNDS_PER_CYCLE="1"
+npm run dictionary:auto
+```
+
+The loop audits coverage, runs the recommended queries as priority harvest queries, audits again, and stops when the coverage gate passes, there are no recommended queries, or the cycle limit is reached. It writes `server/keywordCoverageLoopReport.json`.
+
 `npm run server` starts both services:
 
 - API backend: `http://127.0.0.1:8787`

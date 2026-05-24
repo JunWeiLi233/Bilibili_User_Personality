@@ -9,6 +9,7 @@
     "video:keywords": "node server/runVideoKeywordDiscovery.js",
     "dictionary:harvest": "node server/runVideoKeywordDiscovery.js",
     "dictionary:coverage": "node server/runDictionaryCoverageAudit.js",
+    "dictionary:auto": "node server/runCoverageHarvestLoop.js",
     "dev:full": "node server/index.js",
     "test": "node --test",
     "build": "vite build",
