@@ -361,6 +361,36 @@ test('buildKeywordHarvestQueries starts with anchored variants for long missed p
   ]);
 });
 
+test('buildKeywordHarvestQueries starts with comment anchors for evidence-backed weak terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u4e0d\u8981\u80e1\u8bf4', family: 'correction', evidenceCount: 1 },
+        { term: '\u8fbe\u7edd\u5bc6\u5168\u662f\u6302', family: 'absolutes', evidenceCount: 1 },
+        { term: '\u51fa\u751f', family: 'attack', evidenceCount: 1 },
+        { term: '\u5927\u53f7\u6ca1\u4e86', family: 'evasion', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 2,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u4e0d\u8981\u80e1\u8bf4 \u56de\u590d',
+    '\u522b\u80e1\u8bf4 \u8bc4\u8bba',
+    '\u51fa\u751f \u6e38\u620f \u8bc4\u8bba',
+    '\u7eaf\u51fa\u751f \u70ed\u8bc4',
+    '\u8fbe\u7edd\u5bc6 \u5168\u662f\u6302 \u8bc4\u8bba',
+    '\u673a\u5bc6\u5168\u662f\u6302 \u70ed\u8bc4',
+    '\u5927\u53f7\u6ca1\u4e86 \u8bc4\u8bba',
+    '\u53f7\u6ca1\u4e86 \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses topic contexts for hard zero-evidence terms', () => {
   const cases = [
     {

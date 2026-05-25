@@ -167,6 +167,50 @@ test('mergeEntriesIntoDictionary prunes persisted suffix-only emote fragments', 
   }
 });
 
+test('mergeEntriesIntoDictionary does not expand variants from persisted entries during evidence refresh', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-no-persisted-variant-expansion-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u76ee\u6807\u5f31\u8bcd',
+            family: 'attack',
+            meaning: 'existing target term',
+            variants: ['\u4e0d\u5e94\u8be5\u53d8\u6210\u65b0\u8bcd'],
+            evidenceCount: 1,
+            evidenceSamples: ['old sample'],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary(
+      [
+        {
+          term: '\u76ee\u6807\u5f31\u8bcd',
+          family: 'attack',
+          meaning: 'existing target term',
+          evidenceCount: 1,
+          evidenceSamples: ['new sample'],
+        },
+      ],
+      { dictionaryPath },
+    );
+
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['\u76ee\u6807\u5f31\u8bcd']);
+    assert.equal(dictionary.entries[0].evidenceCount, 2);
+    assert.equal(dictionary.entries[0].evidenceSamples.includes('new sample'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('mergeEntriesIntoDictionary shares existing alias evidence with longer dictionary variants', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-alias-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');
@@ -810,6 +854,50 @@ test('findDictionaryEntriesWithTextEvidence maps long missed phrase anchors back
   ]);
   assert.equal(entries.every((entry) => entry.evidenceCount >= 1), true);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-long-miss-alias'), true);
+});
+
+test('findDictionaryEntriesWithTextEvidence maps evidence-backed weak anchors back to target terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u4e0d\u8981\u80e1\u8bf4', family: 'correction', meaning: 'stop incorrect statement' },
+        { term: '\u8fbe\u7edd\u5bc6\u5168\u662f\u6302', family: 'absolutes', meaning: 'game cheating absolute claim' },
+        { term: '\u51fa\u751f', family: 'attack', meaning: 'homophone insult' },
+        { term: '\u5927\u53f7\u6ca1\u4e86', family: 'evasion', meaning: 'account gone evasion' },
+        { term: '\u902e\u6355', family: 'attack', meaning: 'caught or beaten in competition' },
+        { term: '\u9053\u5fc3\u7834\u788e', family: 'cooperation', meaning: 'mindset collapsed' },
+        { term: '\u4f4e\u60c5\u5546', family: 'attack', meaning: 'low EQ blunt framing' },
+        { term: '\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86', family: 'evasion', meaning: 'understood immediately in-group cue' },
+      ],
+    },
+    [
+      '\u522b\u80e1\u8bf4\uff0c\u8fd9\u4e0d\u662f\u539f\u56e0',
+      '\u8fbe\u7edd\u5bc6\u91cc\u9762\u5168\u662f\u6302',
+      '\u7eaf\u51fa\u751f\u6253\u6cd5',
+      '\u8fd9\u4e0b\u53f7\u6ca1\u4e86',
+      '\u5f53\u573a\u88ab\u902e\u6355',
+      '\u9053\u5fc3\u788e\u4e86',
+      '\u4f4e\u60c5\u5546\uff1a\u8fd9\u5c31\u662f\u4e0d\u884c',
+      '\u574f\u4e86\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86',
+    ].join('\n'),
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-evidence-backed-alias/',
+      uid: 'BV-evidence-backed-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u4e0d\u8981\u80e1\u8bf4',
+    '\u8fbe\u7edd\u5bc6\u5168\u662f\u6302',
+    '\u51fa\u751f',
+    '\u5927\u53f7\u6ca1\u4e86',
+    '\u902e\u6355',
+    '\u9053\u5fc3\u7834\u788e',
+    '\u4f4e\u60c5\u5546',
+    '\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceCount >= 1), true);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-evidence-backed-alias'), true);
 });
 
 test('findDictionaryEntriesWithTextEvidence maps persistent zero-evidence attack aliases back to dictionary terms', () => {
