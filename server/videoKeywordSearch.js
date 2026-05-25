@@ -209,6 +209,14 @@ const AMBIGUOUS_ALIAS_ONLY_TARGET_NEEDLES = new Set(
   ].map(cleanSearchText),
 );
 
+const STRICT_TARGET_RELEVANCE_NEEDLES = new Set(
+  [
+    '\u56fd\u9645\u5b85\u7537\u8054\u76df',
+    '\u5b85\u7537\u8054\u76df',
+    '\u679c\u8747play',
+  ].map(cleanSearchText),
+);
+
 const ASK_BAIDU_PRODUCT_NOISE_NEEDLES = [
   '\u767e\u5ea6\u6587\u5e93',
   '\u767e\u5ea6\u7f51\u76d8',
@@ -227,6 +235,10 @@ const ASK_BAIDU_PRODUCT_NOISE_NEEDLES = [
 
 function targetsAskBaiduTerm(targetExistingTerms = []) {
   return targetExistingTerms.map(cleanSearchText).some((needle) => AMBIGUOUS_ALIAS_ONLY_TARGET_NEEDLES.has(needle));
+}
+
+function targetsRequireStrictRelevance(targetExistingTerms = []) {
+  return targetExistingTerms.map(cleanSearchText).some((needle) => STRICT_TARGET_RELEVANCE_NEEDLES.has(needle));
 }
 
 function isAskBaiduProductNoiseVideo(video) {
@@ -543,6 +555,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       targetExistingTerms.length > 0 &&
       includeVideoContext === false &&
       !targetsAskBaiduTerm(targetExistingTerms) &&
+      !targetsRequireStrictRelevance(targetExistingTerms) &&
       eligibleDiscoveryGroups.every((group) => group.length === 0)
     ) {
       eligibleDiscoveryGroups = rankedDiscoveryGroups.map((group) => group.slice(0, discoveryLimit));
