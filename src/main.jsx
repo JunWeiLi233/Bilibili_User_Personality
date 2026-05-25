@@ -994,18 +994,25 @@ function App() {
     });
     const sentenceAnalyses = Array.isArray(result.sentenceAnalyses) ? result.sentenceAnalyses : [];
     const sentenceRadarMarks = buildSentenceRadarMarks(sentenceAnalyses, { confidence: result.confidence || 0.7 });
-    const sentenceMarkByQuote = new Map(sentenceRadarMarks.map((mark) => [mark.quote, mark]));
+    const sentenceMarksByQuote = sentenceRadarMarks.reduce((groups, mark) => {
+      const marks = groups.get(mark.quote) || [];
+      marks.push(mark);
+      groups.set(mark.quote, marks);
+      return groups;
+    }, new Map());
     const sentenceErrors = sentenceAnalyses.map((item, index) => ({
       id: `deepseek-sentence-${index}`,
       source: 'DeepSeek V4 逐句分析',
       speechAct: item.speechAct || '完整句判断',
-      target: sentenceMarkByQuote.get(item.quote || '')?.axis || item.target || '整句语境',
+      target: (sentenceMarksByQuote.get(item.quote || '') || []).map((mark) => mark.axis).join(' / ') || item.target || '整句语境',
       type: item.risk === 'high' ? '高风险话语' : item.risk === 'medium' ? '中性话语' : '低风险话语',
       severity: item.risk === 'high' ? '高' : item.risk === 'medium' ? '中' : '低',
       comment: item.quote || '',
       highlight: (item.quote || '').slice(0, 40),
       diagnosis: [
-        sentenceMarkByQuote.get(item.quote || '') ? `Radar: ${sentenceMarkByQuote.get(item.quote || '').axis}` : '',
+        (sentenceMarksByQuote.get(item.quote || '') || []).length > 0
+          ? `Radar: ${(sentenceMarksByQuote.get(item.quote || '') || []).map((mark) => `${mark.axis} ${Math.round(mark.strength * 100)}%`).join(' / ')}`
+          : '',
         item.stance,
         item.contextRole,
         item.reasoning,
@@ -1246,7 +1253,7 @@ function App() {
                     <article className={`sentence-radar-item sentence-${mark.direction}`} key={mark.id}>
                       <div className="sentence-radar-meta">
                         <strong>{mark.axis}</strong>
-                        <span>{mark.speechAct} · {Math.round(mark.strength * 100)}%</span>
+                        <span>{mark.speechAct} / {mark.target} / {Math.round(mark.strength * 100)}%</span>
                       </div>
                       <p>{mark.quote}</p>
                       <em>{mark.reasoning}</em>

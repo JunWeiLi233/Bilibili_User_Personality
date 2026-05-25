@@ -62,6 +62,10 @@ test('buildSentenceRadarMarks maps full sentence impacts onto radar axes', () =>
     ],
   );
   assert.equal(marks[0].confidence, 0.82);
+  assert.equal(marks[0].sentenceIndex, 0);
+  assert.equal(marks[1].sentenceIndex, 0);
+  assert.equal(marks[2].sentenceIndex, 1);
+  assert.equal(marks[0].target, '证据链覆盖范围');
 });
 
 test('buildSentenceRadarMarks infers radar axis when model omits axisImpacts', () => {

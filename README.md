@@ -52,7 +52,7 @@ cd D:\Bilibili_User_Personality
 .\run-bilibili-video.ps1
 ```
 
-The script does not require video links. By default it uses backend `controversial` discovery: debate-heavy Bilibili search seeds such as politics/current affairs, games, social issues, fandom disputes, and tech-company disputes are searched first with a popularity-oriented Bilibili search order, then mixed with dictionary-generated queries. Generic public popular videos are not included in `controversial` mode by default, because the goal is controversial popular videos, not ordinary popular videos. Add `-IncludeGenericPopular` only when you intentionally want to mix in the public popular feed. It then scans public comments, trains the keyword dictionary, and prints a coverage/growth report.
+The script does not require video links. By default it uses backend `controversial` discovery: debate-heavy Bilibili search seeds such as politics/current affairs, games, social issues, fandom disputes, and tech-company disputes are searched first with a popularity-oriented Bilibili search order, then mixed with dictionary-generated queries. Generic public popular videos are not included in `controversial` mode by default, because the goal is controversial popular videos, not ordinary popular videos. Add `-IncludeGenericPopular` only when you intentionally want to mix in the public popular feed. It then scans public comments plus public danmaku, trains the keyword dictionary, and prints a coverage/growth report. Pass `-NoDanmaku` when you intentionally want replies only.
 
 It also persists harvest state in `server/keywordHarvestState.json` and writes the latest report to `server/keywordHarvestReport.json`. These local files are ignored by Git because they are run-specific data.
 Harvest commands also take an exclusive local lock at `server/.keyword-harvest.lock`, and dictionary writes use a per-file lock such as `server/deepseekKeywordDictionary.json.lock`, so two dictionary jobs do not write the same local dictionary at the same time. If a command was killed and left a stale lock, the next run removes it automatically when the recorded process is gone or older than `BILIBILI_HARVEST_LOCK_STALE_MS`.
@@ -142,10 +142,10 @@ To run the next audit-recommended queries first:
 ```
 
 `-PriorityQueryFile server\keywordCoverageQueries.txt` still works for plain one-query-per-line runs, but `-PriorityActionFile` is better for coverage work because it keeps the backend target-term metadata from the audit.
-Add `-IncludeDanmaku` to the same command when the current priority terms are short meme phrases that often appear in public danmaku before they appear in replies:
+The direct harvest script includes public danmaku by default because many short meme phrases appear in弹幕 before they appear in replies. Pass `-NoDanmaku` when you intentionally want reply comments only:
 
 ```powershell
-.\run-bilibili-video.ps1 -PriorityActionFile server\keywordCoverageActions.json -RequireCommentEvidence -ExistingTermsOnly -IncludeDanmaku
+.\run-bilibili-video.ps1 -PriorityActionFile server\keywordCoverageActions.json -RequireCommentEvidence -ExistingTermsOnly -NoDanmaku
 ```
 
 To run a bounded audit-harvest loop without manually copying query files:

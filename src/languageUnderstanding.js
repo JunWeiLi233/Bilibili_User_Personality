@@ -66,6 +66,7 @@ export function buildSentenceRadarMarks(sentenceAnalyses = [], options = {}) {
       .slice(0, 3)
       .map((impact, impactIndex) => ({
         id: `sentence-radar-${sentenceIndex}-${impact.axis}-${impactIndex}`,
+        sentenceIndex,
         quote,
         axis: impact.axis,
         direction: impact.direction,
