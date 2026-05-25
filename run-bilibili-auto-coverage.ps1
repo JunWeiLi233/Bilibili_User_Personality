@@ -23,6 +23,7 @@ param(
   [string]$DiscoveryMode = "controversial",
   [switch]$AllowNewTerms,
   [switch]$AllowUnsourcedEvidence,
+  [switch]$AllowContextOnlyEvidence,
   [switch]$StopOnNoProgress,
   [switch]$IncludeGenericPopular,
   [switch]$ResetHarvestState,
@@ -89,9 +90,15 @@ if ($AllowNewTerms) {
 if ($AllowUnsourcedEvidence) {
   Remove-Item Env:\BILIBILI_HARVEST_REQUIRE_SOURCES -ErrorAction SilentlyContinue
   Remove-Item Env:\BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES -ErrorAction SilentlyContinue
+  Remove-Item Env:\BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS -ErrorAction SilentlyContinue
 } else {
   $env:BILIBILI_HARVEST_REQUIRE_SOURCES = "1"
   $env:BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES = "1"
+  if ($AllowContextOnlyEvidence) {
+    Remove-Item Env:\BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS -ErrorAction SilentlyContinue
+  } else {
+    $env:BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS = "1"
+  }
 }
 if ($StopOnNoProgress) {
   $env:BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS = "1"
@@ -128,6 +135,7 @@ Write-Host "Controversial popular search order: $ControversialPopularSearchOrder
 Write-Host "Include generic popular feed in controversial mode: $IncludeGenericPopular"
 Write-Host "Existing dictionary terms only: $(!$AllowNewTerms)"
 Write-Host "Require Bilibili evidence sources: $(!$AllowUnsourcedEvidence)"
+Write-Host "Require Bilibili comment evidence: $(!$AllowUnsourcedEvidence -and !$AllowContextOnlyEvidence)"
 Write-Host "Reset harvest state: $ResetHarvestState"
 Write-Host ""
 Write-Host "Auditing coverage, harvesting priority queries, and repeating until the gate passes or the cycle limit is reached..."

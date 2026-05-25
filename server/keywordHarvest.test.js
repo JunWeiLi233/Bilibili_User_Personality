@@ -1200,6 +1200,49 @@ test('buildDictionaryCoverageAudit can require source-backed evidence metadata',
   assert.equal(audit.failureReasons.some((reason) => reason.includes('missing Bilibili source metadata')), true);
 });
 
+test('buildDictionaryCoverageAudit can require comment-backed evidence instead of video context only', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'contextOnly',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext/',
+              uid: 'BVcontext',
+              sample: 'Bilibili video context: contextOnly from a video title',
+            },
+          ],
+        },
+        {
+          term: 'commentBacked',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public video comment scan plus video context: https://www.bilibili.com/video/BVcomment/',
+              uid: 'BVcomment',
+              sample: 'commentBacked appears in a real reply',
+            },
+          ],
+        },
+      ],
+    },
+    { termAttempts: {} },
+    { targetEvidence: 3, requireSourceBackedEvidence: true, requireCommentBackedEvidence: true },
+  );
+
+  const byTerm = Object.fromEntries(audit.nextActions.map((item) => [item.term, item]));
+  assert.equal(audit.coverage.sourcedEvidenceTerms, 1);
+  assert.equal(audit.coverage.unsourcedEvidenceTerms, 1);
+  assert.equal(audit.ok, false);
+  assert.equal(byTerm.contextOnly.status, 'source_gap');
+  assert.equal(byTerm.contextOnly.sourcedEvidence, false);
+  assert.equal(audit.failureReasons.some((reason) => reason.includes('missing Bilibili comment evidence')), true);
+});
+
 test('buildDictionaryCoverageAudit diversifies recommendations across related weak term groups', () => {
   const audit = buildDictionaryCoverageAudit(
     {

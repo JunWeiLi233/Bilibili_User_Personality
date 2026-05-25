@@ -151,6 +151,18 @@ function hasEvidenceSource(entry) {
   return evidenceCount(entry) > 0 && Array.isArray(entry?.evidenceSources) && entry.evidenceSources.length > 0;
 }
 
+function isVideoContextEvidenceSource(source = {}) {
+  const sample = String(source?.sample || '').trim();
+  const sourceText = String(source?.source || '').trim();
+  return sample.startsWith('Bilibili video context:') || sourceText.includes('search-discovered video context');
+}
+
+function hasCoverageEvidenceSource(entry, options = {}) {
+  if (!hasEvidenceSource(entry)) return false;
+  if (options.requireCommentBackedEvidence !== true) return true;
+  return (entry.evidenceSources || []).some((source) => !isVideoContextEvidenceSource(source));
+}
+
 function termAttemptKey(term) {
   return Buffer.from(String(term || ''), 'utf8').toString('base64url');
 }
@@ -529,7 +541,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   const entries =
     coverageMode === 'all-weak'
       ? allEntries
-          .filter((entry) => evidenceCount(entry) < targetEvidence || (requireSourceBackedEvidence && evidenceCount(entry) > 0 && !hasEvidenceSource(entry)))
+          .filter((entry) => evidenceCount(entry) < targetEvidence || (requireSourceBackedEvidence && evidenceCount(entry) > 0 && !hasCoverageEvidenceSource(entry, options)))
           .sort((a, b) => {
             const actionA = actionMap.get(String(a.term || '').trim());
             const actionB = actionMap.get(String(b.term || '').trim());
@@ -569,7 +581,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
         term,
         family,
         evidenceCount: evidenceCount(entry),
-        sourcedEvidence: hasEvidenceSource(entry),
+        sourcedEvidence: hasCoverageEvidenceSource(entry, options),
         priorAttempts: attempts,
         priorSuccessfulAttempts: successfulAttempts,
         variantIndex: variant.variantIndex,
@@ -652,8 +664,8 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
   const totalEvidence = entries.reduce((sum, entry) => sum + evidenceCount(entry), 0);
   const weakEntries = entries.filter((entry) => evidenceCount(entry) < targetEvidence);
   const zeroEvidence = entries.filter((entry) => evidenceCount(entry) === 0);
-  const sourcedEvidence = entries.filter(hasEvidenceSource);
-  const unsourcedEvidence = entries.filter((entry) => evidenceCount(entry) > 0 && !hasEvidenceSource(entry));
+  const sourcedEvidence = entries.filter((entry) => hasCoverageEvidenceSource(entry, options));
+  const unsourcedEvidence = entries.filter((entry) => evidenceCount(entry) > 0 && !hasCoverageEvidenceSource(entry, options));
   const evidenceDeficit = weakEntries.reduce((sum, entry) => sum + Math.max(0, targetEvidence - evidenceCount(entry)), 0);
   const byFamily = {};
   for (const entry of entries) {
@@ -663,7 +675,7 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
     byFamily[family].evidence += evidenceCount(entry);
     if (evidenceCount(entry) < targetEvidence) byFamily[family].weak += 1;
     if (evidenceCount(entry) === 0) byFamily[family].zero += 1;
-    if (hasEvidenceSource(entry)) byFamily[family].sourced += 1;
+    if (hasCoverageEvidenceSource(entry, options)) byFamily[family].sourced += 1;
   }
   return {
     complete: weakEntries.length === 0,
@@ -801,7 +813,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       null;
     let status = 'covered';
     let action = 'none';
-    if (count >= targetEvidence && options.requireSourceBackedEvidence === true && count > 0 && !hasEvidenceSource(entry)) {
+    if (count >= targetEvidence && options.requireSourceBackedEvidence === true && count > 0 && !hasCoverageEvidenceSource(entry, options)) {
       status = 'source_gap';
       action = nextVariant ? 'refresh_source_metadata' : 'add_query_template';
     } else if (count < targetEvidence && exhausted) {
@@ -823,7 +835,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       status,
       action,
       evidenceCount: count,
-      sourcedEvidence: hasEvidenceSource(entry),
+      sourcedEvidence: hasCoverageEvidenceSource(entry, options),
       targetEvidence,
       evidenceNeeded: Math.max(0, targetEvidence - count),
       attempts: attemptsCount,
@@ -843,7 +855,10 @@ export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, option
   const minCoverageRatio = Math.min(1, Math.max(0, Number(options.minCoverageRatio ?? 1)));
   const requireComplete = options.requireComplete !== false;
   const requireSourceBackedEvidence = options.requireSourceBackedEvidence === true;
-  const coverage = summarizeEvidenceCoverage(dictionary, { targetEvidence });
+  const coverage = summarizeEvidenceCoverage(dictionary, {
+    targetEvidence,
+    requireCommentBackedEvidence: options.requireCommentBackedEvidence === true,
+  });
   const termAttemptSummary = summarizeTermAttempts(state, dictionary, options);
   const coverageActions = buildCoverageActions(dictionary, state, options);
   const actionSummary = coverageActions.reduce((summary, item) => {
@@ -880,7 +895,11 @@ export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, option
     failureReasons.push(`${coverage.weakTerms} term(s) are below ${targetEvidence} evidence hit(s)`);
   }
   if (requireSourceBackedEvidence && coverage.unsourcedEvidenceTerms > 0) {
-    failureReasons.push(`${coverage.unsourcedEvidenceTerms} evidence-backed term(s) are missing Bilibili source metadata`);
+    failureReasons.push(
+      options.requireCommentBackedEvidence === true
+        ? `${coverage.unsourcedEvidenceTerms} evidence-backed term(s) are missing Bilibili comment evidence`
+        : `${coverage.unsourcedEvidenceTerms} evidence-backed term(s) are missing Bilibili source metadata`,
+    );
   }
   if (termAttemptSummary.exhaustedTerms > 0) {
     failureReasons.push(`${termAttemptSummary.exhaustedTerms} exhausted term(s) need extra query templates`);

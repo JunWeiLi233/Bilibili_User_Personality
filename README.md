@@ -61,7 +61,7 @@ For the full dictionary coverage loop, use:
 .\run-bilibili-auto-coverage.ps1 -MaxCycles 5 -RoundsPerCycle 2 -MaxQueries 20 -DiscoveryLimit 8 -CommentPages 3
 ```
 
-That command audits the current dictionary, exports the next weak-term priority queries, harvests Bilibili comments from controversial popular topics plus dictionary queries, then repeats until the coverage gate passes or the cycle limit is reached. It does not use the generic popular feed unless you pass `-IncludeGenericPopular`. It requires source-backed Bilibili evidence and refreshes existing dictionary terms only by default, so coverage work does not keep lowering the pass ratio by adding fresh terms mid-loop. Add `-AllowNewTerms` when you want the same loop to expand the dictionary, and add `-AllowUnsourcedEvidence` only when you want a faster but less auditable run.
+That command audits the current dictionary, exports the next weak-term priority queries, harvests Bilibili comments from controversial popular topics plus dictionary queries, then repeats until the coverage gate passes or the cycle limit is reached. It does not use the generic popular feed unless you pass `-IncludeGenericPopular`. It requires source-backed Bilibili comment evidence and refreshes existing dictionary terms only by default, so coverage work does not keep lowering the pass ratio by adding fresh terms mid-loop or treating search-result titles as completed comment evidence. Add `-AllowNewTerms` when you want the same loop to expand the dictionary, add `-AllowContextOnlyEvidence` when video title/description context is enough for your run, and add `-AllowUnsourcedEvidence` only when you want a faster but less auditable run.
 
 To change what videos are discovered:
 
@@ -125,7 +125,7 @@ After a harvest, run a read-only coverage audit to see exactly which dictionary 
 npm run dictionary:coverage
 ```
 
-The audit writes `server/keywordCoverageAudit.json`, exports recommended queries to `server/keywordCoverageQueries.txt`, and prints weak terms, exhausted terms, family gaps, source-backed evidence counts, unsourced evidence terms to refresh, next coverage actions, and recommended next queries/templates. For a local or CI gate, set `BILIBILI_COVERAGE_AUDIT_STRICT=1`; the command exits non-zero until the configured coverage target is met. Tune the gate with `BILIBILI_COVERAGE_AUDIT_MIN_RATIO`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_COMPLETE=0`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES=1`, `BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS`, and `BILIBILI_HARVEST_TARGET_EVIDENCE`.
+The audit writes `server/keywordCoverageAudit.json`, exports recommended queries to `server/keywordCoverageQueries.txt`, and prints weak terms, exhausted terms, family gaps, source-backed evidence counts, unsourced evidence terms to refresh, next coverage actions, and recommended next queries/templates. For a local or CI gate, set `BILIBILI_COVERAGE_AUDIT_STRICT=1`; the command exits non-zero until the configured coverage target is met. Tune the gate with `BILIBILI_COVERAGE_AUDIT_MIN_RATIO`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_COMPLETE=0`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES=1`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS=1`, `BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS`, and `BILIBILI_HARVEST_TARGET_EVIDENCE`. `BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS=1` is stricter: search-result video titles/descriptions can help discovery, but they do not satisfy the coverage gate until the term has non-context Bilibili comment evidence.
 
 To run the next audit-recommended queries first:
 

@@ -36,6 +36,7 @@ const requireComplete = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMPLETE !==
 const requireSourceBackedEvidence =
   process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES === '1' ||
   process.env.BILIBILI_HARVEST_REQUIRE_SOURCES === '1';
+const requireCommentBackedEvidence = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS === '1';
 const strict = process.env.BILIBILI_COVERAGE_AUDIT_STRICT === '1';
 const extraQueryTemplates = process.env.BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES || '';
 const exhaustedSuggestionTemplates = process.env.BILIBILI_HARVEST_EXHAUSTED_SUGGESTION_TEMPLATES || '';
@@ -49,6 +50,7 @@ const audit = buildDictionaryCoverageAudit(dictionary, state, {
   minCoverageRatio,
   requireComplete,
   requireSourceBackedEvidence,
+  requireCommentBackedEvidence,
   extraQueryTemplates,
   exhaustedSuggestionTemplates,
   retryBeforeUnattemptedLimit,
@@ -75,9 +77,13 @@ if (audit.familyGaps.length) {
 }
 
 if (audit.coverage.unsourcedEvidenceSamples.length) {
-  console.log('Unsourced evidence terms to refresh:');
+  console.log(requireCommentBackedEvidence ? 'Context-only evidence terms to refresh from comments:' : 'Unsourced evidence terms to refresh:');
   for (const entry of audit.coverage.unsourcedEvidenceSamples.slice(0, 12)) {
-    console.log(`- [${entry.family}] ${entry.term}: ${entry.evidenceCount} evidence hit(s), missing Bilibili source metadata`);
+    console.log(
+      `- [${entry.family}] ${entry.term}: ${entry.evidenceCount} evidence hit(s), missing ${
+        requireCommentBackedEvidence ? 'Bilibili comment evidence' : 'Bilibili source metadata'
+      }`,
+    );
   }
 }
 
