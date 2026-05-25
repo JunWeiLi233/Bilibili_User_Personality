@@ -2384,6 +2384,74 @@ test('harvestKeywordDictionary keeps target terms for feedback priority queries'
   }
 });
 
+test('harvestKeywordDictionary runs hard zero-evidence priority queries even when globally searched', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-hard-zero-priority-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        harvestStrategyVersion: 2,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        searchedQueries: ['车家军'],
+        scannedBvids: [],
+        termAttempts: {
+          [Buffer.from('没有车家军', 'utf8').toString('base64url')]: {
+            term: '没有车家军',
+            family: 'attack',
+            evidenceAtPlanTime: 0,
+            lastEvidenceCount: 0,
+            attempts: 6,
+            successfulAttempts: 0,
+            queries: [
+              { query: '没有车家军 评论区 梗 热评', strategyVersion: 2 },
+              { query: '没有车家军 评论区', strategyVersion: 2 },
+              { query: '没有车家军 热评', strategyVersion: 2 },
+              { query: '没有车家军 B站 评论区 梗', strategyVersion: 2 },
+              { query: '没有车家军 B站 回复 评论区', strategyVersion: 2 },
+              { query: '没有车家军 弹幕', strategyVersion: 2 },
+            ],
+          },
+        },
+        runs: [],
+      }),
+      'utf8',
+    );
+
+    const searched = [];
+    await harvestKeywordDictionary(
+      {
+        priorityQueries: ['车家军'],
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: '没有车家军', family: 'attack', evidenceCount: 0 }] }),
+        searchVideoKeywords: async (payload) => {
+          searched.push(payload.searchQueries[0]);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BV1111111111' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(searched, ['车家军']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionaryRounds keeps running new unseen queries across rounds', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-rounds-'));
   const statePath = join(dir, 'state.json');

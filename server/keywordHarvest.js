@@ -348,8 +348,9 @@ function selectHarvestPlan(candidatePlan, options = {}) {
   for (const item of candidatePlan) {
     if (selected.length >= maxQueries) break;
     const query = String(item?.query || '').trim();
-    if (!query || (skipSeen && searchedQuerySet.has(query))) continue;
     const hardMissed = isHardMissedPlanItem(item, termAttempts, options.retryBeforeUnattemptedLimit);
+    const canRetrySeenPriority = hardMissed && item?.source === 'priority';
+    if (!query || (skipSeen && searchedQuerySet.has(query) && !canRetrySeenPriority)) continue;
     const hardMissedTerm = String(item?.term || '').trim();
     if (hardMissed && !selectedHardMissedTerms.has(hardMissedTerm) && selectedHardMissedTerms.size >= maxHardMissedQueries) continue;
     if (hardMissed && selectedHardMissedTerms.has(hardMissedTerm)) continue;
@@ -456,14 +457,18 @@ function diversifyCoverageActions(actions, limit) {
 function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
   const actions = [...actionMap.values()];
   return priorityQueries.map((query) => {
+    const cleanQuery = String(query || '').trim();
     const matchedAction = actions.find(
       (action) =>
-        action.nextQuery === query ||
-        (Array.isArray(action.suggestedQueries) && action.suggestedQueries.includes(query)),
+        action.nextQuery === cleanQuery ||
+        (Array.isArray(action.suggestedQueries) && action.suggestedQueries.includes(cleanQuery)) ||
+        exactFeedbackQueriesForTerm(action.term).includes(cleanQuery) ||
+        precisionQueriesForTerm(action.term).includes(cleanQuery) ||
+        negativeFeedbackQueriesForTerm(action.term).includes(cleanQuery),
     );
-    if (!matchedAction) return { query, source: 'priority' };
+    if (!matchedAction) return { query: cleanQuery, source: 'priority' };
     return {
-      query,
+      query: cleanQuery,
       source: 'priority',
       term: matchedAction.term,
       family: matchedAction.family,
