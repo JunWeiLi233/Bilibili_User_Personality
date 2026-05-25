@@ -81,6 +81,19 @@ test('normalizes noisy punctuation and rejects low-quality keyword terms', () =>
   ]);
 });
 
+test('normalizes away suffix-only Bilibili emote variants', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: 'Cat_confuse',
+      variants: ['confuse'],
+      family: 'cooperation',
+      meaning: 'Bilibili emote marker copied from a bracket expression',
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['Catconfuse']);
+});
+
 test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-noise-'));
   const dictionaryPath = join(dir, 'dictionary.json');
@@ -101,6 +114,43 @@ test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise ter
     const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
 
     assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['doge']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('mergeEntriesIntoDictionary prunes persisted suffix-only emote fragments', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-emote-fragment-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: 'Catconfuse',
+            family: 'cooperation',
+            meaning: 'Bilibili emote marker copied from a bracket expression',
+            evidenceCount: 1,
+            evidenceSamples: ['sample [Cat_confuse] comment'],
+          },
+          {
+            term: 'confuse',
+            family: 'cooperation',
+            meaning: 'Bilibili emote marker copied from a bracket expression',
+            evidenceCount: 1,
+            evidenceSamples: ['sample [Cat_confuse] comment'],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['Catconfuse']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

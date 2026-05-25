@@ -125,6 +125,29 @@ function isNoisyTerm(term) {
   return false;
 }
 
+function isAsciiSuffixFragmentOf(fragment, term) {
+  return /^[A-Za-z]{4,}$/.test(fragment) && /^[A-Za-z]{6,}$/.test(term) && term.length >= fragment.length + 3 && term.toLowerCase().endsWith(fragment.toLowerCase());
+}
+
+function pruneSuffixOnlyFragments(entries = []) {
+  return entries.filter((entry) => {
+    const term = cleanTerm(entry?.term);
+    if (!/^[A-Za-z]{4,}$/.test(term)) return true;
+    return !entries.some((candidate) => {
+      const candidateTerm = cleanTerm(candidate?.term);
+      return (
+        candidate !== entry &&
+        candidate.family === entry.family &&
+        isAsciiSuffixFragmentOf(term, candidateTerm) &&
+        String(candidate.meaning || '').trim() === String(entry.meaning || '').trim() &&
+        ((candidate.evidenceSamples || []).length === 0 ||
+          (entry.evidenceSamples || []).length === 0 ||
+          (candidate.evidenceSamples || []).some((sample) => (entry.evidenceSamples || []).includes(sample)))
+      );
+    });
+  });
+}
+
 function normalizeFamily(family) {
   const raw = String(family || '').trim();
   return SUPPORTED_FAMILIES.includes(raw) ? raw : FAMILY_ALIASES[raw] || 'attack';
@@ -242,7 +265,8 @@ export function normalizeKeywordEntries(rawEntries = []) {
   for (const item of rawEntries) {
     const family = normalizeFamily(item.family);
     const variants = Array.isArray(item.variants) ? item.variants : [];
-    const terms = unique([item.term, ...variants].map(cleanTerm)).filter((term) => term.length >= 2 && term.length <= 12);
+    const cleanedTerms = unique([item.term, ...variants].map(cleanTerm)).filter((term) => term.length >= 2 && term.length <= 12);
+    const terms = cleanedTerms.filter((term) => !cleanedTerms.some((candidate) => candidate !== term && isAsciiSuffixFragmentOf(term, candidate)));
     const meaning = String(item.meaning || item.reason || '').trim();
     if (!meaning || /中文含义|语用功能|^含义$|^解释$/.test(meaning)) continue;
     for (const term of terms) {
@@ -264,7 +288,7 @@ export function normalizeKeywordEntries(rawEntries = []) {
   for (const entry of entries) {
     entryMap.set(entry.term, mergeKeywordEntry(entryMap.get(entry.term), entry, now));
   }
-  return [...entryMap.values()].map(({ updatedAt, ...entry }) => entry);
+  return pruneSuffixOnlyFragments([...entryMap.values()]).map(({ updatedAt, ...entry }) => entry);
 }
 
 function cleanEvidenceText(text) {
@@ -382,7 +406,7 @@ export async function mergeEntriesIntoDictionary(entries, options = {}) {
   }
   propagateAliasEvidence(entryMap, now);
 
-  const allEntries = [...entryMap.values()].sort((a, b) => a.family.localeCompare(b.family) || a.term.localeCompare(b.term));
+  const allEntries = pruneSuffixOnlyFragments([...entryMap.values()]).sort((a, b) => a.family.localeCompare(b.family) || a.term.localeCompare(b.term));
   const families = Object.fromEntries(SUPPORTED_FAMILIES.map((family) => [family, []]));
   for (const entry of allEntries) {
     if (!families[entry.family]) families[entry.family] = [];
