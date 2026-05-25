@@ -161,7 +161,10 @@ function cleanTerm(term) {
 }
 
 function cleanKeywordTerm(term) {
-  let cleaned = cleanTerm(term).replace(/^热词系列/u, '').trim();
+  let cleaned = cleanTerm(term)
+    .replace(/[A-Za-z0-9]+/g, (match) => match.toLowerCase())
+    .replace(/^热词系列/u, '')
+    .trim();
   if (/[\p{Script=Han}]/u.test(cleaned) && /doge$/i.test(cleaned) && cleaned.length > 'doge'.length + 1) {
     cleaned = cleaned.replace(/doge$/i, '');
   }
@@ -887,6 +890,9 @@ export async function trainKeywordDictionary(payload, options = {}) {
   const generated = existingTermsOnly
     ? { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' }
     : await generateKeywordEntries(payload, config, options);
+  const currentTermSet = new Set(
+    normalizeKeywordEntries(currentDictionary.entries.map(({ variants: _variants, ...entry }) => entry)).map((entry) => entry.term),
+  );
   const generatedTerms = new Set(generated.entries.map((entry) => entry.term));
   const exactDictionaryEvidenceEntries = findDictionaryEntriesWithTextEvidence(evidenceDictionary, payload.text, {
     excludeTerms: generatedTerms,
@@ -900,7 +906,9 @@ export async function trainKeywordDictionary(payload, options = {}) {
       })
     : { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' };
   const dictionaryEvidenceEntries = normalizeKeywordEntries([...exactDictionaryEvidenceEntries, ...modelDictionaryEvidence.entries]);
-  const acceptedEntries = normalizeKeywordEntries([...generated.entries, ...dictionaryEvidenceEntries]);
+  const acceptedEntries = normalizeKeywordEntries([...generated.entries, ...dictionaryEvidenceEntries]).filter(
+    (entry) => !existingTermsOnly || currentTermSet.has(entry.term),
+  );
   const dictionary = await mergeEntriesIntoDictionary(acceptedEntries, options);
   return {
     ok: true,

@@ -91,7 +91,7 @@ test('normalizes away suffix-only Bilibili emote variants', () => {
     },
   ]);
 
-  assert.deepEqual(entries.map((entry) => entry.term), ['Catconfuse']);
+  assert.deepEqual(entries.map((entry) => entry.term), ['catconfuse']);
 });
 
 test('normalizes Bilibili emote wrapper artifacts to the spoken keyword', () => {
@@ -103,6 +103,18 @@ test('normalizes Bilibili emote wrapper artifacts to the spoken keyword', () => 
   ]);
 
   assert.deepEqual(entries.map((entry) => entry.term), ['\u77e5\u8bc6\u76f2\u533a', '\u5999\u554a', '\u61c2\u4e86\u5427', 'doge']);
+});
+
+test('normalizes mixed-case ASCII runs inside keyword terms', () => {
+  const entries = normalizeKeywordEntries([
+    { term: 'Doge', family: 'cooperation', meaning: 'mixed case Bilibili shorthand' },
+    { term: 'UP\u4e3b', family: 'cooperation', meaning: 'Bilibili uploader shorthand' },
+    { term: '\u5168B\u7ad9', family: 'absolutes', meaning: 'mixed Chinese and Latin platform name' },
+    { term: 'PUA', family: 'attack', meaning: 'internet discourse acronym' },
+    { term: 'A\u5230\u7206\u70b8', family: 'cooperation', meaning: 'mixed Latin adjective phrase' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['doge', 'up\u4e3b', '\u5168b\u7ad9', 'pua', 'a\u5230\u7206\u70b8']);
 });
 
 test('mergeEntriesIntoDictionary compacts persisted Bilibili emote wrapper artifacts', async () => {
@@ -246,7 +258,7 @@ test('mergeEntriesIntoDictionary prunes persisted suffix-only emote fragments', 
 
     const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
 
-    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['Catconfuse']);
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['catconfuse']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -338,7 +350,7 @@ test('mergeEntriesIntoDictionary shares existing alias evidence with longer dict
   }
 });
 
-test('mergeEntriesIntoDictionary shares evidence across same-family allowed ASCII case variants', async () => {
+test('mergeEntriesIntoDictionary compacts same-family ASCII case variants', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-casefold-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');
   try {
@@ -371,12 +383,10 @@ test('mergeEntriesIntoDictionary shares evidence across same-family allowed ASCI
 
     const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
     const lower = dictionary.entries.find((entry) => entry.term === 'doge');
-    const upper = dictionary.entries.find((entry) => entry.term === 'Doge');
 
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['doge']);
     assert.equal(lower.evidenceCount, 2);
-    assert.equal(upper.evidenceCount, 2);
     assert.deepEqual(lower.evidenceSamples, ['this comment uses doge', 'Doge appears in mixed case']);
-    assert.deepEqual(upper.evidenceSamples, ['Doge appears in mixed case', 'this comment uses doge']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -465,7 +475,7 @@ test('mergeEntriesIntoDictionary shares evidence across contained Chinese varian
   }
 });
 
-test('mergeEntriesIntoDictionary does not share case-fold evidence across different families', async () => {
+test('mergeEntriesIntoDictionary keeps canonical ASCII terms split by family confidence', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-casefold-family-'));
   const dictionaryPath = join(dir, 'dictionary.json');
   try {
@@ -495,10 +505,12 @@ test('mergeEntriesIntoDictionary does not share case-fold evidence across differ
     );
 
     const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
-    const upper = dictionary.entries.find((entry) => entry.term === 'Doge');
+    const entry = dictionary.entries.find((item) => item.term === 'doge');
 
-    assert.equal(upper.evidenceCount, 0);
-    assert.deepEqual(upper.evidenceSamples, []);
+    assert.deepEqual(dictionary.entries.map((item) => item.term), ['doge']);
+    assert.equal(entry.family, 'cooperation');
+    assert.equal(entry.evidenceCount, 2);
+    assert.deepEqual(entry.evidenceSamples, ['nice one doge']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -531,7 +543,7 @@ test('normalizes away Bilibili object IDs from keyword terms', () => {
     { term: 'BV号', family: 'evidence', meaning: 'discussion about Bilibili ids as text' },
   ]);
 
-  assert.deepEqual(entries.map((entry) => entry.term), ['BV号']);
+  assert.deepEqual(entries.map((entry) => entry.term), ['bv号']);
 });
 
 test('extracts JSON object from verbose DeepSeek responses', () => {
@@ -1076,6 +1088,56 @@ test('trainKeywordDictionary can refresh only existing dictionary terms', async 
     assert.deepEqual(result.entries.map((entry) => entry.term), ['\u65b0\u9c9c\u8bcd']);
     assert.equal(result.dictionary.entries.some((entry) => entry.term === '\u5168\u65b0\u8bcd'), false);
     assert.equal(result.dictionary.entries.find((entry) => entry.term === '\u65b0\u9c9c\u8bcd').evidenceCount, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('trainKeywordDictionary existing-only mode refuses non-current normalized terms', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-train-existing-only-current-terms-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await mergeEntriesIntoDictionary(
+      [{ term: '\u5df2\u6709\u8bcd', family: 'cooperation', meaning: 'existing dictionary term', confidence: 0.7, evidenceCount: 0 }],
+      { dictionaryPath },
+    );
+
+    const result = await trainKeywordDictionary(
+      {
+        text: '\u5df2\u6709\u8bcd and \u672a\u6536\u5f55\u8bcd both appear here',
+        uid: 'BV-existing-only-current',
+        source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-existing-only-current/',
+        existingTermsOnly: true,
+      },
+      {
+        dictionaryPath,
+        env: { DEEPSEEK_API_KEY: 'test-key', DEEPSEEK_MODEL: 'deepseek-v4-flash' },
+        fetch: async (url) => {
+          if (String(url).endsWith('/models')) {
+            return { ok: true, json: async () => ({ data: [{ id: 'deepseek-v4-flash' }] }) };
+          }
+          return {
+            ok: true,
+            json: async () => ({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      matches: [
+                        { term: '\u672a\u6536\u5f55\u8bcd', evidence: '\u672a\u6536\u5f55\u8bcd' },
+                      ],
+                    }),
+                  },
+                },
+              ],
+            }),
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(result.entries.map((entry) => entry.term), ['\u5df2\u6709\u8bcd']);
+    assert.equal(result.dictionary.entries.some((entry) => entry.term === '\u672a\u6536\u5f55\u8bcd'), false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
