@@ -1909,6 +1909,22 @@ test('findDictionaryEntriesWithTextEvidence maps latest sample-backed weak alias
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps network-cable meme anchors back to target term', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [{ term: '\u7ed9\u6839\u7f51\u7ebf\u5c31\u4e0a\u5929', family: 'attack', meaning: 'keyboard warrior insult' }],
+    },
+    '\u8fd9\u79cd\u952e\u76d8\u4fa0\u7ed9\u4f60\u4e00\u6839\u7f51\u7ebf\u4ed6\u80fd\u4e0a\u5929\uff0c\u4e0d\u770b\u5b8c\u5c31\u5f00\u55b7',
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-network-cable-meme/',
+      uid: 'BV-network-cable-meme',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u7ed9\u6839\u7f51\u7ebf\u5c31\u4e0a\u5929']);
+  assert.equal(entries[0].evidenceSources[0].uid, 'BV-network-cable-meme');
+});
+
 test('findDictionaryEntriesWithTextEvidence maps persistent zero-evidence attack aliases back to dictionary terms', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

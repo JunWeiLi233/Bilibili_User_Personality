@@ -381,6 +381,22 @@ test('buildKeywordHarvestQueries uses latest weak miss aliases before exact stal
   }
 });
 
+test('buildKeywordHarvestQueries avoids cable-repair noise for give-network-cable meme terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [{ term: '\u7ed9\u6839\u7f51\u7ebf\u5c31\u4e0a\u5929', family: 'attack', evidenceCount: 1 }],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 8,
+    },
+  );
+
+  assert.equal(queries.includes('\u952e\u76d8\u4fa0\u7ed9\u6839\u7f51\u7ebf\u5c31\u4e0a\u5929 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+});
+
 test('buildKeywordHarvestQueries uses follow-up weak aliases before exact stale queries', () => {
   const cases = [
     {
@@ -845,7 +861,7 @@ test('buildKeywordHarvestQueries starts with priority weak action aliases', () =
     {
       term: '\u7ed9\u6839\u7f51\u7ebf\u5c31\u4e0a\u5929',
       family: 'attack',
-      expectedAliasQuery: '\u7ed9\u6839\u7f51\u7ebf\u5c31\u4e0a\u5929 \u8bc4\u8bba',
+      expectedAliasQuery: '\u952e\u76d8\u4fa0 \u7ed9\u6839\u7f51\u7ebf\u5c31\u4e0a\u5929 \u70ed\u8bc4',
     },
     {
       term: '\u7ed9\u7b5b\u5b50\u91cc\u704c\u4e86\u94c5',
