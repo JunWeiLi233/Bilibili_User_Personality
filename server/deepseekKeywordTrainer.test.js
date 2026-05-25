@@ -324,6 +324,76 @@ test('trainKeywordDictionary can refresh only existing dictionary terms', async 
   }
 });
 
+test('trainKeywordDictionary uses DeepSeek V4 to map exact source phrases to existing terms only', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-train-existing-deepseek-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  const chatBodies = [];
+  try {
+    await mergeEntriesIntoDictionary(
+      [
+        { term: '\u524d\u9762\u8bf4\u91cd\u4e86', family: 'correction', meaning: 'self correction phrase', confidence: 0.7 },
+        { term: '\u8e6d\u6982\u5ff5', family: 'attack', meaning: 'concept-riding accusation', confidence: 0.7 },
+      ],
+      { dictionaryPath },
+    );
+
+    const result = await trainKeywordDictionary(
+      {
+        text: '\u64a4\u56de\u8fd9\u53e5\uff0c\u524d\u9762\u7684\u7ed3\u8bba\u4e0d\u51c6\u786e\n\u8fd9\u4e0d\u662f\u666e\u901a\u7684AI\u70ed\u5ea6\u5417',
+        uid: 'BV-existing-deepseek',
+        source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-existing-deepseek/',
+        existingTermsOnly: true,
+      },
+      {
+        dictionaryPath,
+        env: {
+          DEEPSEEK_API_KEY: 'test-key',
+          DEEPSEEK_MODEL: 'deepseek-v4-flash',
+          DEEPSEEK_REASONING_EFFORT: 'medium',
+        },
+        fetch: async (url, options = {}) => {
+          if (String(url).endsWith('/models')) {
+            return { ok: true, json: async () => ({ data: [{ id: 'deepseek-v4-flash' }] }) };
+          }
+          const body = JSON.parse(options.body);
+          chatBodies.push(body);
+          return {
+            ok: true,
+            json: async () => ({
+              choices: [
+                {
+                  message: {
+                    content: JSON.stringify({
+                      matches: [
+                        { term: '\u524d\u9762\u8bf4\u91cd\u4e86', evidence: '\u64a4\u56de\u8fd9\u53e5', confidence: 0.86 },
+                        { term: '\u65b0\u8bcd', evidence: '\u666e\u901a', confidence: 0.9 },
+                        { term: '\u8e6d\u6982\u5ff5', evidence: '\u4e0d\u5728\u539f\u6587\u7684\u8bc1\u636e', confidence: 0.8 },
+                      ],
+                    }),
+                  },
+                },
+              ],
+            }),
+          };
+        },
+      },
+    );
+
+    assert.equal(result.available, true);
+    assert.equal(result.usedFallback, false);
+    assert.deepEqual(result.generatedEntries, []);
+    assert.deepEqual(result.dictionaryEvidenceEntries.map((entry) => entry.term), ['\u524d\u9762\u8bf4\u91cd\u4e86']);
+    assert.equal(result.dictionaryEvidenceEntries[0].evidenceCount, 1);
+    assert.equal(result.dictionaryEvidenceEntries[0].evidenceSamples[0].includes('\u64a4\u56de\u8fd9\u53e5'), true);
+    assert.equal(result.dictionaryEvidenceEntries[0].evidenceSources[0].uid, 'BV-existing-deepseek');
+    assert.equal(result.dictionary.entries.some((entry) => entry.term === '\u65b0\u8bcd'), false);
+    assert.equal(chatBodies[0].model, 'deepseek-v4-flash');
+    assert.equal(chatBodies[0].reasoning_effort, 'medium');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('merges learned keyword entries into a persistent local dictionary', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-keywords-'));
   const dictionaryPath = join(dir, 'dictionary.json');

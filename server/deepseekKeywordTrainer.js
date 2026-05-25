@@ -420,6 +420,40 @@ ${String(text || '').slice(0, 6000)}`,
   ];
 }
 
+function buildExistingEvidenceMessages(dictionary, { text, uid }) {
+  const candidates = normalizeKeywordEntries(Array.isArray(dictionary?.entries) ? dictionary.entries : [])
+    .slice(0, 120)
+    .map((entry) => ({
+      term: entry.term,
+      family: entry.family,
+      meaning: entry.meaning,
+    }));
+  return [
+    {
+      role: 'system',
+      content:
+        'You map Bilibili source text to an existing local Chinese internet-language dictionary. Output only valid JSON. Never invent new dictionary terms.',
+    },
+    {
+      role: 'user',
+      content: `Task: choose zero or more terms from EXISTING_TERMS only when the source text contains an exact evidence phrase that supports that term semantically.
+Rules:
+1. term must exactly equal one term from EXISTING_TERMS.
+2. evidence must be an exact contiguous substring from SOURCE_TEXT.
+3. Do not output a term if you cannot quote exact source evidence.
+4. Do not output new terms, variants, explanations, or categories outside the existing dictionary.
+5. Output JSON only: {"matches":[{"term":"existing term","evidence":"exact source substring","confidence":0.0}]}
+
+EXISTING_TERMS:
+${JSON.stringify(candidates)}
+
+UID: ${uid || 'unknown'}
+SOURCE_TEXT:
+${String(text || '').slice(0, 6000)}`,
+    },
+  ];
+}
+
 function buildCandidateTerms(text) {
   const value = String(text || '');
   const fromHeuristics = heuristicKeywordEntries(value).map((entry) => entry.term);
@@ -517,6 +551,85 @@ async function generateKeywordEntries(payload, config, options = {}) {
   }
 }
 
+function evidenceFromExactSourcePhrase(entry, evidencePhrase, text, options = {}) {
+  const cleanPhrase = cleanEvidenceText(evidencePhrase);
+  const evidenceText = cleanEvidenceText(text);
+  if (!cleanPhrase || !evidenceText.includes(cleanPhrase)) return null;
+  const evidenceCount = countOccurrences(evidenceText, cleanPhrase);
+  const evidenceSamples = [];
+  const evidenceSources = [];
+  const source = String(options.source || '').trim();
+  const uid = String(options.uid || '').trim();
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const cleanLine = cleanEvidenceText(line);
+    if (!cleanLine.includes(cleanPhrase)) continue;
+    const sample = line.replace(/\s+/g, ' ').trim();
+    if (!sample) continue;
+    const clippedSample = sample.length > 120 ? `${sample.slice(0, 120)}...` : sample;
+    evidenceSamples.push(clippedSample);
+    if (source || uid) evidenceSources.push({ source, uid, sample: clippedSample });
+    if (evidenceSamples.length >= 3) break;
+  }
+  return {
+    ...entry,
+    evidenceCount,
+    evidenceSamples: unique(evidenceSamples).slice(0, 3),
+    evidenceSources: normalizeEvidenceSources(evidenceSources).slice(0, 3),
+  };
+}
+
+async function generateExistingDictionaryEvidenceEntries(dictionary, payload, config, options = {}) {
+  if (!config.available || !config.keyConfigured || !config.model) {
+    return { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' };
+  }
+  const fetchImpl = options.fetch || fetch;
+  const excludeTerms = new Set(Array.from(options.excludeTerms || []).map(cleanTerm).filter(Boolean));
+  const currentEntries = normalizeKeywordEntries(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
+  const entryMap = new Map(currentEntries.filter((entry) => !excludeTerms.has(entry.term)).map((entry) => [entry.term, entry]));
+  if (entryMap.size === 0) return { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' };
+
+  const requestBody = {
+    model: config.model,
+    messages: buildExistingEvidenceMessages({ entries: [...entryMap.values()] }, payload),
+    response_format: { type: 'json_object' },
+    thinking: { type: 'enabled' },
+    reasoning_effort: config.reasoningEffort || 'medium',
+    stream: false,
+    max_tokens: 1200,
+  };
+  try {
+    const raw = await requestDeepSeekKeywords(config, fetchImpl, options, requestBody);
+    const parsed = extractJsonObject(raw);
+    const rawMatches = Array.isArray(parsed.matches) ? parsed.matches : Array.isArray(parsed.keywords) ? parsed.keywords : [];
+    const accepted = [];
+    let rejected = 0;
+    for (const match of rawMatches) {
+      const term = cleanTerm(match?.term);
+      const evidence = String(match?.evidence || match?.evidencePhrase || match?.sample || '').trim();
+      const entry = entryMap.get(term);
+      const evidenceEntry = entry ? evidenceFromExactSourcePhrase(entry, evidence, payload.text, { source: payload.source, uid: payload.uid }) : null;
+      if (evidenceEntry) {
+        accepted.push(evidenceEntry);
+      } else {
+        rejected += 1;
+      }
+    }
+    const now = new Date().toISOString();
+    const merged = new Map();
+    for (const entry of accepted) {
+      merged.set(entry.term, mergeKeywordEntry(merged.get(entry.term), entry, now));
+    }
+    return {
+      entries: [...merged.values()],
+      usedFallback: accepted.length === 0,
+      evidenceRejected: rejected,
+      raw,
+    };
+  } catch {
+    return { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' };
+  }
+}
+
 async function requestDeepSeekKeywords(config, fetchImpl, options, body) {
   const cleanBody = Object.fromEntries(Object.entries(body).filter(([, value]) => value !== undefined));
   const response = await fetchImpl(`${config.baseUrl}/chat/completions`, {
@@ -532,26 +645,23 @@ async function requestDeepSeekKeywords(config, fetchImpl, options, body) {
 export async function trainKeywordDictionary(payload, options = {}) {
   const currentDictionary = await readDictionary(options.dictionaryPath || DEFAULT_DICTIONARY_PATH);
   const existingTermsOnly = options.existingTermsOnly === true || payload.existingTermsOnly === true;
-  const config = existingTermsOnly
-    ? {
-        ok: true,
-        provider: 'deepseek',
-        baseUrl: String((options.env || process.env).DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/$/, ''),
-        model: (options.env || process.env).DEEPSEEK_MODEL || 'deepseek-v4-flash',
-        reasoningEffort: String((options.env || process.env).DEEPSEEK_REASONING_EFFORT || 'medium').trim().toLowerCase(),
-        available: false,
-        keyConfigured: Boolean((options.env || process.env).DEEPSEEK_API_KEY),
-      }
-    : await getDeepSeekConfig(options);
+  const config = await getDeepSeekConfig(options);
   const generated = existingTermsOnly
     ? { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' }
     : await generateKeywordEntries(payload, config, options);
   const generatedTerms = new Set(generated.entries.map((entry) => entry.term));
-  const dictionaryEvidenceEntries = findDictionaryEntriesWithTextEvidence(currentDictionary, payload.text, {
+  const exactDictionaryEvidenceEntries = findDictionaryEntriesWithTextEvidence(currentDictionary, payload.text, {
     excludeTerms: generatedTerms,
     source: payload.source,
     uid: payload.uid,
   });
+  const modelDictionaryEvidence = existingTermsOnly
+    ? await generateExistingDictionaryEvidenceEntries(currentDictionary, payload, config, {
+        ...options,
+        excludeTerms: new Set([...generatedTerms, ...exactDictionaryEvidenceEntries.map((entry) => entry.term)]),
+      })
+    : { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' };
+  const dictionaryEvidenceEntries = normalizeKeywordEntries([...exactDictionaryEvidenceEntries, ...modelDictionaryEvidence.entries]);
   const acceptedEntries = normalizeKeywordEntries([...generated.entries, ...dictionaryEvidenceEntries]);
   const dictionary = await mergeEntriesIntoDictionary(acceptedEntries, options);
   return {
@@ -562,8 +672,8 @@ export async function trainKeywordDictionary(payload, options = {}) {
     reasoningEffort: config.reasoningEffort || 'medium',
     available: config.available,
     keyConfigured: config.keyConfigured,
-    usedFallback: generated.usedFallback,
-    evidenceRejected: generated.evidenceRejected || 0,
+    usedFallback: existingTermsOnly ? modelDictionaryEvidence.usedFallback : generated.usedFallback,
+    evidenceRejected: (generated.evidenceRejected || 0) + (modelDictionaryEvidence.evidenceRejected || 0),
     entries: acceptedEntries,
     generatedEntries: generated.entries,
     dictionaryEvidenceEntries,
