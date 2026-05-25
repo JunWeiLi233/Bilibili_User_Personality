@@ -117,6 +117,34 @@ test('normalizes mixed-case ASCII runs inside keyword terms', () => {
   assert.deepEqual(entries.map((entry) => entry.term), ['doge', 'up\u4e3b', '\u5168b\u7ad9', 'pua', 'a\u5230\u7206\u70b8']);
 });
 
+test('normalizes away keyword entries backed only by file-share ad evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7edd\u5bf9\u56de\u5f52',
+      family: 'absolutes',
+      meaning: 'title fragment from a file-share advert',
+      evidenceCount: 1,
+      evidenceSamples: ['\u3010\u8d85\u7ea7\u4f1a\u5458V4\u3011\u901a\u8fc7\u767e\u5ea6\u7f51\u76d8\u5206\u4eab\u7684\u6587\u4ef6\uff1a\u7edd\u5bf9\u56de\u5f52\u3010\u8bd5\u770b\u3011\u2026'],
+      evidenceSources: [
+        {
+          source: 'Bilibili public search-discovered video comment scan',
+          uid: 'BV-file-share',
+          sample: '\u3010\u8d85\u7ea7\u4f1a\u5458V4\u3011\u901a\u8fc7\u767e\u5ea6\u7f51\u76d8\u5206\u4eab\u7684\u6587\u4ef6\uff1a\u7edd\u5bf9\u56de\u5f52\u3010\u8bd5\u770b\u3011\u2026',
+        },
+      ],
+    },
+    {
+      term: '\u7edd\u5bf9\u4e0d\u591f\u7684',
+      family: 'absolutes',
+      meaning: 'real comment evidence',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4f60\u8fd9\u8010\u529b\u662f\u771f\u7684\u5077\uff0c\u7edd\u5bf9\u4e0d\u591f\u7684'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u7edd\u5bf9\u4e0d\u591f\u7684']);
+});
+
 test('mergeEntriesIntoDictionary compacts persisted Bilibili emote wrapper artifacts', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-emote-wrapper-'));
   const dictionaryPath = join(dir, 'dictionary.json');

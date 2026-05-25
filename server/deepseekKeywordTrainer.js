@@ -205,6 +205,13 @@ function isNoisyTerm(term) {
   return false;
 }
 
+function isNoisyEvidenceSample(sample) {
+  const text = String(sample || '').trim();
+  if (!text) return true;
+  if (/百度网盘分享的文件|通过百度网盘分享|超级会员v?\d+/i.test(text)) return true;
+  return false;
+}
+
 function isAsciiSuffixFragmentOf(fragment, term) {
   return /^[A-Za-z]{4,}$/.test(fragment) && /^[A-Za-z]{6,}$/.test(term) && term.length >= fragment.length + 3 && term.toLowerCase().endsWith(fragment.toLowerCase());
 }
@@ -381,6 +388,13 @@ export function normalizeKeywordEntries(rawEntries = []) {
     const terms = cleanedTerms.filter((term) => !cleanedTerms.some((candidate) => candidate !== term && isAsciiSuffixFragmentOf(term, candidate)));
     const meaning = String(item.meaning || item.reason || '').trim();
     if (!meaning || /中文含义|语用功能|^含义$|^解释$/.test(meaning)) continue;
+    const rawEvidenceSamples = Array.isArray(item.evidenceSamples)
+      ? unique(item.evidenceSamples.map((sample) => String(sample || '').trim()).filter(Boolean))
+      : [];
+    const evidenceSamples = rawEvidenceSamples.filter((sample) => !isNoisyEvidenceSample(sample)).slice(0, 5);
+    const evidenceSources = normalizeEvidenceSources(item.evidenceSources).filter((source) => !isNoisyEvidenceSample(source.sample));
+    const rawEvidenceCount = Math.max(0, Number(item.evidenceCount) || 0);
+    if (rawEvidenceCount > 0 && rawEvidenceSamples.length > 0 && evidenceSamples.length === 0) continue;
     for (const term of terms) {
       if (isNoisyTerm(term)) continue;
       entries.push({
@@ -389,9 +403,9 @@ export function normalizeKeywordEntries(rawEntries = []) {
         meaning,
         risk: String(item.risk || '').trim() || (family === 'cooperation' || family === 'correction' ? 'positive' : 'medium'),
         confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.68,
-        evidenceCount: Math.max(0, Number(item.evidenceCount) || 0),
-        evidenceSamples: Array.isArray(item.evidenceSamples) ? unique(item.evidenceSamples.map((sample) => String(sample || '').trim())).slice(0, 5) : [],
-        evidenceSources: normalizeEvidenceSources(item.evidenceSources),
+        evidenceCount: rawEvidenceCount,
+        evidenceSamples,
+        evidenceSources,
       });
     }
   }
