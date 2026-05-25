@@ -22,3 +22,14 @@ test('buildVideoKeywordDiscoveryOptions forwards strict comment-backed coverage 
   assert.deepEqual(options.priorityQueries, ['contextOnly 评论区']);
 });
 
+test('buildVideoKeywordDiscoveryOptions treats comment evidence as source-backed evidence', () => {
+  const options = buildVideoKeywordDiscoveryOptions({
+    env: {
+      BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS: '1',
+    },
+  });
+
+  assert.equal(options.requireCommentBackedEvidence, true);
+  assert.equal(options.requireSourceBackedEvidence, true);
+  assert.equal(options.prioritizeSourceGaps, true);
+});

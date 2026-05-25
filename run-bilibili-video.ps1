@@ -82,7 +82,7 @@ $env:BILIBILI_HARVEST_TARGET_EVIDENCE = [string]$TargetEvidence
 $env:BILIBILI_HARVEST_ROUNDS = [string]$Rounds
 $env:BILIBILI_HARVEST_COVERAGE_MODE = $CoverageMode
 $env:BILIBILI_VIDEO_DISCOVERY_MODE = $DiscoveryMode
-if ($RequireEvidenceSources) {
+if ($RequireEvidenceSources -or $RequireCommentEvidence) {
   $env:BILIBILI_HARVEST_REQUIRE_SOURCES = "1"
 } else {
   Remove-Item Env:\BILIBILI_HARVEST_REQUIRE_SOURCES -ErrorAction SilentlyContinue
@@ -139,7 +139,7 @@ Write-Host "Target evidence per term: $TargetEvidence"
 Write-Host "Harvest rounds: $Rounds"
 Write-Host "Coverage mode: $CoverageMode"
 Write-Host "Discovery mode: $DiscoveryMode"
-Write-Host "Require evidence sources: $RequireEvidenceSources"
+Write-Host "Require evidence sources: $($RequireEvidenceSources -or $RequireCommentEvidence)"
 Write-Host "Require Bilibili comment evidence: $RequireCommentEvidence"
 Write-Host "Existing dictionary terms only: $ExistingTermsOnly"
 Write-Host "Reset harvest state: $ResetHarvestState"

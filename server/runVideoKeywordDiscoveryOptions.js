@@ -27,10 +27,11 @@ export function buildVideoKeywordDiscoveryOptions({
   exhaustedSuggestionTemplates = [],
 } = {}) {
   const maxQueries = numberFromEnv(env, 'BILIBILI_HARVEST_MAX_QUERIES', seedQueries.length || 12);
+  const requireCommentBackedEvidence = env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS === '1';
   const requireSourceBackedEvidence =
+    requireCommentBackedEvidence ||
     env.BILIBILI_HARVEST_REQUIRE_SOURCES === '1' ||
     env.BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES === '1';
-  const requireCommentBackedEvidence = env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS === '1';
   return {
     priorityQueries,
     seedQueries,
@@ -63,4 +64,3 @@ export function buildVideoKeywordDiscoveryOptions({
     skipSeen: env.BILIBILI_HARVEST_SKIP_SEEN !== '0',
   };
 }
-
