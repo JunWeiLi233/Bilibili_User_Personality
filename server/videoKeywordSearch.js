@@ -269,6 +269,40 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       (video) => video.bvid,
     );
     if (discoveredVideos.length === 0) {
+      const videoContextText = includeVideoContext ? buildVideoContextText(discoveryContextVideos) : '';
+      const trainingText = videoContextText.trim();
+      if (trainingText) {
+        const trainKeywordDictionary = deps.trainKeywordDictionary || defaultTrainKeywordDictionary;
+        const contextSourceUrls = videoContextSourceUrls(discoveryContextVideos);
+        const keywordTraining = await trainKeywordDictionary({
+          uid: discoveryContextVideos.map((video) => video.bvid).filter(Boolean).join(','),
+          text: trainingText,
+          source: `Bilibili public search-discovered video context: ${contextSourceUrls.join(', ')}`,
+          existingTermsOnly,
+          ...(targetExistingTerms.length ? { targetExistingTerms } : {}),
+        });
+        return {
+          ok: true,
+          video: null,
+          videos: [],
+          discoveredVideos,
+          discoveryContextVideos,
+          searchQueries,
+          controversyQueries: discoveryMode === 'controversial' ? controversyQueries : [],
+          controversialPopularQueries: discoveryMode === 'controversial' ? controversyQueries.slice(0, controversialPopularQueryLimit) : [],
+          controversialPopularSearchOrder: discoveryMode === 'controversial' ? controversialPopularSearchOrder : null,
+          discoveryMode,
+          comments: [],
+          commentText: '',
+          videoContextText,
+          source: 'Bilibili public search-discovered video context',
+          confidenceHint: 'search result video context only',
+          warnings: discoveryWarnings,
+          entries: keywordTraining.entries || [],
+          keywordTraining,
+          dictionary: keywordTraining.dictionary || null,
+        };
+      }
       return {
         ok: false,
         error: discoveryWarnings[0] || 'No Bilibili videos were discovered from the backend discovery mode.',

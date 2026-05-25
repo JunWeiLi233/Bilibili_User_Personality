@@ -692,6 +692,42 @@ test('searchVideoKeywords keeps excluded search-result metadata as video context
   assert.equal(trainedPayloads[0].source.includes('BV1excluded'), true);
 });
 
+test('searchVideoKeywords can train from excluded search-result context when no fresh videos remain', async () => {
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: 'hard term',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      excludeBvids: ['BV1excluded'],
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u8e6d\u6982\u5ff5'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BV1excluded',
+          title: '\u8e6d\u6982\u5ff5 \u641c\u7d22\u7ed3\u679c\u6807\u9898',
+          sourceUrl: 'https://www.bilibili.com/video/BV1excluded/',
+        },
+      ],
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return { ok: true, entries: [{ term: '\u8e6d\u6982\u5ff5', family: 'attack' }], dictionary: { entries: [] } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 1);
+  assert.equal(result.videoContextText.includes('\u8e6d\u6982\u5ff5 \u641c\u7d22\u7ed3\u679c\u6807\u9898'), true);
+  assert.equal(trainedPayloads.length, 1);
+  assert.deepEqual(trainedPayloads[0].targetExistingTerms, ['\u8e6d\u6982\u5ff5']);
+  assert.equal(trainedPayloads[0].source.includes('BV1excluded'), true);
+});
+
 test('searchVideoKeywords scans multiple backend video links and trains one merged dictionary pass', async () => {
   const trainedPayloads = [];
   const result = await searchVideoKeywords(
