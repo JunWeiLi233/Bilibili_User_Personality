@@ -2143,6 +2143,51 @@ test('buildDictionaryCoverageAudit keeps comment-backed source refreshes on comm
   assert.equal(audit.recommendedQueries[0].includes('\u662f\u4ec0\u4e48\u6897'), false);
 });
 
+test('buildDictionaryCoverageAudit treats danmaku searches as comment-backed source refreshes', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'sourceGap',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext/',
+              uid: 'BVcontext',
+              sample: 'Bilibili video context: sourceGap from a title',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      termAttempts: {
+        sourceGap: {
+          term: 'sourceGap',
+          attempts: 4,
+          successfulAttempts: 0,
+          queries: [
+            { query: 'sourceGap 评论区 梗 热评' },
+            { query: 'sourceGap 评论区' },
+            { query: 'sourceGap 热评' },
+            { query: 'sourceGap 回复' },
+          ],
+        },
+      },
+    },
+    {
+      targetEvidence: 3,
+      requireSourceBackedEvidence: true,
+      requireCommentBackedEvidence: true,
+      prioritizeSourceGaps: true,
+    },
+  );
+
+  assert.equal(audit.nextActions[0].status, 'source_gap');
+  assert.equal(audit.nextActions[0].nextQuery, 'sourceGap 弹幕');
+});
+
 test('buildDictionaryCoverageAudit rotates source gaps behind fresh weak terms after a current comment miss', () => {
   const audit = buildDictionaryCoverageAudit(
     {

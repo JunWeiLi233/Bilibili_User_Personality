@@ -541,7 +541,7 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
 }
 
 function isCommentEvidenceQuery(query) {
-  return /评论|热评|回复|互动|控评|节奏|粉丝/.test(String(query || ''));
+  return /评论|热评|回复|互动|控评|节奏|粉丝|弹幕/.test(String(query || ''));
 }
 
 function relatedContainedSearchTerms(entries, entry) {
@@ -745,6 +745,7 @@ function exactFeedbackQueriesForTerm(term) {
         `${searchTerm} \u8bc4\u8bba\u533a`,
         `${searchTerm} \u70ed\u8bc4`,
         `${searchTerm} \u56de\u590d`,
+        `${searchTerm} \u5f39\u5e55`,
         searchTerm,
       ]),
     ],
@@ -753,6 +754,11 @@ function exactFeedbackQueriesForTerm(term) {
 
 function bareFeedbackQueriesForTerm(term) {
   return unique(searchTermsForTerm(term)).slice(0, 16);
+}
+
+function usesTriedBareSearchQuery(query, term, triedQueries = new Set()) {
+  const cleanQuery = normalizeQueryText(query);
+  return searchTermsForTerm(term).some((searchTerm) => cleanQuery !== searchTerm && cleanQuery.startsWith(`${searchTerm} `) && triedQueries.has(searchTerm));
 }
 
 function flattenQueryDiagnostics(runs = []) {
@@ -1165,14 +1171,16 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const exactFeedbackQuery =
       !needsSourceRefresh && missedWithIrrelevantFeedback
         ? (filteredSearchContextFeedback ? bareFeedbackQueriesForTerm(term) : exactFeedbackQueriesForTerm(term)).find(
-            (query) => !currentStrategyTriedQueries.has(query),
+            (query) => !currentStrategyTriedQueries.has(query) && !usesTriedBareSearchQuery(query, term, currentStrategyTriedQueries),
           )
         : '';
     const precisionQuery = !needsSourceRefresh && hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
     const relatedRetryVariant = preferRelatedSearchTerms ? availableVariants.find((variant) => !triedQueries.has(variant.query)) : null;
     const sourceRefreshExactQuery =
       needsSourceRefresh && options.requireCommentBackedEvidence === true
-        ? exactFeedbackQueriesForTerm(term).find((query) => !triedQueries.has(query) && isCommentEvidenceQuery(query))
+        ? exactFeedbackQueriesForTerm(term).find(
+            (query) => !triedQueries.has(query) && !usesTriedBareSearchQuery(query, term, triedQueries) && isCommentEvidenceQuery(query),
+          )
         : '';
     const sourceRefreshVariant =
       needsSourceRefresh && options.requireCommentBackedEvidence === true
