@@ -349,6 +349,10 @@ function negativeFeedbackQueriesForTerm(term) {
   return TERM_NEGATIVE_FEEDBACK_QUERIES[recommendationGroupForTerm(term)] || [];
 }
 
+function exactFeedbackQueriesForTerm(term) {
+  return searchTermsForTerm(term).slice(0, 8);
+}
+
 function flattenQueryDiagnostics(runs = []) {
   return runs.flatMap((run) => (Array.isArray(run?.queryDiagnostics) ? run.queryDiagnostics.flat() : []));
 }
@@ -655,6 +659,7 @@ export function summarizeTermAttempts(state = {}, dictionary = {}, options = {})
 export function buildCoverageActions(dictionary = {}, state = {}, options = {}) {
   const entries = sortEntriesForCoverage(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
   const attempts = state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
+  const searchedQueries = new Set(Array.isArray(state.searchedQueries) ? state.searchedQueries : []);
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
   return entries.map((entry) => {
     const term = String(entry.term || '').trim();
@@ -664,16 +669,21 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const exhausted = isTermAttemptExhausted(term, family, attempt, options);
     const successfulAttempts = Number(attempt?.successfulAttempts) || 0;
     const attemptsCount = Number(attempt?.attempts) || 0;
-    const triedQueries = attemptedVariantQueries(attempt);
+    const triedQueries = new Set([...attemptedVariantQueries(attempt), ...searchedQueries]);
     const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, options);
     const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(attempt, options.retryBeforeUnattemptedLimit);
     const feedbackQuery =
       hardMissedZeroEvidence && hasIrrelevantQueryFeedback(state, term)
         ? negativeFeedbackQueriesForTerm(term).find((query) => !triedQueries.has(query))
         : '';
+    const exactFeedbackQuery =
+      hardMissedZeroEvidence && hasIrrelevantQueryFeedback(state, term)
+        ? exactFeedbackQueriesForTerm(term).find((query) => !triedQueries.has(query))
+        : '';
     const precisionQuery = hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
     const nextVariant =
       (feedbackQuery ? { query: feedbackQuery, variantIndex: null, builtIn: false } : null) ||
+      (exactFeedbackQuery ? { query: exactFeedbackQuery, variantIndex: null, builtIn: false } : null) ||
       (precisionQuery ? { query: precisionQuery, variantIndex: null, builtIn: false } : null) ||
       availableVariants.find((variant) => !triedQueries.has(variant.query)) ||
       null;

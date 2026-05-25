@@ -141,6 +141,155 @@ test('searchVideoKeywords prioritizes target-relevant discovered videos during e
   assert.deepEqual(scannedBvids.slice(0, 2), ['BVtarget1', 'BVgeneric1']);
 });
 
+test('searchVideoKeywords expands candidate discovery before selecting target-relevant videos', async () => {
+  const requestedLimits = [];
+  const scannedBvids = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u8f66\u5bb6\u519b',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u8f66\u5bb6\u519b'],
+    },
+    {
+      discoverVideosByKeyword: async (_query, limit) => {
+        requestedLimits.push(limit);
+        return [
+          {
+            bvid: 'BVgeneric1',
+            title: '\u8001\u8f66\u5bb6\u4e2a\u4e2a\u90fd\u662f\u597d\u6837\u7684',
+            sourceUrl: 'https://www.bilibili.com/video/BVgeneric1/',
+          },
+          {
+            bvid: 'BVgeneric2',
+            title: '\u65b0\u80fd\u6e90\u8f66\u4e89\u8bae\u70ed\u8bc4',
+            sourceUrl: 'https://www.bilibili.com/video/BVgeneric2/',
+          },
+          {
+            bvid: 'BVtarget1',
+            title: '\u822a\u5929\u8f66\u5bb6\u519b\u4e89\u8bae\u590d\u76d8',
+            sourceUrl: 'https://www.bilibili.com/video/BVtarget1/',
+          },
+        ];
+      },
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          scannedBvids.push(bvid);
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(requestedLimits[0] > 1, true);
+  assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BVtarget1']);
+  assert.deepEqual(scannedBvids, ['BVtarget1']);
+});
+
+test('searchVideoKeywords scores whitespace query tokens when ranking target videos', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: 'SU7 \u8f66\u5bb6\u519b \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u8f66\u5bb6\u519b'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVgeneric1',
+          title: '\u65b0SU7\u5165\u95e8VS\u9876\u914d',
+          sourceUrl: 'https://www.bilibili.com/video/BVgeneric1/',
+        },
+        {
+          bvid: 'BVtarget1',
+          title: '\u822a\u5929\u8f66\u5bb6\u519b\u70ed\u8bc4\u590d\u76d8',
+          sourceUrl: 'https://www.bilibili.com/video/BVtarget1/',
+        },
+      ],
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BVtarget1']);
+});
+
+test('searchVideoKeywords ranks query-token matches even when the target term spelling differs', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97 \u79d1\u666e \u8bc4\u8bba\u533a',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVgeneric1',
+          title: '\u533b\u5b66\u79d1\u666e\u8bc4\u8bba\u533a\u95ee\u7b54',
+          sourceUrl: 'https://www.bilibili.com/video/BVgeneric1/',
+        },
+        {
+          bvid: 'BVtarget1',
+          title: '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97\u8fd9\u662f\u79d1\u666e\u5427',
+          sourceUrl: 'https://www.bilibili.com/video/BVtarget1/',
+        },
+      ],
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BVtarget1']);
+});
+
 test('searchVideoKeywords can discover popular videos without a search query', async () => {
   const requestedUrls = [];
   const result = await searchVideoKeywords(

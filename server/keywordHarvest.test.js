@@ -1192,6 +1192,95 @@ test('buildDictionaryCoverageAudit rewrites hard misses after irrelevant query d
   assert.equal(audit.nextActions.find((item) => item.term === '\u8c01\u662f\u8e6d\u6982\u5ff5').nextQuery, '\u8c01\u662f\u8e6d\u6982\u5ff5 \u539f\u8bdd');
 });
 
+test('buildDictionaryCoverageAudit falls back to exact terms after feedback queries miss', () => {
+  const term = '\u8f66\u5bb6\u519b';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [{ term, family: 'attack', evidenceCount: 0 }],
+    },
+    {
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 9,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a' },
+            { query: '\u6ca1\u6709\u8f66\u5bb6\u519b \u5c0f\u7c73SU7' },
+            { query: '\u8f66\u5bb6\u519b \u96f7\u519b \u539f\u8bdd' },
+          ],
+        },
+      },
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                query: '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a',
+                commentsCollected: 20,
+                trainingTextChars: 500,
+                targetExistingTerms: [term],
+                acceptedTerms: [],
+              },
+            ],
+          ],
+        },
+      ],
+    },
+    { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 3 },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, term);
+});
+
+test('buildDictionaryCoverageAudit does not recommend globally searched feedback queries again', () => {
+  const term = '\u8f66\u5bb6\u519b';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [{ term, family: 'attack', evidenceCount: 0 }],
+    },
+    {
+      searchedQueries: [
+        '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a',
+        '\u6ca1\u6709\u8f66\u5bb6\u519b \u5c0f\u7c73SU7',
+        '\u8f66\u5bb6\u519b \u96f7\u519b \u539f\u8bdd',
+      ],
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 9,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [],
+        },
+      },
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                query: '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a',
+                commentsCollected: 20,
+                trainingTextChars: 500,
+                targetExistingTerms: [term],
+                acceptedTerms: [],
+              },
+            ],
+          ],
+        },
+      ],
+    },
+    { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 3 },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, term);
+});
+
 test('harvestKeywordDictionary runs dictionary-seeded searches and reports growth', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-'));
   const statePath = join(dir, 'state.json');

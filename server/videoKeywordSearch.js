@@ -101,9 +101,15 @@ function videoSearchText(video) {
   return cleanSearchText([video?.title, video?.desc, video?.description, video?.dynamic].filter(Boolean).join(' '));
 }
 
+function searchQueryNeedles(query) {
+  const raw = String(query || '').trim();
+  if (!raw) return [];
+  return [raw, ...raw.split(/\s+/)].map(cleanSearchText).filter((item) => item.length >= 2);
+}
+
 function searchNeedlesForRelevance(searchQueries = [], targetExistingTerms = []) {
   return uniqueByKey(
-    [...targetExistingTerms, ...searchQueries.flatMap((query) => parseList(query))]
+    [...targetExistingTerms, ...searchQueries.flatMap((query) => parseList(query).flatMap(searchQueryNeedles))]
       .map(cleanSearchText)
       .filter((item) => item.length >= 2),
     (item) => item,
@@ -115,7 +121,7 @@ function relevanceScoreForVideo(video, needles = []) {
   if (!text) return 0;
   return needles.reduce((score, needle) => {
     if (!needle || !text.includes(needle)) return score;
-    return score + (needle.length >= 4 ? 3 : 1);
+    return score + Math.min(12, Math.max(1, needle.length));
   }, 0);
 }
 
@@ -258,6 +264,15 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     payload.existingDictionaryTermsOnly === true ||
     deps.existingTermsOnly === true ||
     process.env.BILIBILI_HARVEST_EXISTING_TERMS_ONLY === '1';
+  const discoveryCandidateLimit =
+    existingTermsOnly || targetExistingTerms.length > 0
+      ? boundedInt(
+          payload.discoveryCandidateLimit ?? deps.discoveryCandidateLimit ?? process.env.BILIBILI_VIDEO_DISCOVERY_CANDIDATE_LIMIT ?? 10,
+          10,
+          discoveryLimit,
+          50,
+        )
+      : discoveryLimit;
   const includeVideoContext =
     payload.includeVideoContext === true ||
     deps.includeVideoContext === true ||
@@ -287,7 +302,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       const group = [];
       for (const query of searchQueries) {
         try {
-          group.push(...(await discoverVideos(query, discoveryLimit, { ...deps, discoveryPages })));
+          group.push(...(await discoverVideos(query, discoveryCandidateLimit, { ...deps, discoveryPages })));
         } catch (error) {
           discoveryWarnings.push(`${query}: ${error.message}`);
         }
@@ -302,7 +317,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       for (const query of controversyQueries.slice(0, controversialPopularQueryLimit)) {
         try {
           controversialPopularGroup.push(
-            ...(await discoverVideos(query, discoveryLimit, { ...deps, discoveryPages, searchOrder: controversialPopularSearchOrder })),
+            ...(await discoverVideos(query, discoveryCandidateLimit, { ...deps, discoveryPages, searchOrder: controversialPopularSearchOrder })),
           );
         } catch (error) {
           discoveryWarnings.push(`${query} (${controversialPopularSearchOrder || 'popular'}): ${error.message}`);
@@ -310,14 +325,14 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       }
       for (const query of controversyQueries) {
         try {
-          controversyGroup.push(...(await discoverVideos(query, discoveryLimit, { ...deps, discoveryPages })));
+          controversyGroup.push(...(await discoverVideos(query, discoveryCandidateLimit, { ...deps, discoveryPages })));
         } catch (error) {
           discoveryWarnings.push(`${query}: ${error.message}`);
         }
       }
       for (const query of searchQueries) {
         try {
-          searchGroup.push(...(await discoverVideos(query, discoveryLimit, { ...deps, discoveryPages })));
+          searchGroup.push(...(await discoverVideos(query, discoveryCandidateLimit, { ...deps, discoveryPages })));
         } catch (error) {
           discoveryWarnings.push(`${query}: ${error.message}`);
         }
@@ -340,8 +355,12 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       discoveryGroups.flatMap((group) => group),
       (video) => video.bvid || video.sourceUrl || video.title,
     );
+    const rankedDiscoveryGroups =
+      existingTermsOnly || targetExistingTerms.length > 0
+        ? discoveryGroups.map((group) => sortVideosByRelevance(group, searchQueries, targetExistingTerms))
+        : discoveryGroups;
     discoveredVideos = roundRobinUnique(
-      discoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
+      rankedDiscoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
       discoveryLimit,
       (video) => video.bvid,
     );
