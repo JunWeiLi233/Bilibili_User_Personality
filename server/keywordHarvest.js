@@ -586,10 +586,12 @@ function hasIrrelevantQueryFeedback(state = {}, term) {
     const accepted = Array.isArray(item?.acceptedTerms) ? item.acceptedTerms.map((target) => String(target || '').trim()).filter(Boolean) : [];
     const commentsCollected = Math.max(0, Number(item?.commentsCollected) || 0);
     const trainingTextChars = Math.max(0, Number(item?.trainingTextChars) || 0);
+    const discoveredVideos = Math.max(0, Number(item?.discoveredVideos) || 0);
+    const discoveryContextVideos = Math.max(0, Number(item?.discoveryContextVideos) || 0);
     return (
       targets.includes(cleanTerm) &&
       accepted.length === 0 &&
-      (commentsCollected > 0 || trainingTextChars > 0)
+      (commentsCollected > 0 || trainingTextChars > 0 || (discoveredVideos === 0 && discoveryContextVideos > 0))
     );
   });
 }

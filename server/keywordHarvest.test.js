@@ -1893,6 +1893,57 @@ test('buildDictionaryCoverageAudit treats text-only misses as irrelevant query f
   assert.equal(audit.nextActions[0].nextQuery, `${term} \u70ed\u8bc4`);
 });
 
+test('buildDictionaryCoverageAudit treats filtered search-context misses as irrelevant query feedback', () => {
+  const term = '\u4e0d\u53ef\u62b5\u6297\u529b';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [{ term, family: 'attack', evidenceCount: 1 }],
+    },
+    {
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'attack',
+          evidenceAtPlanTime: 1,
+          attempts: 2,
+          successfulAttempts: 0,
+          lastEvidenceCount: 1,
+          queries: [
+            { query: `${term} \u8bc4\u8bba\u533a`, strategyVersion: 4, ok: false, hit: false },
+            { query: `${term} \u70ed\u8bc4`, strategyVersion: 4, ok: false, hit: false },
+          ],
+          lastQuery: `${term} \u70ed\u8bc4`,
+        },
+      },
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                query: `${term} \u70ed\u8bc4`,
+                discoveredVideos: 0,
+                discoveryContextVideos: 10,
+                scannedVideos: 0,
+                commentsCollected: 0,
+                trainingTextChars: 0,
+                targetExistingTerms: [term],
+                acceptedTerms: [],
+                sampleVideos: [
+                  { title: '\u62b5\u6297\u529b\u5dee\u3001\u4f53\u8d28\u5f31\u6613\u751f\u75c5' },
+                  { title: '\u5bf9\u6234\u773c\u955c\u7684\u5973\u751f\u6beb\u65e0\u62b5\u6297\u529b' },
+                ],
+              },
+            ],
+          ],
+        },
+      ],
+    },
+    { targetEvidence: 3, maxActions: 1 },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, `${term} \u56de\u590d`);
+});
+
 test('buildDictionaryCoverageAudit does not recommend globally searched feedback queries again', () => {
   const term = '\u8f66\u5bb6\u519b';
   const audit = buildDictionaryCoverageAudit(
