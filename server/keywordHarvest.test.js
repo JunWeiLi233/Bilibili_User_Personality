@@ -4401,6 +4401,62 @@ test('harvestKeywordDictionary targets context-only source gaps during existing-
   }
 });
 
+test('harvestKeywordDictionary keeps strict comment coverage in result summaries', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-strict-comment-summary-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const contextOnlyDictionary = {
+      entries: [
+        {
+          term: 'contextOnly',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext/',
+              uid: 'BVcontext',
+              sample: 'Bilibili video context: contextOnly from a title',
+            },
+          ],
+        },
+      ],
+    };
+    const result = await harvestKeywordDictionary(
+      {
+        priorityQueries: ['contextOnly 评论区'],
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        requireSourceBackedEvidence: true,
+        requireCommentBackedEvidence: true,
+        prioritizeSourceGaps: true,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => contextOnlyDictionary,
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.equal(result.coverage.totalEvidence, 0);
+    assert.equal(result.coverage.zeroEvidenceTerms, 1);
+    assert.equal(result.coverageActions[0].status, 'source_gap');
+    assert.equal(result.coverageActions[0].coverageEvidenceCount, 0);
+    assert.equal(result.state.runs[0].zeroEvidenceTerms, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary targets exact source-gap priority terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-exact-source-gap-target-'));
   const statePath = join(dir, 'state.json');

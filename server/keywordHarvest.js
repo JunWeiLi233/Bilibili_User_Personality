@@ -1475,7 +1475,11 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     ? { version: 1, harvestStrategyVersion: 0, updatedAt: null, searchedQueries: [], scannedBvids: [], termAttempts: {}, runs: [] }
     : await readKeywordHarvestState(statePath);
   const before = await readKeywordDictionary();
-  const beforeCoverage = summarizeEvidenceCoverage(before, { targetEvidence: options.targetEvidence });
+  const coverageOptions = {
+    targetEvidence: options.targetEvidence,
+    requireCommentBackedEvidence: options.requireCommentBackedEvidence === true,
+  };
+  const beforeCoverage = summarizeEvidenceCoverage(before, coverageOptions);
   const searchedQuerySet = new Set(state.searchedQueries);
   const skipSearchedQuerySet =
     Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION ? new Set(state.searchedQueries) : new Set();
@@ -1593,7 +1597,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
 
   const after = await readKeywordDictionary();
   const growth = summarizeDictionaryGrowth(before, after);
-  const coverage = summarizeEvidenceCoverage(after, { targetEvidence: options.targetEvidence });
+  const coverage = summarizeEvidenceCoverage(after, coverageOptions);
   const coverageProgress = summarizeCoverageProgress(beforeCoverage, coverage);
   const termAttemptSummary = summarizeTermAttempts({ termAttempts }, after, {
     extraQueryTemplates: options.extraQueryTemplates,
@@ -1602,6 +1606,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const coverageActions = buildCoverageActions(after, { termAttempts }, {
     targetEvidence: options.targetEvidence,
     requireSourceBackedEvidence: options.requireSourceBackedEvidence,
+    requireCommentBackedEvidence: options.requireCommentBackedEvidence,
     extraQueryTemplates: options.extraQueryTemplates,
     exhaustedSuggestionTemplates: options.exhaustedSuggestionTemplates,
   });
