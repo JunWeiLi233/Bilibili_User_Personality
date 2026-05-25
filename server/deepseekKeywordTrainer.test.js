@@ -1520,6 +1520,12 @@ test('findDictionaryEntriesWithTextEvidence maps follow-up weak variants back to
         { term: '\u590d\u6d3b\u8d5b', family: 'attack', meaning: 'comeback sarcasm' },
         { term: '\u5c2c\u5230\u62a0\u811a', family: 'attack', meaning: 'extreme awkwardness' },
         { term: '\u8be5\u9a82\u5c31\u9a82', family: 'evasion', meaning: 'vague criticism permission' },
+        { term: '\u76d6\u4e16\u592a\u4fdd', family: 'attack', meaning: 'moderation-style label attack' },
+        { term: '\u8d76\u7f9a\u7f8a', family: 'attack', meaning: 'euphemistic insult' },
+        { term: '\u611f\u8c22\u6307\u6b63', family: 'correction', meaning: 'accepts correction' },
+        { term: '\u5e72\u5d29\u963f', family: 'attack', meaning: 'platform attack shorthand' },
+        { term: '\u5e72\u8d27', family: 'cooperation', meaning: 'substantive content praise' },
+        { term: '\u5e72\u8d27up', family: 'cooperation', meaning: 'substantive creator praise' },
       ],
     },
     [
@@ -1531,6 +1537,12 @@ test('findDictionaryEntriesWithTextEvidence maps follow-up weak variants back to
       '\u4e92\u8054\u7f51\u590d\u6d3b\u8d5b\u53c8\u5f00\u6253\u4e86',
       '\u8fd9\u6bb5\u5c34\u5c2c\u5230\u62a0\u811a\uff0c\u90fd\u80fd\u62a0\u51fa\u4e09\u5ba4\u4e00\u5385',
       '\u8be5\u9a82\u9a82\uff0c\u8be5\u55b7\u5c31\u55b7\uff0c\u4f46\u4f60\u5f97\u8bf4\u6e05\u695a\u4e3a\u4ec0\u4e48',
+      '\u8fd9\u79cd\u8a00\u8bba\u76d6\u4e16\u592a\u4fdd\u53c8\u6765\u4e86\uff0c\u8fd8\u6709\u4eba\u6253\u6210\u683c\u4e16\u592a\u4fdd',
+      '\u6df1\u84dd\u8d76\u7f9a\u7f8a\u554a\uff0c\u8fd9\u5c31\u662f\u4e2a\u5e72\u4f60\u5a18\u7684\u53e3\u5934\u8868\u8fbe',
+      '\u8c22\u8c22\u6307\u51fa\uff0c\u524d\u9762\u8bf4\u6cd5\u5df2\u4fee\u6b63',
+      '\u9053\u53cb\u4eec\u8bf4\u8981\u5e72\u5d29\u963fB\uff0c\u522b\u771f\u641e\u5d29\u963fB\u4e86',
+      '\u8fd9\u671f\u771f\u5e72\u8d27\uff0c\u6709\u5e72\u8d27\u7684\u5185\u5bb9\u53ef\u4ee5\u591a\u6765\u70b9',
+      '\u8fd9\u79cd\u5e72\u8d27up\u4e3b\u548c\u5e72\u8d27\u535a\u4e3b\u503c\u5f97\u5173\u6ce8',
     ].join('\n'),
     {
       source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-follow-up-alias/',
@@ -1547,6 +1559,12 @@ test('findDictionaryEntriesWithTextEvidence maps follow-up weak variants back to
     '\u590d\u6d3b\u8d5b',
     '\u5c2c\u5230\u62a0\u811a',
     '\u8be5\u9a82\u5c31\u9a82',
+    '\u76d6\u4e16\u592a\u4fdd',
+    '\u8d76\u7f9a\u7f8a',
+    '\u611f\u8c22\u6307\u6b63',
+    '\u5e72\u5d29\u963f',
+    '\u5e72\u8d27',
+    '\u5e72\u8d27up',
   ]);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-follow-up-alias'), true);
 });

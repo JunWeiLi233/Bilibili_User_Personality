@@ -423,6 +423,36 @@ test('buildKeywordHarvestQueries uses follow-up weak aliases before exact stale 
       family: 'evasion',
       expectedAliasQuery: '\u8be5\u9a82\u9a82 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
+    {
+      term: '\u76d6\u4e16\u592a\u4fdd',
+      family: 'attack',
+      expectedAliasQuery: '\u683c\u4e16\u592a\u4fdd \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u8d76\u7f9a\u7f8a',
+      family: 'attack',
+      expectedAliasQuery: '\u5e72\u4f60\u5a18 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u611f\u8c22\u6307\u6b63',
+      family: 'correction',
+      expectedAliasQuery: '\u611f\u8c22\u6307\u51fa \u66f4\u6b63 \u8bc4\u8bba\u533a',
+    },
+    {
+      term: '\u5e72\u5d29\u963f',
+      family: 'attack',
+      expectedAliasQuery: '\u5e72\u5d29\u963fB \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u5e72\u8d27',
+      family: 'cooperation',
+      expectedAliasQuery: '\u5e72\u8d27up \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5e72\u8d27up',
+      family: 'cooperation',
+      expectedAliasQuery: '\u5e72\u8d27 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
   ];
 
   for (const item of cases) {
