@@ -1869,6 +1869,9 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       if (/\u5f39\u5e55/.test(query)) {
         searchPayload.includeDanmaku = true;
         searchPayload.allowNetworkDanmaku = true;
+      } else if (options.existingTermsOnly === true && commentMisses > 0) {
+        searchPayload.includeDanmaku = true;
+        searchPayload.allowNetworkDanmaku = true;
       } else if (options.includeDanmaku !== undefined) {
         searchPayload.includeDanmaku = options.includeDanmaku;
         searchPayload.allowNetworkDanmaku = options.includeDanmaku === true;

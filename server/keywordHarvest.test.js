@@ -4667,6 +4667,63 @@ test('harvestKeywordDictionary enables danmaku scans for danmaku priority querie
   }
 });
 
+test('harvestKeywordDictionary enables danmaku after a current comment miss', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-comment-miss-danmaku-'));
+  const statePath = join(dir, 'state.json');
+  const term = '\u7ed9\u7237\u722c';
+  try {
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        harvestStrategyVersion: 4,
+        termAttempts: {
+          [term]: {
+            term,
+            family: 'attack',
+            attempts: 1,
+            successfulAttempts: 0,
+            queries: [{ query: `${term} \u8bc4\u8bba\u533a`, strategyVersion: 4, ok: true, hit: false, videos: 1, comments: 10 }],
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        priorityQueries: [{ term, family: 'attack', query: `${term} \u8bc4\u8bba\u533a` }],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term, family: 'attack', evidenceCount: 1 }],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BV1111111111' }],
+            comments: [],
+            entries: [],
+            keywordTraining: { dictionaryEvidenceEntries: [] },
+            dictionary: { entries: [{ term, family: 'attack', evidenceCount: 1 }] },
+          };
+        },
+      },
+    );
+
+    assert.equal(payloads[0].includeDanmaku, true);
+    assert.equal(payloads[0].allowNetworkDanmaku, true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary prefixes planned terms into controversial discovery queries', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-term-controversy-'));
   const statePath = join(dir, 'state.json');

@@ -322,6 +322,33 @@ test('fetchJson caches successful Bilibili JSON responses for repeated reads', a
   resetBilibiliRequestState();
 });
 
+test('fetchJson passes an abort signal so stalled Bilibili requests can time out', async () => {
+  resetBilibiliRequestState();
+  await fetchJson('https://api.bilibili.com/timeout', 'https://www.bilibili.com', {
+    env: {},
+    config: {
+      minDelayMs: 0,
+      jitterMs: 0,
+      blockCooldownMs: 0,
+      cacheTtlMs: 0,
+      longPauseProbability: 0,
+      requestTimeoutMs: 500,
+    },
+    nowFn: () => 1000,
+    randomFn: () => 0,
+    waitFn: async () => {},
+    fetchImpl: async (_url, init) => {
+      assert.ok(init.signal);
+      assert.equal(init.signal.aborted, false);
+      return {
+        ok: true,
+        json: async () => ({ code: 0, data: { ok: true } }),
+      };
+    },
+  });
+  resetBilibiliRequestState();
+});
+
 test('extractDynamicRecords returns commentable dynamic objects and authored text', () => {
   const records = extractDynamicRecords(
     [

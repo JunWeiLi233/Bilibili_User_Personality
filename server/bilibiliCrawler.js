@@ -37,6 +37,7 @@ function readCrawlerConfig(env = process.env) {
     pagePauseMaxMs: Math.max(0, Number(env.BILIBILI_CRAWLER_PAGE_PAUSE_MAX_MS || 1600)),
     objectPauseMinMs: Math.max(0, Number(env.BILIBILI_CRAWLER_OBJECT_PAUSE_MIN_MS || 1400)),
     objectPauseMaxMs: Math.max(0, Number(env.BILIBILI_CRAWLER_OBJECT_PAUSE_MAX_MS || 3600)),
+    requestTimeoutMs: Math.max(0, Number(env.BILIBILI_CRAWLER_REQUEST_TIMEOUT_MS || 20000)),
   };
 }
 
@@ -180,6 +181,27 @@ function buildHeaders(url, referer, randomFn, nowFn) {
   return headers;
 }
 
+async function fetchWithTimeout(fetchImpl, url, init, config) {
+  const timeoutMs = Math.max(0, Number(config?.requestTimeoutMs) || 0);
+  if (!timeoutMs || typeof AbortController === 'undefined') {
+    return fetchImpl(url, init);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (typeof timer.unref === 'function') timer.unref();
+  try {
+    return await fetchImpl(url, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`Bilibili request timed out after ${timeoutMs}ms: ${url}`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function pickRange(randomFn, minMs, maxMs) {
   if (maxMs <= minMs) return minMs;
   return minMs + Math.floor((randomFn ? randomFn() : Math.random()) * (maxMs - minMs));
@@ -236,9 +258,9 @@ export async function fetchJson(url, referer = 'https://www.bilibili.com', optio
 
   await scheduleBilibiliRequest({ ...options, config });
   const fetchImpl = options.fetchImpl || fetch;
-  const response = await fetchImpl(url, {
+  const response = await fetchWithTimeout(fetchImpl, url, {
     headers: buildHeaders(url, referer, randomFn, nowFn),
-  });
+  }, config);
   if (!response.ok) {
     if ([403, 429, 503].includes(Number(response.status))) {
       applyBlockCooldown(config, nowFn);
@@ -267,9 +289,9 @@ export async function fetchText(url, referer = 'https://www.bilibili.com', optio
   const randomFn = options.randomFn || Math.random;
   await scheduleBilibiliRequest({ ...options, config });
   const fetchImpl = options.fetchImpl || fetch;
-  const response = await fetchImpl(url, {
+  const response = await fetchWithTimeout(fetchImpl, url, {
     headers: buildHeaders(url, referer, randomFn, nowFn),
-  });
+  }, config);
   if (!response.ok) {
     if ([403, 429, 503].includes(Number(response.status))) {
       applyBlockCooldown(config, nowFn);
