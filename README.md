@@ -127,6 +127,12 @@ npm run dictionary:coverage
 
 The audit writes `server/keywordCoverageAudit.json`, exports recommended queries to `server/keywordCoverageQueries.txt`, and prints weak terms, exhausted terms, family gaps, source-backed evidence counts, unsourced evidence terms to refresh, next coverage actions, and recommended next queries/templates. For a local or CI gate, set `BILIBILI_COVERAGE_AUDIT_STRICT=1`; the command exits non-zero until the configured coverage target is met. Tune the gate with `BILIBILI_COVERAGE_AUDIT_MIN_RATIO`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_COMPLETE=0`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES=1`, `BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS=1`, `BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS`, and `BILIBILI_HARVEST_TARGET_EVIDENCE`. `BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS=1` is stricter: search-result video titles/descriptions can help discovery, but they do not satisfy the coverage gate until the term has non-context Bilibili comment evidence.
 
+If older DeepSeek harvest runs added generic ASCII fragments such as `API`, `BUG`, `MVP`, short ids, or uploader tags, compact the local generated dictionary through the current backend normalizer:
+
+```powershell
+npm run dictionary:prune
+```
+
 To run the next audit-recommended queries first:
 
 ```powershell

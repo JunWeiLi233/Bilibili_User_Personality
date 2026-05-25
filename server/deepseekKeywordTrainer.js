@@ -22,6 +22,25 @@ const STOP_TERMS = new Set([
   '分类',
 ]);
 const URL_HOST_FRAGMENT_TERMS = new Set(['http', 'https', 'www', 'com', 'cn', 'net', 'org', 'gov', 'mps']);
+const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
+  'allin',
+  'catconfuse',
+  'dddd',
+  'doge',
+  'giegie',
+  'lsp',
+  'nb',
+  'nocap',
+  'nt',
+  'op',
+  'pink',
+  'pua',
+  'up',
+  'wdnmd',
+  'xswl',
+  'yygq',
+  'yyds',
+]);
 const FAMILY_ALIASES = {
   sarcasm: 'attack',
   meme: 'attack',
@@ -170,6 +189,7 @@ function isNoisyTerm(term) {
   if (/\d{3,}元/.test(term) || /^最高领\d+元$/.test(term)) return true;
   if (/^\d+$/.test(term)) return true;
   if (/^[A-Za-z]$/.test(term)) return true;
+  if (/^[A-Za-z0-9]+$/.test(term) && !ALLOWED_ASCII_KEYWORD_TERMS.has(String(term).toLowerCase())) return true;
   if (/^去问(?!百度|谷歌|Google|搜索|老师|客服)/i.test(term)) return true;
   return false;
 }

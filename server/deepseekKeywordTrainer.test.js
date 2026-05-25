@@ -102,7 +102,25 @@ test('normalizes away standalone URL host fragments from keyword terms', () => {
     { term: 'cyberpolice', family: 'evidence', meaning: 'network police reporting concept from a cited URL' },
   ]);
 
-  assert.deepEqual(entries.map((entry) => entry.term), ['cyberpolice']);
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+});
+
+test('normalizes away weak ASCII technical and id fragments while keeping known Bilibili shorthand', () => {
+  const entries = normalizeKeywordEntries([
+    { term: 'API', family: 'evidence', meaning: 'technical acronym copied from a video title' },
+    { term: 'BUG', family: 'evidence', meaning: 'generic English issue word' },
+    { term: 'MVP', family: 'cooperation', meaning: 'generic product acronym' },
+    { term: 'NPC', family: 'attack', meaning: 'generic game abbreviation without Chinese context' },
+    { term: 'R2', family: 'evidence', meaning: 'short id-like fragment' },
+    { term: 'STLINE', family: 'evidence', meaning: 'asset or uploader id fragment' },
+    { term: 'doge', family: 'cooperation', meaning: 'Bilibili emote shorthand' },
+    { term: 'dddd', family: 'evidence', meaning: 'understood-by-insiders shorthand' },
+    { term: 'yygq', family: 'attack', meaning: 'yin-yang sarcasm shorthand' },
+    { term: 'wdnmd', family: 'attack', meaning: 'Chinese internet insult shorthand' },
+    { term: 'nocap', family: 'evidence', meaning: 'internet slang shorthand' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['doge', 'dddd', 'yygq', 'wdnmd', 'nocap']);
 });
 
 test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise terms', async () => {
@@ -125,6 +143,35 @@ test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise ter
     const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
 
     assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['doge']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('mergeEntriesIntoDictionary prunes persisted weak ASCII technical and id fragments', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-ascii-fragments-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          { term: 'API', family: 'evidence', meaning: 'technical acronym copied from a video title', evidenceCount: 1 },
+          { term: 'BUG', family: 'evidence', meaning: 'generic English issue word', evidenceCount: 1 },
+          { term: 'MVP', family: 'cooperation', meaning: 'generic product acronym', evidenceCount: 1 },
+          { term: 'R2', family: 'evidence', meaning: 'short id-like fragment', evidenceCount: 1 },
+          { term: 'doge', family: 'cooperation', meaning: 'Bilibili emote shorthand', evidenceCount: 1 },
+          { term: 'yygq', family: 'attack', meaning: 'yin-yang sarcasm shorthand', evidenceCount: 1 },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['yygq', 'doge']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -253,7 +300,7 @@ test('mergeEntriesIntoDictionary shares existing alias evidence with longer dict
   }
 });
 
-test('mergeEntriesIntoDictionary shares evidence across same-family ASCII case variants', async () => {
+test('mergeEntriesIntoDictionary shares evidence across same-family allowed ASCII case variants', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-casefold-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');
   try {
@@ -264,20 +311,20 @@ test('mergeEntriesIntoDictionary shares evidence across same-family ASCII case v
         updatedAt: '2026-01-01T00:00:00.000Z',
         entries: [
           {
-            term: 'bug',
-            family: 'evidence',
-            meaning: 'lowercase issue marker',
+            term: 'doge',
+            family: 'cooperation',
+            meaning: 'lowercase Bilibili emote marker',
             evidenceCount: 1,
-            evidenceSamples: ['this bug can be reproduced'],
-            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-lower', sample: 'this bug can be reproduced' }],
+            evidenceSamples: ['this comment uses doge'],
+            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-lower', sample: 'this comment uses doge' }],
           },
           {
-            term: 'BUG',
-            family: 'evidence',
-            meaning: 'uppercase issue marker',
+            term: 'Doge',
+            family: 'cooperation',
+            meaning: 'uppercase Bilibili emote marker',
             evidenceCount: 1,
-            evidenceSamples: ['BUG is still there'],
-            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-upper', sample: 'BUG is still there' }],
+            evidenceSamples: ['Doge appears in mixed case'],
+            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-upper', sample: 'Doge appears in mixed case' }],
           },
         ],
       }),
@@ -285,13 +332,13 @@ test('mergeEntriesIntoDictionary shares evidence across same-family ASCII case v
     );
 
     const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
-    const lower = dictionary.entries.find((entry) => entry.term === 'bug');
-    const upper = dictionary.entries.find((entry) => entry.term === 'BUG');
+    const lower = dictionary.entries.find((entry) => entry.term === 'doge');
+    const upper = dictionary.entries.find((entry) => entry.term === 'Doge');
 
     assert.equal(lower.evidenceCount, 2);
     assert.equal(upper.evidenceCount, 2);
-    assert.deepEqual(lower.evidenceSamples, ['this bug can be reproduced', 'BUG is still there']);
-    assert.deepEqual(upper.evidenceSamples, ['BUG is still there', 'this bug can be reproduced']);
+    assert.deepEqual(lower.evidenceSamples, ['this comment uses doge', 'Doge appears in mixed case']);
+    assert.deepEqual(upper.evidenceSamples, ['Doge appears in mixed case', 'this comment uses doge']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -934,13 +981,13 @@ test('trainKeywordDictionary updates evidence for existing terms found in crawle
   const dictionaryPath = join(dir, 'dictionary.json');
   try {
     await mergeEntriesIntoDictionary(
-      [{ term: 'freshterm', family: 'cooperation', meaning: 'existing dictionary term', confidence: 0.7, evidenceCount: 0 }],
+      [{ term: '\u65b0\u9c9c\u8bcd', family: 'cooperation', meaning: 'existing dictionary term', confidence: 0.7, evidenceCount: 0 }],
       { dictionaryPath },
     );
 
     const result = await trainKeywordDictionary(
       {
-        text: 'Bilibili comment has [freshterm]\nanother freshterm reply',
+        text: 'Bilibili comment has [\u65b0\u9c9c\u8bcd]\nanother \u65b0\u9c9c\u8bcd reply',
         uid: 'BV-existing',
         source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-existing/',
       },
@@ -950,11 +997,11 @@ test('trainKeywordDictionary updates evidence for existing terms found in crawle
       },
     );
 
-    const existing = result.dictionary.entries.find((entry) => entry.term === 'freshterm');
+    const existing = result.dictionary.entries.find((entry) => entry.term === '\u65b0\u9c9c\u8bcd');
     assert.equal(result.generatedEntries.length, 0);
-    assert.deepEqual(result.dictionaryEvidenceEntries.map((entry) => entry.term), ['freshterm']);
+    assert.deepEqual(result.dictionaryEvidenceEntries.map((entry) => entry.term), ['\u65b0\u9c9c\u8bcd']);
     assert.equal(existing.evidenceCount, 2);
-    assert.equal(existing.evidenceSamples.includes('Bilibili comment has [freshterm]'), true);
+    assert.equal(existing.evidenceSamples.includes('Bilibili comment has [\u65b0\u9c9c\u8bcd]'), true);
     assert.equal(existing.evidenceSources[0].uid, 'BV-existing');
     assert.equal(existing.evidenceSources[0].source.includes('bilibili.com/video/BV-existing'), true);
   } finally {
@@ -967,13 +1014,13 @@ test('trainKeywordDictionary can refresh only existing dictionary terms', async 
   const dictionaryPath = join(dir, 'dictionary.json');
   try {
     await mergeEntriesIntoDictionary(
-      [{ term: 'freshterm', family: 'cooperation', meaning: 'existing dictionary term', confidence: 0.7, evidenceCount: 0 }],
+      [{ term: '\u65b0\u9c9c\u8bcd', family: 'cooperation', meaning: 'existing dictionary term', confidence: 0.7, evidenceCount: 0 }],
       { dictionaryPath },
     );
 
     const result = await trainKeywordDictionary(
       {
-        text: 'freshterm appears here and brandnewterm appears too',
+        text: '\u65b0\u9c9c\u8bcd appears here and \u5168\u65b0\u8bcd appears too',
         uid: 'BV-existing-only',
         source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-existing-only/',
         existingTermsOnly: true,
@@ -988,9 +1035,9 @@ test('trainKeywordDictionary can refresh only existing dictionary terms', async 
     );
 
     assert.deepEqual(result.generatedEntries, []);
-    assert.deepEqual(result.entries.map((entry) => entry.term), ['freshterm']);
-    assert.equal(result.dictionary.entries.some((entry) => entry.term === 'brandnewterm'), false);
-    assert.equal(result.dictionary.entries.find((entry) => entry.term === 'freshterm').evidenceCount, 1);
+    assert.deepEqual(result.entries.map((entry) => entry.term), ['\u65b0\u9c9c\u8bcd']);
+    assert.equal(result.dictionary.entries.some((entry) => entry.term === '\u5168\u65b0\u8bcd'), false);
+    assert.equal(result.dictionary.entries.find((entry) => entry.term === '\u65b0\u9c9c\u8bcd').evidenceCount, 1);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -1273,7 +1320,7 @@ test('rejects DeepSeek keywords that are not evidenced in crawled text', async (
                     content: JSON.stringify({
                       keywords: [
                         { term: '[doge]', family: 'cooperation', meaning: '表情梗' },
-                        { term: 'notpresent', family: 'attack', meaning: 'not in source text' },
+                        { term: '\u672a\u51fa\u73b0\u8bcd', family: 'attack', meaning: 'not in source text' },
                       ],
                     }),
                   },
