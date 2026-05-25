@@ -507,14 +507,14 @@ function buildCandidateTerms(text) {
 function heuristicKeywordEntries(text) {
   const patterns = [
     { pattern: /(不会真有人(?:觉得|以为)?)/g, family: 'attack', meaning: '用反问包装资格审查或嘲讽' },
-    { pattern: /(典中典|典|孝|急了|绷不住|赢麻了|乐|yygq|阴阳怪气|懂哥|小丑)/gi, family: 'attack', meaning: '中文互联网嘲讽或贬低性梗' },
-    { pattern: /(单走(?:一个)?[0-9A-Za-z]+|蹭概念|车家军|doge|滑稽)/gi, family: 'attack', meaning: '中文互联网弹幕式嘲讽、阵营指称或戏谑表达' },
-    { pattern: /(懂的都懂|你自己搜|自己查|不会百度|这还用问|懒得解释)/g, family: 'evasion', meaning: '把举证责任转移给对方' },
+    { pattern: /(典中典|典|孝|急了|绷不住|赢麻了|乐|yygq|阴阳怪气|懂哥|小丑|逆天|闹麻了|唐|破防|急成这样|这就破防)/gi, family: 'attack', meaning: '中文互联网嘲讽或贬低性梗' },
+    { pattern: /(单走(?:一个)?[0-9A-Za-z]+|蹭概念|车家军|doge|滑稽|粉红|小粉红|精外|洋奴|殖人|水军|五毛|美分|1450|来电了|你国|贵国|神神|兔兔)/gi, family: 'attack', meaning: '中文互联网弹幕式嘲讽、阵营指称或戏谑表达' },
+    { pattern: /(懂的都懂|你自己搜|自己查|不会百度|这还用问|懒得解释|问百度|去百度|百度一下|自己去找|不会搜|这都不知道|常识|不用我教|自己学|去看书|多读书|这还用说|这都不懂)/g, family: 'evasion', meaning: '把举证责任转移给对方' },
     { pattern: /(问百度|去问[^，。！？\s]{1,8})/g, family: 'evasion', meaning: '把解释责任转移到搜索或第三方身上' },
-    { pattern: /(全是|全都|根本没有|没有一个|必然|绝对|肯定是)/g, family: 'absolutes', meaning: '缺少限定条件的强断言' },
-    { pattern: /(数据|来源|报告|论文|链接|证据|出处)/g, family: 'evidence', meaning: '要求或提供可核验证据' },
-    { pattern: /(可能|不一定|如果有|可以贴|我理解|补充一下)/g, family: 'cooperation', meaning: '合作讨论或条件化表达' },
-    { pattern: /(我错了|我说重了|前面说重了|更正|修正|改结论)/g, family: 'correction', meaning: '自我修正或结论降级' },
+    { pattern: /(全是|全都|根本没有|没有一个|必然|绝对|肯定是|毫无疑问|毋庸置疑|众所周知|谁都|没人|百分百|一律|从古至今)/g, family: 'absolutes', meaning: '缺少限定条件的强断言' },
+    { pattern: /(数据|来源|报告|论文|链接|证据|出处|原文|截图|引用|参考文献|有数据吗|来源呢|出处在哪|发链接|上链接|有证据吗|张口就来|查查资料|引用的什么|贴原文|无图无真相|信源|原文在哪|数据来源)/g, family: 'evidence', meaning: '要求或提供可核验证据' },
+    { pattern: /(可能|不一定|如果有|可以贴|我理解|补充一下|据我所知|就我所见|目前看来|仅供参考|个人看法|在我看来|有一说一|确实|我是觉得|我认为|我觉得|应该|也许|大概|或许|有可能是|让我补充|提供一下)/g, family: 'cooperation', meaning: '合作讨论或条件化表达' },
+    { pattern: /(我错了|我说重了|前面说重了|更正|修正|改结论|说错了|搞错了|弄错了|记错了|确实如此|你说得对|受教|学习了|感谢指正|谢谢指正|有道理|你说的有道理|这倒也是|那倒也对|收回前面|前面说错|之前说错|是我搞混|我记混了|我的问题|是我疏忽)/g, family: 'correction', meaning: '自我修正或结论降级' },
   ];
   const entries = [];
   for (const item of patterns) {
@@ -736,4 +736,132 @@ export async function trainKeywordDictionary(payload, options = {}) {
 
 export async function readKeywordDictionary(options = {}) {
   return readDictionary(options.dictionaryPath || DEFAULT_DICTIONARY_PATH);
+}
+
+function buildAnalysisMessages({ text, uid, name }) {
+  return [
+    {
+      role: 'system',
+      content:
+        '你是中文互联网论辩行为分析器。分析 B 站用户的公开评论，从话语行为角度评估其在论辩中的风险倾向。只输出合法 JSON，不要 markdown。',
+    },
+    {
+      role: 'user',
+      content: `分析以下 B 站用户的公开评论，从 6 个维度评估其论辩行为风险。每个维度输出 0-100 的分数和判断依据。
+
+维度说明：
+1. 对抗性动机 (attack)：是否从讨论观点转向攻击人身、资格、阵营或动机。高分=频繁人身攻击或阵营指认。
+2. 认知闭合 (closure)：是否使用全称判断、绝对化断言、拒绝歧义。高分=思维闭合、拒绝 nuance。
+3. 证据敏感 (evidence)：是否提供或要求可核验证据、来源、数据。低分=不关心证据、转移举证责任。
+4. 逻辑一致 (logic)：论证是否出现稻草人、偷换概念、以偏概全、因果跳跃等谬误。低分=逻辑漏洞多。
+5. 合作讨论 (cooperation)：是否使用条件化表达、澄清、复述对方观点、让步。低分=拒绝合作讨论。
+6. 修正意愿 (correction)：被指出错误时是否承认、修正、降低结论强度。低分=拒绝修正。
+
+重要规则：
+- 评估的是话语行为模式，不是观点对错
+- 每轴必须引用至少 1 条原文作为证据
+- 如果某轴的证据不足（评论中缺少相关语言），给出中性分数（40-60）并说明"证据不足"
+- 注意区分反讽、玩梗和真诚表达
+- 如果评论数很少或样本不具代表性，在 overall 中注明
+
+输出 JSON 结构：
+{
+  "axes": [
+    {"axis": "对抗性动机", "score": 0-100, "evidence": ["原文引用..."], "reasoning": "判断依据..."},
+    {"axis": "认知闭合", "score": 0-100, "evidence": ["原文引用..."], "reasoning": "判断依据..."},
+    {"axis": "证据敏感", "score": 0-100, "evidence": ["原文引用..."], "reasoning": "判断依据..."},
+    {"axis": "逻辑一致", "score": 0-100, "evidence": ["原文引用..."], "reasoning": "判断依据..."},
+    {"axis": "合作讨论", "score": 0-100, "evidence": ["原文引用..."], "reasoning": "判断依据..."},
+    {"axis": "修正意愿", "score": 0-100, "evidence": ["原文引用..."], "reasoning": "判断依据..."}
+  ],
+  "overall": {"riskBand": "高风险对抗型|混合争辩型|低风险讨论型", "summary": "一句话总结..."},
+  "confidence": 0.0
+}
+
+UID: ${uid || 'unknown'}
+用户名: ${name || '未知'}
+评论样本：
+${String(text || '').slice(0, 8000)}`,
+    },
+  ];
+}
+
+export async function analyzeCommentsWithDeepSeek(payload, options = {}) {
+  const config = await getDeepSeekConfig(options);
+  const fetchImpl = options.fetch || fetch;
+
+  if (!config.available || !config.keyConfigured || !config.model) {
+    return {
+      ok: false,
+      error: 'DeepSeek API is not configured. Set DEEPSEEK_API_KEY to enable direct analysis.',
+      available: false,
+    };
+  }
+
+  const requestBody = {
+    model: config.model,
+    messages: buildAnalysisMessages(payload),
+    response_format: { type: 'json_object' },
+    thinking: { type: 'enabled' },
+    reasoning_effort: config.reasoningEffort || 'medium',
+    stream: false,
+    max_tokens: 2000,
+  };
+
+  try {
+    const response = await fetchImpl(`${config.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: authHeaders((options.env || process.env).DEEPSEEK_API_KEY),
+      body: JSON.stringify(requestBody),
+    });
+    if (!response.ok) {
+      throw new Error(`DeepSeek analyze failed with HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const parsed = extractJsonObject(raw);
+
+    const axes = (Array.isArray(parsed.axes) ? parsed.axes : []).map((axis) => ({
+      axis: String(axis.axis || ''),
+      score: Math.max(0, Math.min(100, Number(axis.score) || 50)),
+      evidence: Array.isArray(axis.evidence) ? axis.evidence.slice(0, 5) : [],
+      reasoning: String(axis.reasoning || '').slice(0, 500),
+    }));
+
+    const validAxes = [
+      { axis: '对抗性动机', score: 50, evidence: [], reasoning: '' },
+      { axis: '认知闭合', score: 50, evidence: [], reasoning: '' },
+      { axis: '证据敏感', score: 50, evidence: [], reasoning: '' },
+      { axis: '逻辑一致', score: 50, evidence: [], reasoning: '' },
+      { axis: '合作讨论', score: 50, evidence: [], reasoning: '' },
+      { axis: '修正意愿', score: 50, evidence: [], reasoning: '' },
+    ];
+
+    for (const item of validAxes) {
+      const found = axes.find((axis) => axis.axis === item.axis);
+      if (found) Object.assign(item, found);
+    }
+
+    const overall = {
+      riskBand: String(parsed.overall?.riskBand || '混合争辩型').trim(),
+      summary: String(parsed.overall?.summary || '').trim(),
+    };
+
+    return {
+      ok: true,
+      provider: config.provider,
+      model: config.model || '',
+      reasoningEffort: config.reasoningEffort || 'medium',
+      axes: validAxes,
+      overall,
+      confidence: Math.max(0.45, Math.min(0.92, Number(parsed.confidence) || 0.7)),
+      raw,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error.message,
+      available: true,
+    };
+  }
 }

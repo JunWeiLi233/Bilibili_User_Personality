@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { URL } from 'node:url';
 
 import { analyzeUid } from './bilibiliCrawler.js';
-import { getDeepSeekConfig, readKeywordDictionary, trainKeywordDictionary } from './deepseekKeywordTrainer.js';
+import { analyzeCommentsWithDeepSeek, getDeepSeekConfig, readKeywordDictionary, trainKeywordDictionary } from './deepseekKeywordTrainer.js';
 import { searchVideoKeywords } from './videoKeywordSearch.js';
 
 const PORT = Number(process.env.PORT || 8787);
@@ -39,6 +39,15 @@ const server = createServer(async (request, response) => {
 
   if (url.pathname === '/api/deepseek/dictionary') {
     return writeJson(response, 200, { ok: true, dictionary: await readKeywordDictionary() });
+  }
+
+  if (url.pathname === '/api/deepseek/analyze-comments' && request.method === 'POST') {
+    try {
+      const payload = JSON.parse((await readBody(request)) || '{}');
+      return writeJson(response, 200, await analyzeCommentsWithDeepSeek(payload));
+    } catch (error) {
+      return writeJson(response, 500, { ok: false, error: error.message });
+    }
   }
 
   if (url.pathname === '/api/deepseek/train-keywords' && request.method === 'POST') {

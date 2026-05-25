@@ -293,6 +293,40 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.mode-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.mode-chip {
+  max-width: 100%;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 620;
+  color: #5c5c5c;
+  background: #fff;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 140ms ease;
+  white-space: nowrap;
+}
+
+.mode-chip:hover {
+  color: #1a1a1a;
+  border-color: rgba(23, 23, 23, 0.28);
+  background: rgba(47, 93, 80, 0.06);
+}
+
+.mode-chip.active {
+  color: #fff;
+  background: #2f5d50;
+  border-color: #2f5d50;
+  font-weight: 720;
+}
+
 .user-rail,
 .analysis-core,
 .error-panel {
