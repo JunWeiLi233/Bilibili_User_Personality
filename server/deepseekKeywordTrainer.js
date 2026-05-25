@@ -115,6 +115,7 @@ function dictionaryScopedToTerms(dictionary, targetTerms) {
 function isNoisyTerm(term) {
   if (!term || STOP_TERMS.has(term) || /^变体\d+$/.test(term)) return true;
   if (/[^\p{Script=Han}A-Za-z0-9]/u.test(term)) return true;
+  if (/^(?:BV[0-9A-Za-z]{8,}|av\d{6,})$/i.test(term)) return true;
   if (/^\d+(?:vip|VIP|会员)$/.test(term)) return true;
   if (/\d{3,}元/.test(term) || /^最高领\d+元$/.test(term)) return true;
   if (/^\d+$/.test(term)) return true;

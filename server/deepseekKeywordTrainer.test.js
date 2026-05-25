@@ -159,6 +159,16 @@ test('normalizes away promotional commerce artifacts from keyword terms', () => 
   assert.deepEqual(entries.map((entry) => entry.term), ['梭哈']);
 });
 
+test('normalizes away Bilibili object IDs from keyword terms', () => {
+  const entries = normalizeKeywordEntries([
+    { term: 'BV11W3nz2Ed2', family: 'evidence', meaning: 'Bilibili video ID copied from source URL' },
+    { term: 'av123456789', family: 'evidence', meaning: 'Bilibili av ID copied from source URL' },
+    { term: 'BV号', family: 'evidence', meaning: 'discussion about Bilibili ids as text' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['BV号']);
+});
+
 test('extracts JSON object from verbose DeepSeek responses', () => {
   const parsed = extractJsonObject('```json\n{"keywords":[{"term":"典中典","family":"attack"}]}\n```');
   assert.deepEqual(parsed, { keywords: [{ term: '典中典', family: 'attack' }] });
