@@ -424,10 +424,145 @@ test('searchVideoKeywords filters ambiguous exact title matches when alias queri
     },
   );
 
-  assert.equal(result.ok, true);
+  assert.equal(result.ok, false);
   assert.equal(fetchCalls, 0);
   assert.deepEqual(result.discoveredVideos, []);
-  assert.equal(trainedPayloads.length, 1);
+  assert.equal(result.discoveryContextVideos.length, 0);
+  assert.equal(trainedPayloads.length, 0);
+});
+
+test('searchVideoKeywords filters Baidu product and publicity videos for ask-baidu aliases', async () => {
+  let fetchCalls = 0;
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u767e\u5ea6\u4e00\u4e0b \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 4,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u95ee\u767e\u5ea6', '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVwenku1',
+          title: '\u8bc4\u5ba1\u5c0f\u7ec4\u4eba\u540d\u6765\u81ea\u767e\u5ea6\u6587\u5e93\uff1f\u91c7\u8d2d\u4e2d\u6807\u7ed3\u679c\u5f15\u4e89\u8bae',
+          sourceUrl: 'https://www.bilibili.com/video/BVwenku1/',
+        },
+        {
+          bvid: 'BVpr1',
+          title: '\u767e\u5ea6\u201c\u516c\u5173\u4e00\u53f7\u4f4d\u201d \u7490\u9759\u5df2\u79bb\u804c \u6b64\u524d\u56e0\u53d1\u5e03\u4e89\u8bae\u8a00\u8bba\u5f15\u70ed\u8bae',
+          sourceUrl: 'https://www.bilibili.com/video/BVpr1/',
+        },
+        {
+          bvid: 'BVsong1',
+          title: '\u8fd9\u6bb5\u65f6\u95f4\u8fd9\u9996\u6b4c\u53c8\u706b\u4e86\uff0c\u300a\u95ee\u767e\u5ea6\u300b\u9648\u745e\u6f14\u5531',
+          sourceUrl: 'https://www.bilibili.com/video/BVsong1/',
+        },
+        {
+          bvid: 'BVreply1',
+          title: '\u3010\u4e92\u5173\u4e00\u4e0b\u8bc4\u8bba\u4e00\u5b9a\u56de\u590d\u3011\u6700\u65b0\u89c6\u9891\u4e0a\u7ebf',
+          sourceUrl: 'https://www.bilibili.com/video/BVreply1/',
+        },
+      ],
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan Baidu product, publicity, song, or generic reply videos');
+      },
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return { ok: true, entries: [], dictionary: { entries: [] } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 0);
+  assert.equal(trainedPayloads.length, 0);
+});
+
+test('searchVideoKeywords filters Baidu product videos for conversational ask-baidu aliases', async () => {
+  let fetchCalls = 0;
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u4e0d\u4f1a\u767e\u5ea6 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 3,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u95ee\u767e\u5ea6', '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVwenku1',
+          title: '\u8bc4\u5ba1\u5c0f\u7ec4\u4eba\u540d\u6765\u81ea\u767e\u5ea6\u6587\u5e93\uff1f\u91c7\u8d2d\u4e2d\u6807\u7ed3\u679c\u5f15\u4e89\u8bae',
+          sourceUrl: 'https://www.bilibili.com/video/BVwenku1/',
+        },
+        {
+          bvid: 'BVpan1',
+          title: '\u4fc4\u5267\u300a\u7231\u4e0d\u4f1a\u91cd\u6765\u300b\u8d85\u6e05\u4e2d\u5b57\u767e\u5ea6\u7f51\u76d8\u5168\u96c6\u5df2\u6574\u7406',
+          sourceUrl: 'https://www.bilibili.com/video/BVpan1/',
+        },
+        {
+          bvid: 'BVpr1',
+          title: '\u767e\u5ea6\u201c\u516c\u5173\u4e00\u53f7\u4f4d\u201d \u7490\u9759\u5df2\u79bb\u804c \u6b64\u524d\u56e0\u53d1\u5e03\u4e89\u8bae\u8a00\u8bba\u5f15\u70ed\u8bae',
+          sourceUrl: 'https://www.bilibili.com/video/BVpr1/',
+        },
+      ],
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan Baidu product, netdisk, or publicity videos');
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 0);
+});
+
+test('searchVideoKeywords rejects exact ask-baidu alias matches inside Baidu product titles', async () => {
+  let fetchCalls = 0;
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u4e0d\u4f1a\u767e\u5ea6 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u95ee\u767e\u5ea6', '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVproduct1',
+          title: '\u4e0d\u4f1a\u767e\u5ea6\u7f51\u76d8\u9650\u901f\u600e\u4e48\u529e\uff1f\u5b98\u65b9APP\u6559\u7a0b',
+          sourceUrl: 'https://www.bilibili.com/video/BVproduct1/',
+        },
+        {
+          bvid: 'BVproduct2',
+          title: '\u4e0d\u4f1a\u767e\u5ea6\u6587\u5e93\u4e0b\u8f7d\uff1f\u8fd9\u4e2a\u529e\u6cd5\u89e3\u51b3',
+          sourceUrl: 'https://www.bilibili.com/video/BVproduct2/',
+        },
+      ],
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan exact alias matches inside Baidu product titles');
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 0);
 });
 
 test('searchVideoKeywords does not treat reply and hot-comment scaffolding as target relevance', async () => {
@@ -466,10 +601,11 @@ test('searchVideoKeywords does not treat reply and hot-comment scaffolding as ta
     },
   );
 
-  assert.equal(result.ok, true);
+  assert.equal(result.ok, false);
   assert.equal(fetchCalls, 0);
   assert.deepEqual(result.discoveredVideos, []);
-  assert.equal(trainedPayloads.length, 1);
+  assert.equal(result.discoveryContextVideos.length, 0);
+  assert.equal(trainedPayloads.length, 0);
 });
 
 test('searchVideoKeywords avoids scanning zero-relevance videos for target coverage', async () => {
@@ -816,6 +952,60 @@ test('searchVideoKeywords controversial discovery skips generic popular feed by 
   assert.equal(result.ok, true);
   assert.equal(popularCalls, 0);
   assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1hotPolitics', 'BV1politics1', 'BV1dictionary']);
+});
+
+test('searchVideoKeywords filters generic controversial videos for ambiguous alias-only targets', async () => {
+  let fetchCalls = 0;
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u767e\u5ea6\u4e00\u4e0b \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      controversyQueries: ['\u65f6\u653f \u70ed\u8bc4 \u8bc4\u8bba\u533a'],
+      discoveryMode: 'controversial',
+      discoveryLimit: 4,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u95ee\u767e\u5ea6', '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528'],
+    },
+    {
+      discoverVideosByKeyword: async (query, _limit, options = {}) => {
+        if (options.searchOrder === 'click') {
+          return [
+            {
+              bvid: 'BVhot1',
+              title: '\u5916\u7f51\u70ed\u8bc4 \u6700\u65b0\u6d88\u606f \u56fd\u9645\u793e\u4f1a\u65f6\u653f',
+              sourceUrl: 'https://www.bilibili.com/video/BVhot1/',
+            },
+          ];
+        }
+        if (query.includes('\u65f6\u653f')) {
+          return [
+            {
+              bvid: 'BVpolitics1',
+              title: '2026\u4e00\u5468\u65f6\u653f \u8bc4\u8bba\u533a\u70ed\u8bae',
+              sourceUrl: 'https://www.bilibili.com/video/BVpolitics1/',
+            },
+          ];
+        }
+        return [
+          {
+            bvid: 'BVwenku1',
+            title: '\u8bc4\u5ba1\u5c0f\u7ec4\u4eba\u540d\u6765\u81ea\u767e\u5ea6\u6587\u5e93\uff1f\u91c7\u8d2d\u4e2d\u6807\u7ed3\u679c\u5f15\u4e89\u8bae',
+            sourceUrl: 'https://www.bilibili.com/video/BVwenku1/',
+          },
+        ];
+      },
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan generic controversial or Baidu product videos');
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 0);
 });
 
 test('searchVideoKeywords can explicitly include generic popular videos in controversial discovery', async () => {

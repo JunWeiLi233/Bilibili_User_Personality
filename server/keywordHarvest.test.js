@@ -153,9 +153,10 @@ test('buildKeywordHarvestQueries uses comment-use aliases before ambiguous media
 
   assert.deepEqual(queries.slice(0, 3), [
     '\u4e0d\u4f1a\u767e\u5ea6 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
-    '\u767e\u5ea6\u4e00\u4e0b \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u81ea\u5df1\u767e\u5ea6 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u4e0d\u4f1a\u767e\u5ea6\u5417 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
   ]);
+  assert.equal(queries.some((query) => query.includes('\u767e\u5ea6\u4e00\u4e0b')), false);
 });
 
 test('buildKeywordHarvestQueries uses conversational aliases for repeatedly missed terms', () => {
@@ -2360,6 +2361,54 @@ test('buildDictionaryCoverageAudit prefers precision feedback queries for ambigu
   );
 
   assert.equal(audit.nextActions[0].nextQuery, '\u6c42\u51fa\u5904 \u8bc4\u8bba\u533a');
+});
+
+test('buildDictionaryCoverageAudit avoids broad Baidu product retries after ask-baidu misses', () => {
+  const term = '\u95ee\u767e\u5ea6';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [{ term, family: 'evidence', evidenceCount: 1 }],
+    },
+    {
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'evidence',
+          evidenceAtPlanTime: 1,
+          attempts: 6,
+          successfulAttempts: 0,
+          lastEvidenceCount: 1,
+          queries: [
+            { query: '\u4e0d\u4f1a\u767e\u5ea6 \u8bc4\u8bba\u533a', strategyVersion: 4 },
+            { query: '\u4e0d\u4f1a\u767e\u5ea6 \u70ed\u8bc4', strategyVersion: 4 },
+            { query: '\u4e0d\u4f1a\u767e\u5ea6 \u56de\u590d', strategyVersion: 4 },
+            { query: '\u4e0d\u4f1a\u767e\u5ea6', strategyVersion: 4 },
+            { query: '\u767e\u5ea6\u4e00\u4e0b \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4', strategyVersion: 4 },
+          ],
+          lastQuery: '\u767e\u5ea6\u4e00\u4e0b \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+        },
+      },
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                query: '\u767e\u5ea6\u4e00\u4e0b \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+                commentsCollected: 90,
+                trainingTextChars: 2400,
+                targetExistingTerms: [term],
+                acceptedTerms: [],
+              },
+            ],
+          ],
+        },
+      ],
+    },
+    { targetEvidence: 3, maxActions: 1 },
+  );
+
+  assert.match(audit.nextActions[0].nextQuery, /\u81ea\u5df1\u767e\u5ea6|\u4f60\u4e0d\u4f1a\u767e\u5ea6\u5417/);
+  assert.doesNotMatch(audit.nextActions[0].nextQuery, /\u767e\u5ea6\u4e00\u4e0b/);
 });
 
 test('buildDictionaryCoverageAudit keeps exact feedback retries comment-bearing after a comment miss', () => {

@@ -209,6 +209,31 @@ const AMBIGUOUS_ALIAS_ONLY_TARGET_NEEDLES = new Set(
   ].map(cleanSearchText),
 );
 
+const ASK_BAIDU_PRODUCT_NOISE_NEEDLES = [
+  '\u767e\u5ea6\u6587\u5e93',
+  '\u767e\u5ea6\u7f51\u76d8',
+  '\u767e\u5ea6\u4e91',
+  '\u767e\u5ea6APP',
+  '\u767e\u5ea6\u5730\u56fe',
+  '\u767e\u5ea6\u767e\u79d1',
+  '\u767e\u5ea6\u8d34\u5427',
+  '\u767e\u5ea6\u7ffb\u8bd1',
+  '\u767e\u5ea6\u8f93\u5165\u6cd5',
+  '\u767e\u5ea6\u516c\u5173',
+  '\u516c\u5173\u4e00\u53f7\u4f4d',
+  '\u95ee\u767e\u5ea6\u9648\u745e',
+  '\u9648\u745e\u6f14\u5531',
+].map(cleanSearchText);
+
+function targetsAskBaiduTerm(targetExistingTerms = []) {
+  return targetExistingTerms.map(cleanSearchText).some((needle) => AMBIGUOUS_ALIAS_ONLY_TARGET_NEEDLES.has(needle));
+}
+
+function isAskBaiduProductNoiseVideo(video) {
+  const text = videoSearchText(video);
+  return text && ASK_BAIDU_PRODUCT_NOISE_NEEDLES.some((needle) => needle && text.includes(needle));
+}
+
 function searchNeedlesForRelevance(searchQueries = [], targetExistingTerms = []) {
   const targetNeedles = uniqueByKey(
     targetExistingTerms.map(cleanSearchText).filter((item) => item.length >= 2),
@@ -252,7 +277,11 @@ function sortVideosByRelevance(videos = [], searchQueries = [], targetExistingTe
 function filterRelevantVideos(videos = [], searchQueries = [], targetExistingTerms = []) {
   const needles = searchNeedlesForRelevance(searchQueries, targetExistingTerms);
   if (needles.length === 0) return videos;
-  return videos.filter((video) => relevanceScoreForVideo(video, needles) > 0);
+  const rejectAskBaiduProductNoise = targetsAskBaiduTerm(targetExistingTerms);
+  return videos.filter((video) => {
+    if (rejectAskBaiduProductNoise && isAskBaiduProductNoiseVideo(video)) return false;
+    return relevanceScoreForVideo(video, needles) > 0;
+  });
 }
 
 function buildVideoContextText(videos = []) {
@@ -484,6 +513,9 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       discoveryGroups.flatMap((group) => group),
       (video) => video.bvid || video.sourceUrl || video.title,
     );
+    if (targetsAskBaiduTerm(targetExistingTerms)) {
+      discoveryContextVideos = filterRelevantVideos(discoveryContextVideos, searchQueries, targetExistingTerms);
+    }
     const rankedDiscoveryGroups =
       existingTermsOnly || targetExistingTerms.length > 0
         ? discoveryGroups.map((group) => sortVideosByRelevance(group, searchQueries, targetExistingTerms))
