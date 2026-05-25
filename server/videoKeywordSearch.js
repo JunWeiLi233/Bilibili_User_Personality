@@ -527,6 +527,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     if (
       targetExistingTerms.length > 0 &&
       includeVideoContext === false &&
+      !targetsAskBaiduTerm(targetExistingTerms) &&
       eligibleDiscoveryGroups.every((group) => group.length === 0)
     ) {
       eligibleDiscoveryGroups = rankedDiscoveryGroups.map((group) => group.slice(0, discoveryLimit));

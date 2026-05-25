@@ -651,6 +651,49 @@ test('searchVideoKeywords avoids scanning zero-relevance videos for target cover
   assert.equal(trainedPayloads.length, 0);
 });
 
+test('searchVideoKeywords does not direct-probe filtered ask-baidu search noise', async () => {
+  let fetchCalls = 0;
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u4f60\u4e0d\u4f1a\u767e\u5ea6\u5417 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 4,
+      pages: 1,
+      existingTermsOnly: true,
+      includeVideoContext: false,
+      targetExistingTerms: ['\u95ee\u767e\u5ea6', '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVgenericReply',
+          title: '\u81ea\u52a8\u56de\u590d\u8bc4\u8bba',
+          sourceUrl: 'https://www.bilibili.com/video/BVgenericReply/',
+        },
+        {
+          bvid: 'BVpan',
+          title: '\u4fc4\u5267\u300a\u7231\u4e0d\u4f1a\u91cd\u6765\u300b\u8d85\u6e05\u4e2d\u5b57\u767e\u5ea6\u7f51\u76d8\u5168\u96c6\u5df2\u6574\u7406',
+          sourceUrl: 'https://www.bilibili.com/video/BVpan/',
+        },
+        {
+          bvid: 'BVnews',
+          title: '\u767e\u5ea6\u201c\u516c\u5173\u4e00\u53f7\u4f4d\u201d \u7490\u9759\u5df2\u79bb\u804c \u6b64\u524d\u56e0\u53d1\u5e03\u4e89\u8bae\u8a00\u8bba\u5f15\u70ed\u8bae',
+          sourceUrl: 'https://www.bilibili.com/video/BVnews/',
+        },
+      ],
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan filtered ask-baidu noise as a direct probe');
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+});
+
 test('searchVideoKeywords probes direct search results when comment-backed target coverage has only filtered context', async () => {
   const scannedBvids = [];
   const result = await searchVideoKeywords(
