@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { readKeywordDictionary as defaultReadKeywordDictionary } from './deepseekKeywordTrainer.js';
 import { searchVideoKeywords as defaultSearchVideoKeywords } from './videoKeywordSearch.js';
 
-const HARVEST_STRATEGY_VERSION = 3;
+const HARVEST_STRATEGY_VERSION = 4;
 const DEFAULT_SEED_QUERIES = [
   '\u4e2d\u6587\u4e92\u8054\u7f51 \u6897 \u8bc4\u8bba\u533a',
   '\u8bc4\u8bba\u533a \u70ed\u8bc4 \u6897',
@@ -157,10 +157,27 @@ function isVideoContextEvidenceSource(source = {}) {
   return sample.startsWith('Bilibili video context:') || sourceText.includes('search-discovered video context');
 }
 
+function hasNonContextEvidenceSample(entry) {
+  return (entry?.evidenceSamples || []).some((sample) => {
+    const sampleText = String(sample || '').trim();
+    return sampleText && !sampleText.startsWith('Bilibili video context:');
+  });
+}
+
+function hasBilibiliCommentScanSource(entry) {
+  return (entry?.evidenceSources || []).some((source) => {
+    const sourceText = String(source?.source || '').trim();
+    return sourceText.startsWith('Bilibili public ') && sourceText.includes('comment scan');
+  });
+}
+
 function hasCoverageEvidenceSource(entry, options = {}) {
   if (!hasEvidenceSource(entry)) return false;
   if (options.requireCommentBackedEvidence !== true) return true;
-  return (entry.evidenceSources || []).some((source) => !isVideoContextEvidenceSource(source));
+  return (
+    (entry.evidenceSources || []).some((source) => !isVideoContextEvidenceSource(source)) ||
+    (hasNonContextEvidenceSample(entry) && hasBilibiliCommentScanSource(entry))
+  );
 }
 
 function termAttemptKey(term) {
@@ -288,7 +305,9 @@ function queryVariantCountForTerm(term, options = {}) {
 function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length, options = {}) {
   const variants = [];
   const templateItems = queryTemplatesFromOptions(options);
-  const searchTerms = searchTermsForTerm(term);
+  const baseSearchTerms = searchTermsForTerm(term);
+  const extraSearchTerms = Array.isArray(options.searchTerms) ? options.searchTerms : [];
+  const searchTerms = options.preferSearchTerms === true ? unique([...extraSearchTerms, ...baseSearchTerms]) : unique([...baseSearchTerms, ...extraSearchTerms]);
   const pushManualVariant = (query, builtIn = true) => {
     variants.push({
       query: normalizeQueryText(query),
@@ -331,6 +350,34 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
   return unique(variants.map((item) => item.query))
     .map((query) => variants.find((item) => item.query === query))
     .slice(0, limit);
+}
+
+function isCommentEvidenceQuery(query) {
+  return /评论|热评|回复|互动|控评|节奏|粉丝/.test(String(query || ''));
+}
+
+function relatedContainedSearchTerms(entries, entry) {
+  const term = String(entry?.term || '').trim();
+  const family = String(entry?.family || '').trim();
+  const meaning = String(entry?.meaning || '').trim();
+  if (!term || !meaning || !/\p{Script=Han}/u.test(term)) return [];
+  return unique(
+    entries
+      .filter((candidate) => {
+        const candidateTerm = String(candidate?.term || '').trim();
+        return (
+          candidateTerm &&
+          candidateTerm !== term &&
+          candidateTerm.length < term.length &&
+          /\p{Script=Han}/u.test(candidateTerm) &&
+          term.includes(candidateTerm) &&
+          String(candidate?.family || '').trim() === family &&
+          String(candidate?.meaning || '').trim() === meaning
+        );
+      })
+      .sort((a, b) => String(a.term || '').length - String(b.term || '').length)
+      .map((candidate) => candidate.term),
+  ).slice(0, 4);
 }
 
 function attemptedVariantQueries(attempt, options = {}) {
@@ -801,28 +848,43 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       assumeLegacyQueriesCurrent,
     });
     const triedQueries = new Set([...attemptedVariantQueries(attempt), ...searchedQueries]);
-    const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, options);
+    const relatedSearchTerms = relatedContainedSearchTerms(entries, entry);
+    const preferRelatedSearchTerms = attemptsCount > 0 && successfulAttempts === 0 && relatedSearchTerms.length > 0;
+    const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, {
+      ...options,
+      searchTerms: relatedSearchTerms,
+      preferSearchTerms: preferRelatedSearchTerms,
+    });
     const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(attempt, options.retryBeforeUnattemptedLimit);
     const irrelevantFeedback = hasIrrelevantQueryFeedback(state, term);
     const missedWithIrrelevantFeedback = attemptsCount > 0 && successfulAttempts === 0 && irrelevantFeedback;
+    const needsSourceRefresh =
+      count >= targetEvidence && options.requireSourceBackedEvidence === true && count > 0 && !hasCoverageEvidenceSource(entry, options);
     const feedbackQuery =
-      hardMissedZeroEvidence && irrelevantFeedback
+      !needsSourceRefresh && hardMissedZeroEvidence && irrelevantFeedback
         ? negativeFeedbackQueriesForTerm(term).find((query) => !triedQueries.has(query))
         : '';
     const exactFeedbackQuery =
-      missedWithIrrelevantFeedback
+      !needsSourceRefresh && missedWithIrrelevantFeedback
         ? exactFeedbackQueriesForTerm(term).find((query) => !currentStrategyTriedQueries.has(query))
         : '';
-    const precisionQuery = hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
+    const precisionQuery = !needsSourceRefresh && hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
+    const sourceRefreshVariant =
+      needsSourceRefresh && options.requireCommentBackedEvidence === true
+        ? availableVariants.find((variant) => !triedQueries.has(variant.query) && isCommentEvidenceQuery(variant.query))
+        : null;
     const nextVariant =
+      sourceRefreshVariant ||
       (feedbackQuery ? { query: feedbackQuery, variantIndex: null, builtIn: false } : null) ||
       (exactFeedbackQuery ? { query: exactFeedbackQuery, variantIndex: null, builtIn: false } : null) ||
       (precisionQuery ? { query: precisionQuery, variantIndex: null, builtIn: false } : null) ||
-      availableVariants.find((variant) => !triedQueries.has(variant.query)) ||
+      (needsSourceRefresh && options.requireCommentBackedEvidence === true
+        ? null
+        : availableVariants.find((variant) => !triedQueries.has(variant.query))) ||
       null;
     let status = 'covered';
     let action = 'none';
-    if (count >= targetEvidence && options.requireSourceBackedEvidence === true && count > 0 && !hasCoverageEvidenceSource(entry, options)) {
+    if (needsSourceRefresh) {
       status = 'source_gap';
       action = nextVariant ? 'refresh_source_metadata' : 'add_query_template';
     } else if (count < targetEvidence && exhausted) {

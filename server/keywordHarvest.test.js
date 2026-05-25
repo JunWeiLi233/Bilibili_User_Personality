@@ -1001,6 +1001,49 @@ test('buildCoverageActions classifies covered, unattempted, missed, partial, and
   assert.equal(byTerm.doge.suggestedQueries.includes('doge \u56de\u590d'), true);
 });
 
+test('buildCoverageActions broadens long contained phrase variants through shorter same-meaning anchors', () => {
+  const actions = buildCoverageActions(
+    {
+      entries: [
+        {
+          term: '\u5927\u8c61\u611f\u5192\u4e86',
+          family: 'evasion',
+          meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+          evidenceCount: 1,
+        },
+        {
+          term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+          family: 'evasion',
+          meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+          evidenceCount: 1,
+        },
+      ],
+    },
+    {
+      termAttempts: {
+        '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc': {
+          term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+            },
+          ],
+        },
+      },
+    },
+    { targetEvidence: 3 },
+  );
+
+  const byTerm = Object.fromEntries(actions.map((item) => [item.term, item]));
+  assert.equal(byTerm['\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc'].status, 'weak_missed');
+  assert.equal(
+    byTerm['\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc'].nextQuery,
+    '\u5927\u8c61\u611f\u5192\u4e86 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  );
+});
+
 
 test('buildDictionaryCoverageAudit reports gate status and next harvest actions', () => {
   const audit = buildDictionaryCoverageAudit(
@@ -1270,6 +1313,34 @@ test('buildDictionaryCoverageAudit treats comment samples from mixed context sca
   assert.equal(audit.nextActions.length, 0);
 });
 
+test('buildDictionaryCoverageAudit treats non-context samples with Bilibili source metadata as comment-backed evidence', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'commentSampleOnly',
+          family: 'cooperation',
+          evidenceCount: 3,
+          evidenceSamples: ['来支持力[打call]', 'Bilibili video context: title-only sample'],
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video comment scan plus video context: https://www.bilibili.com/video/BVcomment/',
+              uid: 'BVcomment',
+              sample: 'Bilibili video context: title-only sample',
+            },
+          ],
+        },
+      ],
+    },
+    { termAttempts: {} },
+    { targetEvidence: 3, requireSourceBackedEvidence: true, requireCommentBackedEvidence: true },
+  );
+
+  assert.equal(audit.coverage.sourcedEvidenceTerms, 1);
+  assert.equal(audit.coverage.unsourcedEvidenceTerms, 0);
+  assert.equal(audit.nextActions.length, 0);
+});
+
 test('buildDictionaryCoverageAudit prioritizes context-only source gaps before ordinary weak retries', () => {
   const audit = buildDictionaryCoverageAudit(
     {
@@ -1312,6 +1383,66 @@ test('buildDictionaryCoverageAudit prioritizes context-only source gaps before o
   assert.equal(audit.nextActions[0].term, 'contextOnly');
   assert.equal(audit.nextActions[0].status, 'source_gap');
   assert.equal(audit.recommendedQueries[0], 'contextOnly \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
+});
+
+test('buildDictionaryCoverageAudit keeps comment-backed source refreshes on comment evidence queries', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'sourceGap',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext/',
+              uid: 'BVcontext',
+              sample: 'Bilibili video context: sourceGap from a title',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      searchedQueries: ['sourceGap \u662f\u4ec0\u4e48\u6897'],
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                targetExistingTerms: ['sourceGap'],
+                acceptedTerms: [],
+                commentsCollected: 12,
+                trainingTextChars: 400,
+              },
+            ],
+          ],
+        },
+      ],
+      termAttempts: {
+        sourceGap: {
+          term: 'sourceGap',
+          attempts: 3,
+          successfulAttempts: 0,
+          queries: [
+            { query: 'sourceGap \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+            { query: 'sourceGap \u8bc4\u8bba\u533a' },
+            { query: 'sourceGap \u70ed\u8bc4' },
+          ],
+        },
+      },
+    },
+    {
+      targetEvidence: 3,
+      requireSourceBackedEvidence: true,
+      requireCommentBackedEvidence: true,
+      prioritizeSourceGaps: true,
+    },
+  );
+
+  assert.equal(audit.nextActions[0].status, 'source_gap');
+  assert.equal(audit.nextActions[0].nextQuery, 'sourceGap \u4e89\u8bae \u8bc4\u8bba\u533a');
+  assert.equal(audit.recommendedQueries[0].includes('\u662f\u4ec0\u4e48\u6897'), false);
 });
 
 test('buildDictionaryCoverageAudit diversifies recommendations across related weak term groups', () => {
