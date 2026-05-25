@@ -106,6 +106,17 @@ test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise ter
   }
 });
 
+test('normalizes away promotional commerce artifacts from keyword terms', () => {
+  const entries = normalizeKeywordEntries([
+    { term: '最高领26618元', family: 'absolutes', meaning: 'promotional ad copy copied from comments' },
+    { term: '88会员', family: 'evidence', meaning: 'shopping membership program, not discourse behavior' },
+    { term: '88vip', family: 'evidence', meaning: 'shopping membership shorthand, not discourse behavior' },
+    { term: '梭哈', family: 'absolutes', meaning: '绝对化投入表达' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['梭哈']);
+});
+
 test('extracts JSON object from verbose DeepSeek responses', () => {
   const parsed = extractJsonObject('```json\n{"keywords":[{"term":"典中典","family":"attack"}]}\n```');
   assert.deepEqual(parsed, { keywords: [{ term: '典中典', family: 'attack' }] });
