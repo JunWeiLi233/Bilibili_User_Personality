@@ -323,6 +323,28 @@ function hasCoverageEvidenceSource(entry, options = {}) {
   );
 }
 
+function commentBackedEvidenceCount(entry) {
+  const rawCount = evidenceCount(entry);
+  if (rawCount === 0) return 0;
+  let hasCommentSample = false;
+  for (const source of entry?.evidenceSources || []) {
+    const sample = String(source?.sample || '').trim();
+    if (sample && !isVideoContextEvidenceSource(source)) hasCommentSample = true;
+  }
+  if (hasBilibiliCommentScanSource(entry)) {
+    for (const sample of entry?.evidenceSamples || []) {
+      const sampleText = String(sample || '').trim();
+      if (sampleText && !sampleText.startsWith('Bilibili video context:')) hasCommentSample = true;
+    }
+  }
+  return hasCommentSample || hasCoverageEvidenceSource(entry, { requireCommentBackedEvidence: true }) ? rawCount : 0;
+}
+
+function coverageEvidenceCount(entry, options = {}) {
+  if (options.requireCommentBackedEvidence === true) return commentBackedEvidenceCount(entry);
+  return evidenceCount(entry);
+}
+
 function termAttemptKey(term) {
   return Buffer.from(String(term || ''), 'utf8').toString('base64url');
 }
@@ -441,7 +463,7 @@ function relatedTargetExistingTerms(dictionary, planItem, options = {}) {
         if (!entryTerm) return false;
         if (family && String(entry?.family || '').trim() !== family) return false;
         if (
-          evidenceCount(entry) >= targetEvidence &&
+          coverageEvidenceCount(entry, options) >= targetEvidence &&
           !(options.requireSourceBackedEvidence === true && evidenceCount(entry) > 0 && !hasCoverageEvidenceSource(entry, options))
         ) {
           return false;
@@ -836,13 +858,13 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   const entries =
     coverageMode === 'all-weak'
       ? allEntries
-          .filter((entry) => evidenceCount(entry) < targetEvidence || (requireSourceBackedEvidence && evidenceCount(entry) > 0 && !hasCoverageEvidenceSource(entry, options)))
+          .filter((entry) => coverageEvidenceCount(entry, options) < targetEvidence || (requireSourceBackedEvidence && evidenceCount(entry) > 0 && !hasCoverageEvidenceSource(entry, options)))
           .sort((a, b) => {
             const actionA = actionMap.get(String(a.term || '').trim());
             const actionB = actionMap.get(String(b.term || '').trim());
             return (
               actionSortRank(actionA, options) - actionSortRank(actionB, options) ||
-              evidenceCount(a) - evidenceCount(b) ||
+              coverageEvidenceCount(a, options) - coverageEvidenceCount(b, options) ||
               sameRecommendationGroupSort(actionA, actionB) ||
               String(a.term || '').localeCompare(String(b.term || ''))
             );
@@ -958,20 +980,21 @@ export function summarizeDictionaryGrowth(before, after) {
 export function summarizeEvidenceCoverage(dictionary, options = {}) {
   const entries = Array.isArray(dictionary?.entries) ? dictionary.entries : [];
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
-  const totalEvidence = entries.reduce((sum, entry) => sum + evidenceCount(entry), 0);
-  const weakEntries = entries.filter((entry) => evidenceCount(entry) < targetEvidence);
-  const zeroEvidence = entries.filter((entry) => evidenceCount(entry) === 0);
+  const totalEvidence = entries.reduce((sum, entry) => sum + coverageEvidenceCount(entry, options), 0);
+  const weakEntries = entries.filter((entry) => coverageEvidenceCount(entry, options) < targetEvidence);
+  const zeroEvidence = entries.filter((entry) => coverageEvidenceCount(entry, options) === 0);
   const sourcedEvidence = entries.filter((entry) => hasCoverageEvidenceSource(entry, options));
   const unsourcedEvidence = entries.filter((entry) => evidenceCount(entry) > 0 && !hasCoverageEvidenceSource(entry, options));
-  const evidenceDeficit = weakEntries.reduce((sum, entry) => sum + Math.max(0, targetEvidence - evidenceCount(entry)), 0);
+  const evidenceDeficit = weakEntries.reduce((sum, entry) => sum + Math.max(0, targetEvidence - coverageEvidenceCount(entry, options)), 0);
   const byFamily = {};
   for (const entry of entries) {
     const family = entry.family || 'unknown';
+    const count = coverageEvidenceCount(entry, options);
     if (!byFamily[family]) byFamily[family] = { terms: 0, evidence: 0, weak: 0, zero: 0, sourced: 0 };
     byFamily[family].terms += 1;
-    byFamily[family].evidence += evidenceCount(entry);
-    if (evidenceCount(entry) < targetEvidence) byFamily[family].weak += 1;
-    if (evidenceCount(entry) === 0) byFamily[family].zero += 1;
+    byFamily[family].evidence += count;
+    if (count < targetEvidence) byFamily[family].weak += 1;
+    if (count === 0) byFamily[family].zero += 1;
     if (hasCoverageEvidenceSource(entry, options)) byFamily[family].sourced += 1;
   }
   return {
@@ -991,6 +1014,7 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
       term: entry.term,
       family: entry.family,
       evidenceCount: evidenceCount(entry),
+      coverageEvidenceCount: coverageEvidenceCount(entry, options),
     })),
     zeroEvidenceSamples: sortEntriesForCoverage(zeroEvidence).slice(0, 20).map((entry) => ({
       term: entry.term,
@@ -1000,6 +1024,7 @@ export function summarizeEvidenceCoverage(dictionary, options = {}) {
       term: entry.term,
       family: entry.family,
       evidenceCount: evidenceCount(entry),
+      coverageEvidenceCount: coverageEvidenceCount(entry, options),
     })),
     byFamily,
   };
@@ -1081,6 +1106,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const family = entry.family || 'attack';
     const attempt = getTermAttempt(attempts, term);
     const count = evidenceCount(entry);
+    const coverageCount = coverageEvidenceCount(entry, options);
     const exhausted = isTermAttemptExhausted(term, family, attempt, options);
     const successfulAttempts = Number(attempt?.successfulAttempts) || 0;
     const attemptsCount = Number(attempt?.attempts) || 0;
@@ -1142,16 +1168,16 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     if (needsSourceRefresh) {
       status = 'source_gap';
       action = nextVariant ? 'refresh_source_metadata' : 'add_query_template';
-    } else if (count < targetEvidence && exhausted) {
+    } else if (coverageCount < targetEvidence && exhausted) {
       status = 'exhausted';
       action = 'add_query_template';
-    } else if (count < targetEvidence && attemptsCount === 0) {
+    } else if (coverageCount < targetEvidence && attemptsCount === 0) {
       status = 'weak_unattempted';
       action = 'harvest';
-    } else if (count < targetEvidence && successfulAttempts === 0) {
+    } else if (coverageCount < targetEvidence && successfulAttempts === 0) {
       status = 'weak_missed';
       action = nextVariant ? 'retry_with_new_variant' : 'add_query_template';
-    } else if (count < targetEvidence) {
+    } else if (coverageCount < targetEvidence) {
       status = 'weak_partial';
       action = 'harvest_more_evidence';
     }
@@ -1161,10 +1187,11 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       status,
       action,
       evidenceCount: count,
+      coverageEvidenceCount: coverageCount,
       sourcedEvidence: hasCoverageEvidenceSource(entry, options),
       recommendationGroup: recommendationGroupForEntry(entries, entry),
       targetEvidence,
-      evidenceNeeded: Math.max(0, targetEvidence - count),
+      evidenceNeeded: Math.max(0, targetEvidence - coverageCount),
       attempts: attemptsCount,
       successfulAttempts,
       currentCommentMisses: currentStrategyCommentMisses(attempt),

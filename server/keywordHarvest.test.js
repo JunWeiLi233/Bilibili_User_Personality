@@ -1731,6 +1731,43 @@ test('buildDictionaryCoverageAudit can require comment-backed evidence instead o
   assert.equal(audit.failureReasons.some((reason) => reason.includes('missing Bilibili comment evidence')), true);
 });
 
+test('buildDictionaryCoverageAudit counts only comment-backed evidence in strict comment mode', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'contextOnly',
+          family: 'attack',
+          evidenceCount: 2,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext1/',
+              uid: 'BVcontext1',
+              sample: 'Bilibili video context: contextOnly from a video title',
+            },
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext2/',
+              uid: 'BVcontext2',
+              sample: 'Bilibili video context: another title-only contextOnly hit',
+            },
+          ],
+        },
+      ],
+    },
+    { termAttempts: {} },
+    { targetEvidence: 3, requireSourceBackedEvidence: true, requireCommentBackedEvidence: true },
+  );
+
+  const action = audit.nextActions.find((item) => item.term === 'contextOnly');
+  assert.equal(audit.coverage.totalEvidence, 0);
+  assert.equal(audit.coverage.evidenceDeficit, 3);
+  assert.equal(audit.coverage.zeroEvidenceTerms, 1);
+  assert.equal(action.status, 'source_gap');
+  assert.equal(action.evidenceCount, 2);
+  assert.equal(action.coverageEvidenceCount, 0);
+  assert.equal(action.evidenceNeeded, 3);
+});
+
 test('buildDictionaryCoverageAudit prioritizes weak context-only evidence for comment refresh', () => {
   const audit = buildDictionaryCoverageAudit(
     {
