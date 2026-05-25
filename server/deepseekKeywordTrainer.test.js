@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
+import { acquireFileLock } from './fileLock.js';
+
 import {
   extractJsonObject,
   filterKeywordEntriesByEvidence,
@@ -1740,6 +1742,25 @@ test('merges learned keyword entries into a persistent local dictionary', async 
     assert.deepEqual(dictionary.families.evasion, ['自己查']);
     const persisted = JSON.parse(await readFile(dictionaryPath, 'utf8'));
     assert.equal(persisted.entries.length, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('mergeEntriesIntoDictionary respects the dictionary write lock', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-dictionary-lock-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    const release = await acquireFileLock(`${dictionaryPath}.lock`, { staleMs: 60_000 });
+    await assert.rejects(
+      () =>
+        mergeEntriesIntoDictionary(
+          [{ term: '\u9501\u6d4b\u8bd5', family: 'attack', meaning: 'lock test', confidence: 0.7, evidenceCount: 1 }],
+          { dictionaryPath },
+        ),
+      /Another Bilibili dictionary job is already running/,
+    );
+    await release();
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

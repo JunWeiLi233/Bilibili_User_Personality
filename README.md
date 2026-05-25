@@ -55,7 +55,7 @@ cd D:\Bilibili_User_Personality
 The script does not require video links. By default it uses backend `controversial` discovery: debate-heavy Bilibili search seeds such as politics/current affairs, games, social issues, fandom disputes, and tech-company disputes are searched first with a popularity-oriented Bilibili search order, then mixed with dictionary-generated queries. Generic public popular videos are not included in `controversial` mode by default, because the goal is controversial popular videos, not ordinary popular videos. Add `-IncludeGenericPopular` only when you intentionally want to mix in the public popular feed. It then scans public comments, trains the keyword dictionary, and prints a coverage/growth report.
 
 It also persists harvest state in `server/keywordHarvestState.json` and writes the latest report to `server/keywordHarvestReport.json`. These local files are ignored by Git because they are run-specific data.
-Harvest commands also take an exclusive local lock at `server/.keyword-harvest.lock` so two dictionary jobs do not write the same local dictionary at the same time. If a command was killed and left a stale lock, the next run removes it automatically when the recorded process is gone or older than `BILIBILI_HARVEST_LOCK_STALE_MS`.
+Harvest commands also take an exclusive local lock at `server/.keyword-harvest.lock`, and dictionary writes use a per-file lock such as `server/deepseekKeywordDictionary.json.lock`, so two dictionary jobs do not write the same local dictionary at the same time. If a command was killed and left a stale lock, the next run removes it automatically when the recorded process is gone or older than `BILIBILI_HARVEST_LOCK_STALE_MS`.
 
 For the full dictionary coverage loop, use:
 

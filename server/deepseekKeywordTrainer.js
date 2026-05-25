@@ -1,6 +1,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { withFileLock } from './fileLock.js';
+
 const SUPPORTED_FAMILIES = ['attack', 'absolutes', 'evidence', 'evasion', 'cooperation', 'correction'];
 const DEEPSEEK_V4_MODELS = ['deepseek-v4-flash', 'deepseek-v4-pro'];
 const REASONING_EFFORTS = new Set(['low', 'medium', 'high', 'xhigh', 'max']);
@@ -590,36 +592,39 @@ function buildCanonicalDictionarySnapshot(current, now = current?.updatedAt || n
 
 export async function mergeEntriesIntoDictionary(entries, options = {}) {
   const dictionaryPath = options.dictionaryPath || DEFAULT_DICTIONARY_PATH;
-  const current = await readDictionary(dictionaryPath);
-  const normalizedEntries = normalizeKeywordEntries(entries);
-  const canonicalCurrent = buildCanonicalDictionarySnapshot(current);
-  const now = new Date().toISOString();
-  const entryMap = new Map();
-  for (const entry of canonicalCurrent.entries) {
-    entryMap.set(entry.term, { ...entry });
-  }
-  for (const entry of normalizedEntries) {
-    entryMap.set(entry.term, mergeKeywordEntry(entryMap.get(entry.term), entry, now));
-  }
-  propagateAliasEvidence(entryMap, now);
+  const lockPath = options.dictionaryLockPath || `${dictionaryPath}.lock`;
+  return withFileLock(lockPath, async () => {
+    const current = await readDictionary(dictionaryPath);
+    const normalizedEntries = normalizeKeywordEntries(entries);
+    const canonicalCurrent = buildCanonicalDictionarySnapshot(current);
+    const now = new Date().toISOString();
+    const entryMap = new Map();
+    for (const entry of canonicalCurrent.entries) {
+      entryMap.set(entry.term, { ...entry });
+    }
+    for (const entry of normalizedEntries) {
+      entryMap.set(entry.term, mergeKeywordEntry(entryMap.get(entry.term), entry, now));
+    }
+    propagateAliasEvidence(entryMap, now);
 
-  const allEntries = pruneSuffixOnlyFragments([...entryMap.values()]).sort((a, b) => a.family.localeCompare(b.family) || a.term.localeCompare(b.term));
-  const families = Object.fromEntries(SUPPORTED_FAMILIES.map((family) => [family, []]));
-  for (const entry of allEntries) {
-    if (!families[entry.family]) families[entry.family] = [];
-    families[entry.family].push(entry.term);
-  }
-  for (const family of Object.keys(families)) families[family] = unique(families[family]).sort();
+    const allEntries = pruneSuffixOnlyFragments([...entryMap.values()]).sort((a, b) => a.family.localeCompare(b.family) || a.term.localeCompare(b.term));
+    const families = Object.fromEntries(SUPPORTED_FAMILIES.map((family) => [family, []]));
+    for (const entry of allEntries) {
+      if (!families[entry.family]) families[entry.family] = [];
+      families[entry.family].push(entry.term);
+    }
+    for (const family of Object.keys(families)) families[family] = unique(families[family]).sort();
 
-  const next = {
-    version: 1,
-    updatedAt: now,
-    entries: allEntries,
-    families,
-  };
-  await mkdir(dirname(dictionaryPath), { recursive: true });
-  await writeFile(dictionaryPath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
-  return next;
+    const next = {
+      version: 1,
+      updatedAt: now,
+      entries: allEntries,
+      families,
+    };
+    await mkdir(dirname(dictionaryPath), { recursive: true });
+    await writeFile(dictionaryPath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+    return next;
+  });
 }
 
 export async function getDeepSeekConfig(options = {}) {
