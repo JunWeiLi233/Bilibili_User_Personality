@@ -1151,6 +1151,44 @@ test('findDictionaryEntriesWithTextEvidence maps short missed phrase aliases bac
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-short-miss-alias'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps current weak miss comment forms back to targets', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u8349\u751f', family: 'cooperation', meaning: 'laughing interaction phrase' },
+        { term: '\u5f39\u5e55\u5168\u662f\u8282\u594f\u590d\u5236', family: 'absolutes', meaning: 'absolute claim about copied rhythm comments' },
+        { term: '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211', family: 'absolutes', meaning: 'claim first coin support' },
+        { term: '\u53d1\u56fe', family: 'evidence', meaning: 'ask for screenshot evidence' },
+        { term: '\u996d\u5708\u5473', family: 'attack', meaning: 'criticize fandom style discourse' },
+        { term: '\u8d29\u5b50\u5c0f\u53f7', family: 'attack', meaning: 'accuse reseller sockpuppet account' },
+      ],
+    },
+    [
+      '\u8fd9\u6bb5\u771f\u7684\u751f\u8349\uff0c\u5f39\u5e55\u90fd\u7b11\u75af\u4e86',
+      '\u8fd9\u91cc\u5168\u662f\u590d\u5236\u5f39\u5e55\uff0c\u5e26\u8282\u594f\u592a\u660e\u663e',
+      '\u6211\u7b2c\u4e00\u4e2a\u6295\u5e01\uff0c\u522b\u8ddf\u6211\u62a2',
+      '\u4f60\u5148\u4e0a\u56fe\uff0c\u6709\u56fe\u518d\u8bf4',
+      '\u8fd9\u8bc4\u8bba\u533a\u996d\u5708\u5473\u592a\u51b2\u4e86',
+      '\u4e00\u770b\u5c31\u662f\u9ec4\u725b\u5c0f\u53f7\u5728\u5e26\u4ef7',
+    ].join('\n'),
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-current-miss-alias/',
+      uid: 'BV-current-miss-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u8349\u751f',
+    '\u5f39\u5e55\u5168\u662f\u8282\u594f\u590d\u5236',
+    '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211',
+    '\u53d1\u56fe',
+    '\u996d\u5708\u5473',
+    '\u8d29\u5b50\u5c0f\u53f7',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceCount >= 1), true);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-current-miss-alias'), true);
+});
+
 test('findDictionaryEntriesWithTextEvidence maps long missed phrase anchors back to weak terms', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
