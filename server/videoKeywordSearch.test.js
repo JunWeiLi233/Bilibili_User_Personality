@@ -503,6 +503,56 @@ test('searchVideoKeywords forwards existing-only training mode', async () => {
   assert.equal(trainedPayloads[0].source.includes('plus video context'), true);
 });
 
+test('searchVideoKeywords forwards target existing terms to dictionary training', async () => {
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      videoLink: 'https://www.bilibili.com/video/BV19yGa61Ee6/',
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u76ee\u6807\u5f31\u8bcd'],
+    },
+    {
+      fetchJson: async (url) => {
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: 'target video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 1,
+                mid: 100,
+                member: { mid: '100', uname: 'alice' },
+                content: { message: '\u76ee\u6807\u5f31\u8bcd appears here' },
+                like: 1,
+                ctime: 1710000000,
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return { ok: true, entries: [], dictionary: { entries: [] } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(trainedPayloads[0].targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd']);
+});
+
 test('searchVideoKeywords can train existing terms from video context when comments are empty', async () => {
   const trainedPayloads = [];
   const result = await searchVideoKeywords(

@@ -145,6 +145,16 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       deps.defaultControversyQuery ||
       DEFAULT_CONTROVERSY_SEARCH_QUERIES,
   );
+  const targetExistingTerms = parseList(
+    payload.targetExistingTerms ||
+      payload.targetExistingTerm ||
+      payload.targetTerms ||
+      payload.targetTerm ||
+      deps.targetExistingTerms ||
+      deps.targetExistingTerm ||
+      deps.targetTerms ||
+      deps.targetTerm,
+  );
   const discoveryLimit = Math.max(
     1,
     Math.min(Number(payload.discoveryLimit || deps.discoveryLimit || process.env.BILIBILI_VIDEO_DISCOVERY_LIMIT || 6), 20),
@@ -338,6 +348,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     text: trainingText,
     source: `${mergedScan.source}${videoContextText ? ' plus video context' : ''}: ${contextSourceUrls.join(', ')}`,
     existingTermsOnly,
+    ...(targetExistingTerms.length ? { targetExistingTerms } : {}),
   });
 
   return {

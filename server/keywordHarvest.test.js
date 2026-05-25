@@ -1792,6 +1792,46 @@ test('harvestKeywordDictionary forwards existing-only training mode to video sea
   }
 });
 
+test('harvestKeywordDictionary targets the planned weak term during existing-only training', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-target-existing-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: '\u76ee\u6807\u5f31\u8bcd', family: 'attack', evidenceCount: 0 },
+            { term: '\u8def\u8fc7\u70ed\u8bcd', family: 'attack', evidenceCount: 4 },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BV1111111111' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(payloads[0].targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionaryRounds keeps running new unseen queries across rounds', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-rounds-'));
   const statePath = join(dir, 'state.json');

@@ -82,6 +82,26 @@ function cleanTerm(term) {
     .trim();
 }
 
+function parseTargetTerms(...values) {
+  const terms = [];
+  for (const value of values) {
+    if (Array.isArray(value)) {
+      terms.push(...value);
+    } else if (value !== undefined && value !== null) {
+      terms.push(...String(value).split(/[\r\n,;|]+/));
+    }
+  }
+  return new Set(terms.map(cleanTerm).filter(Boolean));
+}
+
+function dictionaryScopedToTerms(dictionary, targetTerms) {
+  if (!targetTerms || targetTerms.size === 0) return dictionary;
+  return {
+    ...dictionary,
+    entries: (Array.isArray(dictionary?.entries) ? dictionary.entries : []).filter((entry) => targetTerms.has(cleanTerm(entry?.term))),
+  };
+}
+
 function isNoisyTerm(term) {
   if (!term || STOP_TERMS.has(term) || /^变体\d+$/.test(term)) return true;
   if (/^\d+$/.test(term)) return true;
@@ -584,7 +604,18 @@ async function generateExistingDictionaryEvidenceEntries(dictionary, payload, co
   }
   const fetchImpl = options.fetch || fetch;
   const excludeTerms = new Set(Array.from(options.excludeTerms || []).map(cleanTerm).filter(Boolean));
-  const currentEntries = normalizeKeywordEntries(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
+  const targetTerms = parseTargetTerms(
+    options.targetExistingTerms,
+    options.targetExistingTerm,
+    options.targetTerms,
+    options.targetTerm,
+    payload.targetExistingTerms,
+    payload.targetExistingTerm,
+    payload.targetTerms,
+    payload.targetTerm,
+  );
+  const scopedDictionary = dictionaryScopedToTerms(dictionary, targetTerms);
+  const currentEntries = normalizeKeywordEntries(Array.isArray(scopedDictionary?.entries) ? scopedDictionary.entries : []);
   const entryMap = new Map(currentEntries.filter((entry) => !excludeTerms.has(entry.term)).map((entry) => [entry.term, entry]));
   if (entryMap.size === 0) return { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' };
 
@@ -645,18 +676,29 @@ async function requestDeepSeekKeywords(config, fetchImpl, options, body) {
 export async function trainKeywordDictionary(payload, options = {}) {
   const currentDictionary = await readDictionary(options.dictionaryPath || DEFAULT_DICTIONARY_PATH);
   const existingTermsOnly = options.existingTermsOnly === true || payload.existingTermsOnly === true;
+  const targetTerms = parseTargetTerms(
+    options.targetExistingTerms,
+    options.targetExistingTerm,
+    options.targetTerms,
+    options.targetTerm,
+    payload.targetExistingTerms,
+    payload.targetExistingTerm,
+    payload.targetTerms,
+    payload.targetTerm,
+  );
+  const evidenceDictionary = dictionaryScopedToTerms(currentDictionary, targetTerms);
   const config = await getDeepSeekConfig(options);
   const generated = existingTermsOnly
     ? { entries: [], usedFallback: true, evidenceRejected: 0, raw: '' }
     : await generateKeywordEntries(payload, config, options);
   const generatedTerms = new Set(generated.entries.map((entry) => entry.term));
-  const exactDictionaryEvidenceEntries = findDictionaryEntriesWithTextEvidence(currentDictionary, payload.text, {
+  const exactDictionaryEvidenceEntries = findDictionaryEntriesWithTextEvidence(evidenceDictionary, payload.text, {
     excludeTerms: generatedTerms,
     source: payload.source,
     uid: payload.uid,
   });
   const modelDictionaryEvidence = existingTermsOnly
-    ? await generateExistingDictionaryEvidenceEntries(currentDictionary, payload, config, {
+    ? await generateExistingDictionaryEvidenceEntries(evidenceDictionary, payload, config, {
         ...options,
         excludeTerms: new Set([...generatedTerms, ...exactDictionaryEvidenceEntries.map((entry) => entry.term)]),
       })

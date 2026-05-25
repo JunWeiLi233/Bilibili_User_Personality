@@ -888,6 +888,9 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       if (options.existingTermsOnly !== undefined) {
         searchPayload.existingTermsOnly = options.existingTermsOnly;
       }
+      if (options.existingTermsOnly === true && planItem.term) {
+        searchPayload.targetExistingTerms = [planItem.term];
+      }
       if (options.controversialPopularQueryLimit !== undefined) {
         searchPayload.controversialPopularQueryLimit = options.controversialPopularQueryLimit;
       }
