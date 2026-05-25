@@ -1243,6 +1243,33 @@ test('buildDictionaryCoverageAudit can require comment-backed evidence instead o
   assert.equal(audit.failureReasons.some((reason) => reason.includes('missing Bilibili comment evidence')), true);
 });
 
+test('buildDictionaryCoverageAudit treats comment samples from mixed context scans as comment-backed evidence', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'commentSample',
+          family: 'cooperation',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video comment scan plus video context: https://www.bilibili.com/video/BVcomment/',
+              uid: 'BVcomment',
+              sample: '来支持力[打call]',
+            },
+          ],
+        },
+      ],
+    },
+    { termAttempts: {} },
+    { targetEvidence: 3, requireSourceBackedEvidence: true, requireCommentBackedEvidence: true },
+  );
+
+  assert.equal(audit.coverage.sourcedEvidenceTerms, 1);
+  assert.equal(audit.coverage.unsourcedEvidenceTerms, 0);
+  assert.equal(audit.nextActions.length, 0);
+});
+
 test('buildDictionaryCoverageAudit prioritizes context-only source gaps before ordinary weak retries', () => {
   const audit = buildDictionaryCoverageAudit(
     {
