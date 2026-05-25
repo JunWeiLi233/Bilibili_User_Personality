@@ -445,13 +445,13 @@ function hasEvidenceSource(entry) {
 function isVideoContextEvidenceSource(source = {}) {
   const sample = String(source?.sample || '').trim();
   const sourceText = String(source?.source || '').trim();
-  return sample.startsWith('Bilibili video context:') || sourceText.includes('search-discovered video context');
+  return sample.startsWith('Bilibili video context:') || sample.startsWith('Bilibili public video title:') || sourceText.includes('search-discovered video context');
 }
 
 function hasNonContextEvidenceSample(entry) {
   return (entry?.evidenceSamples || []).some((sample) => {
     const sampleText = String(sample || '').trim();
-    return sampleText && !sampleText.startsWith('Bilibili video context:');
+    return sampleText && !sampleText.startsWith('Bilibili video context:') && !sampleText.startsWith('Bilibili public video title:');
   });
 }
 
@@ -482,7 +482,7 @@ function commentBackedEvidenceCount(entry) {
   if (hasBilibiliCommentScanSource(entry)) {
     for (const sample of entry?.evidenceSamples || []) {
       const sampleText = String(sample || '').trim();
-      if (sampleText && !sampleText.startsWith('Bilibili video context:')) hasCommentSample = true;
+      if (sampleText && !sampleText.startsWith('Bilibili video context:') && !sampleText.startsWith('Bilibili public video title:')) hasCommentSample = true;
     }
   }
   return hasCommentSample || hasCoverageEvidenceSource(entry, { requireCommentBackedEvidence: true }) ? rawCount : 0;

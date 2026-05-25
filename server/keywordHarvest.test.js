@@ -2599,6 +2599,36 @@ test('buildDictionaryCoverageAudit treats non-context samples with Bilibili sour
   assert.equal(audit.nextActions.length, 0);
 });
 
+test('buildDictionaryCoverageAudit does not count video-title object evidence as comment-backed evidence', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'titleOnly',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSamples: ['Bilibili public video title: titleOnly appears only in the video title'],
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video comment scan plus video object evidence: https://www.bilibili.com/video/BVtitle/',
+              uid: 'BVtitle',
+              sample: 'Bilibili public video title: titleOnly appears only in the video title',
+            },
+          ],
+        },
+      ],
+    },
+    { termAttempts: {} },
+    { targetEvidence: 3, requireSourceBackedEvidence: true, requireCommentBackedEvidence: true },
+  );
+
+  assert.equal(audit.coverage.sourcedEvidenceTerms, 0);
+  assert.equal(audit.coverage.unsourcedEvidenceTerms, 1);
+  assert.equal(audit.nextActions[0].term, 'titleOnly');
+  assert.equal(audit.nextActions[0].status, 'source_gap');
+  assert.equal(audit.nextActions[0].coverageEvidenceCount, 0);
+});
+
 test('buildDictionaryCoverageAudit prioritizes context-only source gaps before ordinary weak retries', () => {
   const audit = buildDictionaryCoverageAudit(
     {
