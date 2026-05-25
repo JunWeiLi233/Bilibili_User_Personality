@@ -43,3 +43,35 @@ test('hasCoverageGateProgress accepts real evidence, zero, weak, or source-gap p
   assert.equal(hasCoverageGateProgress({ weakTerms: 4 }, { weakTerms: 3 }), true);
   assert.equal(hasCoverageGateProgress({ unsourcedEvidenceTerms: 2 }, { unsourcedEvidenceTerms: 1 }), true);
 });
+
+test('hasCoverageGateProgress accepts target action progress even when new weak terms offset totals', () => {
+  const beforeCoverage = {
+    terms: 100,
+    totalEvidence: 300,
+    coverageRatio: 0.35,
+    evidenceDeficit: 120,
+    weakTerms: 70,
+    zeroEvidenceTerms: 0,
+    unsourcedEvidenceTerms: 0,
+  };
+  const afterCoverage = {
+    terms: 104,
+    totalEvidence: 313,
+    coverageRatio: 0.3567,
+    evidenceDeficit: 123,
+    weakTerms: 72,
+    zeroEvidenceTerms: 0,
+    unsourcedEvidenceTerms: 0,
+  };
+
+  assert.equal(
+    hasCoverageGateProgress(beforeCoverage, afterCoverage, {
+      beforeActions: [
+        { term: '\u626e\u6f14\u5c0f\u4e11', needs: 2 },
+        { term: '\u8865\u836f\u554a', needs: 2 },
+      ],
+      afterActions: [{ term: '\u8865\u836f\u554a', needs: 2 }],
+    }),
+    true,
+  );
+});

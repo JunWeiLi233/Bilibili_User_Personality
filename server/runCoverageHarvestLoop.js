@@ -179,7 +179,13 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     audit = nextAudit;
     break;
   }
-  if (!hasCoverageGateProgress(audit.coverage, nextAudit.coverage) && process.env.BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS === '1') {
+  if (
+    !hasCoverageGateProgress(audit.coverage, nextAudit.coverage, {
+      beforeActions: audit.nextActions,
+      afterActions: nextAudit.nextActions,
+    }) &&
+    process.env.BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS === '1'
+  ) {
     stopReason = 'no_coverage_progress';
     audit = nextAudit;
     break;

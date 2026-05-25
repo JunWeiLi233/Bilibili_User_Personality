@@ -10,12 +10,42 @@ export function coverageDelta(before = {}, after = {}) {
   };
 }
 
-export function hasCoverageGateProgress(before = {}, after = {}) {
+function actionNeed(action) {
+  return Math.max(0, Number(action?.needs) || 0);
+}
+
+export function actionProgressDelta(beforeActions = [], afterActions = []) {
+  const afterByTerm = new Map(
+    (Array.isArray(afterActions) ? afterActions : [])
+      .map((action) => [String(action?.term || '').trim(), action])
+      .filter(([term]) => term),
+  );
+  let actionTermsResolved = 0;
+  let actionEvidenceNeedReduced = 0;
+  for (const action of Array.isArray(beforeActions) ? beforeActions : []) {
+    const term = String(action?.term || '').trim();
+    if (!term) continue;
+    const beforeNeed = actionNeed(action);
+    const afterAction = afterByTerm.get(term);
+    if (!afterAction) {
+      actionTermsResolved += 1;
+      actionEvidenceNeedReduced += beforeNeed;
+      continue;
+    }
+    actionEvidenceNeedReduced += Math.max(0, beforeNeed - actionNeed(afterAction));
+  }
+  return { actionTermsResolved, actionEvidenceNeedReduced };
+}
+
+export function hasCoverageGateProgress(before = {}, after = {}, options = {}) {
   const delta = coverageDelta(before, after);
+  const actionDelta = actionProgressDelta(options.beforeActions, options.afterActions);
   return (
     delta.evidenceDeficitReduced > 0 ||
     delta.zeroEvidenceResolved > 0 ||
     delta.weakTermsResolved > 0 ||
-    delta.unsourcedEvidenceReduced > 0
+    delta.unsourcedEvidenceReduced > 0 ||
+    actionDelta.actionTermsResolved > 0 ||
+    actionDelta.actionEvidenceNeedReduced > 0
   );
 }

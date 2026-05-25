@@ -1263,6 +1263,10 @@ function collectEvidenceTerms(result) {
   );
 }
 
+function findResultDictionaryEntry(result, term) {
+  return (Array.isArray(result?.dictionary?.entries) ? result.dictionary.entries : []).find((entry) => String(entry?.term || '').trim() === term);
+}
+
 function summarizeTrainingDiagnostics(results = []) {
   const diagnostics = {
     deepseekCalls: 0,
@@ -1317,7 +1321,12 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
   const current = getTermAttempt(termAttempts, term) || {};
   const evidenceTerms = collectEvidenceTerms(result);
   const evidenceEntry = [...(result?.entries || []), ...(result?.keywordTraining?.dictionaryEvidenceEntries || [])].find((entry) => entry?.term === term);
-  const hit = evidenceTerms.has(term);
+  const dictionaryEntry = findResultDictionaryEntry(result, term);
+  const plannedEvidenceCount = Number(planItem.evidenceCount ?? current.evidenceAtPlanTime ?? 0) || 0;
+  const dictionaryEvidenceCount = Number(dictionaryEntry?.evidenceCount) || 0;
+  const dictionaryEvidenceGained = Boolean(result?.ok) && dictionaryEvidenceCount > plannedEvidenceCount;
+  const hit = evidenceTerms.has(term) || dictionaryEvidenceGained;
+  const hitEvidenceCount = Number(evidenceEntry?.evidenceCount) || dictionaryEvidenceCount;
   const queryRecord = {
     at: finishedAt,
     query: planItem.query,
@@ -1340,7 +1349,7 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
     lastSuccessfulAt: hit ? finishedAt : current.lastSuccessfulAt || null,
     lastQuery: planItem.query,
     lastError: result?.ok ? '' : result?.error || '',
-    lastEvidenceCount: hit ? Number(evidenceEntry?.evidenceCount) || 0 : Number(current.lastEvidenceCount) || 0,
+    lastEvidenceCount: hit ? hitEvidenceCount : Number(current.lastEvidenceCount) || 0,
     queries: [...(Array.isArray(current.queries) ? current.queries : []), queryRecord].slice(-20),
   };
 }

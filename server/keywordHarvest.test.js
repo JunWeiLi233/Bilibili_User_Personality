@@ -4076,6 +4076,57 @@ test('harvestKeywordDictionary records attempts for related target terms from on
   }
 });
 
+test('harvestKeywordDictionary records a hit when the returned dictionary gained target evidence', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-dictionary-gain-attempt-'));
+  const statePath = join(dir, 'state.json');
+  const term = '\u76ee\u6807\u5df2\u589e\u8bc1\u636e';
+  try {
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term, family: 'attack', evidenceCount: 1 }],
+        }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+          keywordTraining: {
+            dictionaryEvidenceEntries: [],
+          },
+          dictionary: {
+            entries: [{ term, family: 'attack', evidenceCount: 2 }],
+          },
+          collectionDiagnostics: {
+            targetExistingTerms: [term],
+            acceptedTerms: [],
+          },
+        }),
+      },
+    );
+
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    const attempt = state.termAttempts[Buffer.from(term, 'utf8').toString('base64url')];
+
+    assert.equal(attempt.attempts, 1);
+    assert.equal(attempt.successfulAttempts, 1);
+    assert.equal(attempt.lastEvidenceCount, 2);
+    assert.equal(attempt.queries[0].hit, true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary backfills shorter-anchor searched queries for related contained terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-contained-backfill-'));
   const statePath = join(dir, 'state.json');
