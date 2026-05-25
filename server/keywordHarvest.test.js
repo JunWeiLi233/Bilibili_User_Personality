@@ -411,6 +411,7 @@ test('buildKeywordHarvestQueryPlan keeps dictionary term metadata for state trac
       priorAttempts: 0,
       priorSuccessfulAttempts: 0,
       sourcedEvidence: false,
+      recommendationGroup: 'doge',
       variantIndex: 0,
       builtInVariant: true,
       previouslyTried: false,
@@ -424,6 +425,7 @@ test('buildKeywordHarvestQueryPlan keeps dictionary term metadata for state trac
       priorAttempts: 0,
       priorSuccessfulAttempts: 0,
       sourcedEvidence: false,
+      recommendationGroup: 'doge',
       variantIndex: 1,
       builtInVariant: true,
       previouslyTried: false,
@@ -601,6 +603,7 @@ test('buildKeywordHarvestQueryPlan annotates audit priority queries with term me
     family: 'attack',
     evidenceCount: 0,
     sourcedEvidence: false,
+    recommendationGroup: 'weak',
     priorAttempts: 0,
     priorSuccessfulAttempts: 0,
     variantIndex: null,
@@ -1563,6 +1566,38 @@ test('buildDictionaryCoverageAudit diversifies recommendations across related we
   assert.equal(audit.recommendedQueries.some((query) => query.includes('\u8e6d\u6982\u5ff5')), true);
 });
 
+test('buildDictionaryCoverageAudit diversifies same-meaning contained phrase groups', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
+          family: 'attack',
+          meaning: '\u5938\u5f20\u5410\u69fd\u751f\u7406\u6027\u538c\u6076',
+          evidenceCount: 1,
+        },
+        {
+          term: '\u628a\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
+          family: 'attack',
+          meaning: '\u5938\u5f20\u5410\u69fd\u751f\u7406\u6027\u538c\u6076',
+          evidenceCount: 1,
+        },
+        { term: '\u4e0d\u670d\u61cb\u7740', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {},
+    {
+      targetEvidence: 3,
+      maxActions: 2,
+    },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), [
+    '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
+    '\u4e0d\u670d\u61cb\u7740',
+  ]);
+});
+
 test('buildDictionaryCoverageAudit recommends precision queries for hard zero-evidence misses', () => {
   const audit = buildDictionaryCoverageAudit(
     {
@@ -1727,7 +1762,7 @@ test('buildDictionaryCoverageAudit falls back to exact terms after feedback quer
     { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 3 },
   );
 
-  assert.equal(audit.nextActions[0].nextQuery, term);
+  assert.equal(audit.nextActions[0].nextQuery, '\u8f66\u5bb6\u519b \u8bc4\u8bba\u533a');
 });
 
 test('buildDictionaryCoverageAudit retries exact term after weak missed irrelevant query feedback', () => {
@@ -1771,7 +1806,47 @@ test('buildDictionaryCoverageAudit retries exact term after weak missed irreleva
     { targetEvidence: 3, maxActions: 1 },
   );
 
-  assert.equal(audit.nextActions[0].nextQuery, term);
+  assert.equal(audit.nextActions[0].nextQuery, '\u4e0d\u8bd7\u4eba \u70ed\u8bc4');
+});
+
+test('buildDictionaryCoverageAudit keeps exact feedback retries comment-bearing after a comment miss', () => {
+  const term = '\u7ef7\u4e0d\u4f4f\u4e86';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [{ term, family: 'attack', evidenceCount: 1 }],
+    },
+    {
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'attack',
+          evidenceAtPlanTime: 1,
+          attempts: 1,
+          successfulAttempts: 0,
+          lastEvidenceCount: 1,
+          queries: [{ query: '\u7ef7\u4e0d\u4f4f\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+        },
+      },
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                query: '\u7ef7\u4e0d\u4f4f\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+                commentsCollected: 17,
+                trainingTextChars: 1027,
+                targetExistingTerms: [term],
+                acceptedTerms: [],
+              },
+            ],
+          ],
+        },
+      ],
+    },
+    { targetEvidence: 3, maxActions: 1 },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, '\u7ef7\u4e0d\u4f4f\u4e86 \u8bc4\u8bba\u533a');
 });
 
 test('buildDictionaryCoverageAudit treats text-only misses as irrelevant query feedback', () => {
@@ -1815,7 +1890,7 @@ test('buildDictionaryCoverageAudit treats text-only misses as irrelevant query f
     { targetEvidence: 3, maxActions: 1 },
   );
 
-  assert.equal(audit.nextActions[0].nextQuery, term);
+  assert.equal(audit.nextActions[0].nextQuery, `${term} \u70ed\u8bc4`);
 });
 
 test('buildDictionaryCoverageAudit does not recommend globally searched feedback queries again', () => {
@@ -1861,7 +1936,7 @@ test('buildDictionaryCoverageAudit does not recommend globally searched feedback
     { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 3 },
   );
 
-  assert.equal(audit.nextActions[0].nextQuery, term);
+  assert.equal(audit.nextActions[0].nextQuery, `${term} \u8bc4\u8bba\u533a`);
 });
 
 test('buildDictionaryCoverageAudit can retry exact queries from older harvest strategy state', () => {
@@ -1908,7 +1983,7 @@ test('buildDictionaryCoverageAudit can retry exact queries from older harvest st
     { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 3 },
   );
 
-  assert.equal(audit.nextActions[0].nextQuery, term);
+  assert.equal(audit.nextActions[0].nextQuery, `${term} \u8bc4\u8bba\u533a`);
 });
 
 test('harvestKeywordDictionary runs dictionary-seeded searches and reports growth', async () => {
@@ -2409,6 +2484,53 @@ test('harvestKeywordDictionary fills limited runs with distinct term groups befo
 
     assert.deepEqual(result.plan.map((item) => item.term), ['\u5927\u8c61\u611f\u5192\u4e86', '\u767d\u5ad6']);
     assert.equal(searched.length, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary skips same-meaning contained duplicate groups in limited runs', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-contained-distinct-groups-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 2,
+        coverageMode: 'all-weak',
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            {
+              term: '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
+              family: 'attack',
+              meaning: '\u5938\u5f20\u5410\u69fd\u751f\u7406\u6027\u538c\u6076',
+              evidenceCount: 1,
+            },
+            {
+              term: '\u628a\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
+              family: 'attack',
+              meaning: '\u5938\u5f20\u5410\u69fd\u751f\u7406\u6027\u538c\u6076',
+              evidenceCount: 1,
+            },
+            { term: '\u4e0d\u670d\u61cb\u7740', family: 'attack', evidenceCount: 1 },
+          ],
+        }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.deepEqual(result.plan.map((item) => item.term), [
+      '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
+      '\u4e0d\u670d\u61cb\u7740',
+    ]);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

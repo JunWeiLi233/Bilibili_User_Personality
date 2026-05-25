@@ -86,6 +86,10 @@ const TERM_SEARCH_ALIASES = {
   '\u54ea\u90fd\u6709\u4f60': ['\u54ea\u513f\u90fd\u6709\u4f60', '\u600e\u4e48\u54ea\u90fd\u6709\u4f60', '\u5230\u54ea\u90fd\u6709\u4f60'],
   '\u600e\u4e48\u54ea\u54ea\u90fd\u6709\u4f60': ['\u600e\u4e48\u54ea\u90fd\u6709\u4f60', '\u54ea\u54ea\u90fd\u6709\u4f60', '\u54ea\u513f\u90fd\u6709\u4f60'],
   'tv\u574f\u7b11': ['\u574f\u7b11', 'tv\u574f\u7b11\u8868\u60c5'],
+  '\u7ef7\u4e0d\u4f4f\u4e86': ['\u7ef7\u4e0d\u4f4f', '\u6ca1\u7ef7\u4f4f', '\u771f\u7ef7\u4e0d\u4f4f'],
+  '\u6ca1\u7528\u771f\u662f\u7ef7\u4e0d\u4f4f\u4e86': ['\u6ca1\u7528\u771f\u7ef7\u4e0d\u4f4f', '\u6ca1\u7528\u7ef7\u4e0d\u4f4f', '\u6ca1\u7528\u771f\u662f\u7ef7\u4e0d\u4f4f'],
+  '\u90fd\u662f\u5bb6\u4eba': ['\u5bb6\u4eba\u4eec', '\u5bb6\u4eba\u4eec\u8c01\u61c2', '\u5bb6\u4eba\u4eec\u7b11\u4e0d\u6d3b'],
+  '\u5bb6\u4eba': ['\u5bb6\u4eba\u4eec', '\u5bb6\u4eba\u4eec\u8c01\u61c2', '\u5bb6\u4eba\u4eec\u7b11\u4e0d\u6d3b'],
   '\u61c2\u7684\u90fd\u61c2': ['dddd'],
   dddd: ['\u61c2\u7684\u90fd\u61c2'],
   yygq: ['\u9634\u9633\u602a\u6c14'],
@@ -385,6 +389,11 @@ function relatedContainedSearchTerms(entries, entry) {
   ).slice(0, 4);
 }
 
+function recommendationGroupForEntry(entries, entry) {
+  const relatedTerms = relatedContainedSearchTerms(entries, entry);
+  return relatedTerms[0] || recommendationGroupForTerm(entry?.term);
+}
+
 function attemptedVariantQueries(attempt, options = {}) {
   const requireCurrentStrategyVersion = options.requireCurrentStrategyVersion === true;
   const assumeLegacyQueriesCurrent = options.assumeLegacyQueriesCurrent === true;
@@ -444,7 +453,7 @@ function selectHarvestPlan(candidatePlan, options = {}) {
     if (selected.length >= maxQueries) return;
     const query = String(item?.query || '').trim();
     const term = String(item?.term || '').trim();
-    const group = term ? recommendationGroupForTerm(term) : '';
+    const group = String(item?.recommendationGroup || (term ? recommendationGroupForTerm(term) : '')).trim();
     const hardMissed = isHardMissedPlanItem(item, termAttempts, options.retryBeforeUnattemptedLimit);
     const canRetrySeenPriority = hardMissed && item?.source === 'priority';
     if (!query || selectedQueries.has(query) || (skipSeen && searchedQuerySet.has(query) && !canRetrySeenPriority)) return;
@@ -518,6 +527,17 @@ function actionSortRank(action, options = {}) {
   return baseRank + priorityPenalty;
 }
 
+function sameRecommendationGroupSort(actionA = {}, actionB = {}) {
+  const groupA = String(actionA?.recommendationGroup || '').trim();
+  const groupB = String(actionB?.recommendationGroup || '').trim();
+  if (!groupA || groupA !== groupB) return 0;
+  const termA = String(actionA?.term || '').trim();
+  const termB = String(actionB?.term || '').trim();
+  const aIsGroup = termA === groupA ? 0 : 1;
+  const bIsGroup = termB === groupB ? 0 : 1;
+  return aIsGroup - bIsGroup || termA.length - termB.length;
+}
+
 function recommendationGroupForTerm(term) {
   const clean = String(term || '').trim();
   if (clean.startsWith('\u4e0d\u4f1a\u771f\u6709\u4eba')) return '\u4e0d\u4f1a\u771f\u6709\u4eba';
@@ -537,7 +557,14 @@ function negativeFeedbackQueriesForTerm(term) {
 }
 
 function exactFeedbackQueriesForTerm(term) {
-  return searchTermsForTerm(term).slice(0, 8);
+  return unique(
+    searchTermsForTerm(term).flatMap((searchTerm) => [
+      `${searchTerm} \u8bc4\u8bba\u533a`,
+      `${searchTerm} \u70ed\u8bc4`,
+      `${searchTerm} \u56de\u590d`,
+      searchTerm,
+    ]),
+  ).slice(0, 16);
 }
 
 function flattenQueryDiagnostics(runs = []) {
@@ -575,7 +602,7 @@ function diversifyCoverageActions(actions, limit) {
   const selectedGroups = new Set();
   const push = (item, enforceNewGroup) => {
     if (!item || selected.length >= limit || selected.includes(item)) return;
-    const group = recommendationGroupForTerm(item.term);
+    const group = item.recommendationGroup || recommendationGroupForTerm(item.term);
     if (enforceNewGroup && group && selectedGroups.has(group)) return;
     selected.push(item);
     if (group) selectedGroups.add(group);
@@ -606,6 +633,7 @@ function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
       family: matchedAction.family,
       evidenceCount: matchedAction.evidenceCount,
       sourcedEvidence: matchedAction.sourcedEvidence,
+      recommendationGroup: matchedAction.recommendationGroup,
       priorAttempts: matchedAction.attempts,
       priorSuccessfulAttempts: matchedAction.successfulAttempts,
       variantIndex: null,
@@ -637,6 +665,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
             return (
               actionSortRank(actionA, options) - actionSortRank(actionB, options) ||
               evidenceCount(a) - evidenceCount(b) ||
+              sameRecommendationGroupSort(actionA, actionB) ||
               String(a.term || '').localeCompare(String(b.term || ''))
             );
           })
@@ -671,6 +700,7 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
         family,
         evidenceCount: evidenceCount(entry),
         sourcedEvidence: hasCoverageEvidenceSource(entry, options),
+        recommendationGroup: actionMap.get(term)?.recommendationGroup || recommendationGroupForEntry(allEntries, entry),
         priorAttempts: attempts,
         priorSuccessfulAttempts: successfulAttempts,
         variantIndex: variant.variantIndex,
@@ -941,6 +971,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       action,
       evidenceCount: count,
       sourcedEvidence: hasCoverageEvidenceSource(entry, options),
+      recommendationGroup: recommendationGroupForEntry(entries, entry),
       targetEvidence,
       evidenceNeeded: Math.max(0, targetEvidence - count),
       attempts: attemptsCount,
@@ -977,6 +1008,7 @@ export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, option
       (a, b) =>
         actionSortRank(a, { ...options, prioritizeHardZeroEvidence: true }) - actionSortRank(b, { ...options, prioritizeHardZeroEvidence: true }) ||
         a.evidenceCount - b.evidenceCount ||
+        sameRecommendationGroupSort(a, b) ||
         String(a.term || '').localeCompare(String(b.term || '')),
     );
   const nextActions = diversifyCoverageActions(sortedActions, maxActions);
