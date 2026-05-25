@@ -994,6 +994,30 @@ test('buildDictionaryCoverageAudit can require source-backed evidence metadata',
   assert.equal(audit.failureReasons.some((reason) => reason.includes('missing Bilibili source metadata')), true);
 });
 
+test('buildDictionaryCoverageAudit diversifies recommendations across related weak term groups', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', family: 'attack', evidenceCount: 0 },
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427', family: 'attack', evidenceCount: 0 },
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427', family: 'attack', evidenceCount: 0 },
+        { term: '\u8e6d\u6982\u5ff5', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {},
+    {
+      targetEvidence: 3,
+      maxActions: 2,
+    },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), [
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97',
+    '\u8e6d\u6982\u5ff5',
+  ]);
+  assert.equal(audit.recommendedQueries.some((query) => query.includes('\u8e6d\u6982\u5ff5')), true);
+});
+
 test('harvestKeywordDictionary runs dictionary-seeded searches and reports growth', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-'));
   const statePath = join(dir, 'state.json');
@@ -1320,6 +1344,75 @@ test('harvestKeywordDictionary caps hard zero-evidence scans per run', async () 
     assert.equal(searched[0].discoveryLimit, 8);
     assert.equal(searched[1].discoveryLimit, 2);
     assert.equal(searched[2].discoveryLimit, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary scales default hard zero-evidence scans with query budget', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-hard-scale-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const searched = [];
+    const entries = ['hardA', 'hardB', 'hardC', 'hardD', 'normalA', 'normalB'].map((term) => ({
+      term,
+      family: 'attack',
+      evidenceCount: term.startsWith('hard') ? 0 : 2,
+    }));
+    const state = {
+      version: 1,
+      searchedQueries: [],
+      scannedBvids: [],
+      termAttempts: Object.fromEntries(
+        entries.map((entry) => [
+          entry.term,
+          {
+            term: entry.term,
+            family: entry.family,
+            evidenceAtPlanTime: entry.evidenceCount,
+            attempts: entry.term.startsWith('hard') ? 6 : 1,
+            successfulAttempts: entry.term.startsWith('hard') ? 0 : 1,
+            lastEvidenceCount: entry.evidenceCount,
+            queries: [{ query: `${entry.term} \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4` }],
+          },
+        ]),
+      ),
+      runs: [],
+    };
+    await writeFile(statePath, JSON.stringify(state), 'utf8');
+
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 8,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        retryBeforeUnattemptedLimit: 3,
+        discoveryLimit: 2,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries }),
+        searchVideoKeywords: async (payload) => {
+          searched.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(result.plan.filter((item) => item.term?.startsWith('hard')).map((item) => item.term), [
+      'hardA',
+      'hardB',
+      'hardC',
+      'hardD',
+    ]);
+    assert.equal(result.queries.filter((query) => query.startsWith('hard')).length, 4);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

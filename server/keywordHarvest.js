@@ -228,20 +228,23 @@ function isHardMissedPlanItem(planItem, termAttempts, retryBeforeUnattemptedLimi
 
 function selectHarvestPlan(candidatePlan, options = {}) {
   const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
-  const maxHardMissedQueries = Math.max(0, Number(options.maxHardMissedQueries ?? 2) || 0);
+  const defaultHardMissedQueries = Math.max(2, Math.ceil(maxQueries / 2));
+  const maxHardMissedQueries = Math.max(0, Number(options.maxHardMissedQueries ?? defaultHardMissedQueries) || 0);
   const termAttempts = options.termAttempts && typeof options.termAttempts === 'object' ? options.termAttempts : {};
   const searchedQuerySet = options.searchedQuerySet instanceof Set ? options.searchedQuerySet : new Set();
   const skipSeen = options.skipSeen !== false;
   const selected = [];
-  let hardMissedQueries = 0;
+  const selectedHardMissedTerms = new Set();
   for (const item of candidatePlan) {
     if (selected.length >= maxQueries) break;
     const query = String(item?.query || '').trim();
     if (!query || (skipSeen && searchedQuerySet.has(query))) continue;
     const hardMissed = isHardMissedPlanItem(item, termAttempts, options.retryBeforeUnattemptedLimit);
-    if (hardMissed && hardMissedQueries >= maxHardMissedQueries) continue;
+    const hardMissedTerm = String(item?.term || '').trim();
+    if (hardMissed && !selectedHardMissedTerms.has(hardMissedTerm) && selectedHardMissedTerms.size >= maxHardMissedQueries) continue;
+    if (hardMissed && selectedHardMissedTerms.has(hardMissedTerm)) continue;
     selected.push(item);
-    if (hardMissed) hardMissedQueries += 1;
+    if (hardMissed && hardMissedTerm) selectedHardMissedTerms.add(hardMissedTerm);
   }
   return selected;
 }
@@ -270,6 +273,30 @@ function actionSortRank(action, options = {}) {
     return coverageActionRank('harvest') + 0.5;
   }
   return baseRank;
+}
+
+function recommendationGroupForTerm(term) {
+  const clean = String(term || '').trim();
+  if (clean.startsWith('\u4e0d\u4f1a\u771f\u6709\u4eba')) return '\u4e0d\u4f1a\u771f\u6709\u4eba';
+  if (clean.includes('\u8f66\u5bb6\u519b')) return '\u8f66\u5bb6\u519b';
+  if (clean.includes('\u8e6d\u6982\u5ff5')) return '\u8e6d\u6982\u5ff5';
+  if (clean === '\u7cbe\u795e\u5916\u56fd\u4eba' || clean === '\u7cbe\u5916') return '\u7cbe\u795e\u5916\u56fd\u4eba';
+  return clean;
+}
+
+function diversifyCoverageActions(actions, limit) {
+  const selected = [];
+  const selectedGroups = new Set();
+  const push = (item, enforceNewGroup) => {
+    if (!item || selected.length >= limit || selected.includes(item)) return;
+    const group = recommendationGroupForTerm(item.term);
+    if (enforceNewGroup && group && selectedGroups.has(group)) return;
+    selected.push(item);
+    if (group) selectedGroups.add(group);
+  };
+  for (const item of actions) push(item, true);
+  for (const item of actions) push(item, false);
+  return selected;
 }
 
 function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
@@ -607,15 +634,15 @@ export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, option
     summary[item.action] = (summary[item.action] || 0) + 1;
     return summary;
   }, {});
-  const nextActions = coverageActions
+  const sortedActions = coverageActions
     .filter((item) => item.action !== 'none')
     .sort(
       (a, b) =>
         actionSortRank(a, options) - actionSortRank(b, options) ||
         a.evidenceCount - b.evidenceCount ||
         String(a.term || '').localeCompare(String(b.term || '')),
-    )
-    .slice(0, maxActions);
+    );
+  const nextActions = diversifyCoverageActions(sortedActions, maxActions);
   const recommendedQueries = unique(
     nextActions.flatMap((item) => [item.nextQuery, ...(Array.isArray(item.suggestedQueries) ? item.suggestedQueries : [])]),
   ).slice(0, maxActions);

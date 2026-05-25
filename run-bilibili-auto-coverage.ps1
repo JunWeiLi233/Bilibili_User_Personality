@@ -12,6 +12,7 @@ param(
   [int]$TermsPerFamily = 4,
   [int]$QueryVariantsPerTerm = 2,
   [int]$RetryBeforeUnattemptedLimit = 3,
+  [int]$MaxHardMissedQueries = 0,
   [int]$StaleMissedDiscoveryLimit = 4,
   [int]$StaleMissedCommentPages = 3,
   [int]$TargetEvidence = 3,
@@ -67,6 +68,11 @@ $env:BILIBILI_HARVEST_MAX_QUERIES = [string]$MaxQueries
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY = [string]$TermsPerFamily
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM = [string]$QueryVariantsPerTerm
 $env:BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT = [string]$RetryBeforeUnattemptedLimit
+if ($MaxHardMissedQueries -gt 0) {
+  $env:BILIBILI_HARVEST_MAX_HARD_MISSED_QUERIES = [string]$MaxHardMissedQueries
+} else {
+  Remove-Item Env:\BILIBILI_HARVEST_MAX_HARD_MISSED_QUERIES -ErrorAction SilentlyContinue
+}
 $env:BILIBILI_HARVEST_STALE_MISSED_DISCOVERY_LIMIT = [string]$StaleMissedDiscoveryLimit
 $env:BILIBILI_HARVEST_STALE_MISSED_COMMENT_PAGES = [string]$StaleMissedCommentPages
 $env:BILIBILI_HARVEST_TARGET_EVIDENCE = [string]$TargetEvidence
@@ -106,6 +112,7 @@ Write-Host "Max cycles: $MaxCycles"
 Write-Host "Rounds per cycle: $RoundsPerCycle"
 Write-Host "Max harvest queries per cycle: $MaxQueries"
 Write-Host "Retry-before-unattempted limit: $RetryBeforeUnattemptedLimit"
+Write-Host "Max hard missed queries: $(if ($MaxHardMissedQueries -gt 0) { $MaxHardMissedQueries } else { 'auto' })"
 Write-Host "Stale missed discovery limit: $StaleMissedDiscoveryLimit"
 Write-Host "Stale missed comment pages: $StaleMissedCommentPages"
 Write-Host "Target evidence per term: $TargetEvidence"
