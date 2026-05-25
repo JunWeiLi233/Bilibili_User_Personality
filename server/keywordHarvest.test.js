@@ -2544,7 +2544,7 @@ test('buildDictionaryCoverageAudit prioritizes weak context-only evidence for co
   assert.equal(audit.nextActions[0].term, '\u8f66\u5bb6\u519b');
 });
 
-test('buildDictionaryCoverageAudit treats comment samples from mixed context scans as comment-backed evidence', () => {
+test('buildDictionaryCoverageAudit treats comment samples from mixed context scans as weak comment-backed evidence', () => {
   const audit = buildDictionaryCoverageAudit(
     {
       entries: [
@@ -2568,10 +2568,12 @@ test('buildDictionaryCoverageAudit treats comment samples from mixed context sca
 
   assert.equal(audit.coverage.sourcedEvidenceTerms, 1);
   assert.equal(audit.coverage.unsourcedEvidenceTerms, 0);
-  assert.equal(audit.nextActions.length, 0);
+  assert.equal(audit.coverage.totalEvidence, 1);
+  assert.equal(audit.nextActions[0].term, 'commentSample');
+  assert.equal(audit.nextActions[0].coverageEvidenceCount, 1);
 });
 
-test('buildDictionaryCoverageAudit treats non-context samples with Bilibili source metadata as comment-backed evidence', () => {
+test('buildDictionaryCoverageAudit treats non-context samples with Bilibili source metadata as weak comment-backed evidence', () => {
   const audit = buildDictionaryCoverageAudit(
     {
       entries: [
@@ -2596,7 +2598,9 @@ test('buildDictionaryCoverageAudit treats non-context samples with Bilibili sour
 
   assert.equal(audit.coverage.sourcedEvidenceTerms, 1);
   assert.equal(audit.coverage.unsourcedEvidenceTerms, 0);
-  assert.equal(audit.nextActions.length, 0);
+  assert.equal(audit.coverage.totalEvidence, 1);
+  assert.equal(audit.nextActions[0].term, 'commentSampleOnly');
+  assert.equal(audit.nextActions[0].coverageEvidenceCount, 1);
 });
 
 test('buildDictionaryCoverageAudit does not count video-title object evidence as comment-backed evidence', () => {
@@ -2627,6 +2631,40 @@ test('buildDictionaryCoverageAudit does not count video-title object evidence as
   assert.equal(audit.nextActions[0].term, 'titleOnly');
   assert.equal(audit.nextActions[0].status, 'source_gap');
   assert.equal(audit.nextActions[0].coverageEvidenceCount, 0);
+});
+
+test('buildDictionaryCoverageAudit counts only comment samples when title evidence is mixed in', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'mixedTitle',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSamples: ['real comment mixedTitle', 'Bilibili public video title: mixedTitle title only'],
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video comment scan: https://www.bilibili.com/video/BVcomment/',
+              uid: 'BVcomment',
+              sample: 'real comment mixedTitle',
+            },
+            {
+              source: 'Bilibili public search-discovered video comment scan plus video object evidence: https://www.bilibili.com/video/BVtitle/',
+              uid: 'BVtitle',
+              sample: 'Bilibili public video title: mixedTitle title only',
+            },
+          ],
+        },
+      ],
+    },
+    { termAttempts: {} },
+    { targetEvidence: 3, requireSourceBackedEvidence: true, requireCommentBackedEvidence: true },
+  );
+
+  assert.equal(audit.coverage.totalEvidence, 1);
+  assert.equal(audit.coverage.weakTerms, 1);
+  assert.equal(audit.nextActions[0].term, 'mixedTitle');
+  assert.equal(audit.nextActions[0].coverageEvidenceCount, 1);
 });
 
 test('buildDictionaryCoverageAudit prioritizes context-only source gaps before ordinary weak retries', () => {

@@ -462,6 +462,11 @@ function hasBilibiliCommentScanSource(entry) {
   });
 }
 
+function isCommentBackedSampleText(sample) {
+  const sampleText = String(sample || '').trim();
+  return sampleText && !sampleText.startsWith('Bilibili video context:') && !sampleText.startsWith('Bilibili public video title:');
+}
+
 function hasCoverageEvidenceSource(entry, options = {}) {
   if (!hasEvidenceSource(entry)) return false;
   if (options.requireCommentBackedEvidence !== true) return true;
@@ -474,18 +479,18 @@ function hasCoverageEvidenceSource(entry, options = {}) {
 function commentBackedEvidenceCount(entry) {
   const rawCount = evidenceCount(entry);
   if (rawCount === 0) return 0;
-  let hasCommentSample = false;
+  const commentSamples = new Set();
   for (const source of entry?.evidenceSources || []) {
     const sample = String(source?.sample || '').trim();
-    if (sample && !isVideoContextEvidenceSource(source)) hasCommentSample = true;
+    if (sample && !isVideoContextEvidenceSource(source) && isCommentBackedSampleText(sample)) commentSamples.add(sample);
   }
   if (hasBilibiliCommentScanSource(entry)) {
     for (const sample of entry?.evidenceSamples || []) {
       const sampleText = String(sample || '').trim();
-      if (sampleText && !sampleText.startsWith('Bilibili video context:') && !sampleText.startsWith('Bilibili public video title:')) hasCommentSample = true;
+      if (isCommentBackedSampleText(sampleText)) commentSamples.add(sampleText);
     }
   }
-  return hasCommentSample || hasCoverageEvidenceSource(entry, { requireCommentBackedEvidence: true }) ? rawCount : 0;
+  return Math.min(rawCount, commentSamples.size);
 }
 
 function coverageEvidenceCount(entry, options = {}) {
