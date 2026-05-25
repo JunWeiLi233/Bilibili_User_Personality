@@ -1925,6 +1925,31 @@ test('findDictionaryEntriesWithTextEvidence maps network-cable meme anchors back
   assert.equal(entries[0].evidenceSources[0].uid, 'BV-network-cable-meme');
 });
 
+test('findDictionaryEntriesWithTextEvidence maps loaded dice title wording back to sentence terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u7ed9\u7b5b\u5b50\u91cc\u704c\u4e86\u94c5', family: 'attack', meaning: 'loaded sieve metaphor' },
+        { term: '\u7ed9\u9ab0\u5b50\u704c\u4e86\u94c5', family: 'attack', meaning: 'loaded dice metaphor' },
+      ],
+    },
+    [
+      '\u8fd9\u628a\u771f\u7684\u50cf\u704c\u94c5\u7b5b\u5b50\uff0c\u600e\u4e48\u6447\u90fd\u51fa\u8fd9\u4e2a\u7ed3\u679c',
+      '\u704c\u94c5\u9ab0\u5b50\u80fd\u4e0d\u80fd\u522b\u518d\u6765\u4e86\uff0c\u6982\u7387\u592a\u79bb\u8c31',
+    ].join('\n'),
+    {
+      source: 'Bilibili public search-discovered video comment scan plus video context: https://www.bilibili.com/video/BV-loaded-dice/',
+      uid: 'BV-loaded-dice',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u7ed9\u7b5b\u5b50\u91cc\u704c\u4e86\u94c5',
+    '\u7ed9\u9ab0\u5b50\u704c\u4e86\u94c5',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-loaded-dice'), true);
+});
+
 test('findDictionaryEntriesWithTextEvidence maps persistent zero-evidence attack aliases back to dictionary terms', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
