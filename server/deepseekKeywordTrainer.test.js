@@ -1823,6 +1823,7 @@ test('findDictionaryEntriesWithTextEvidence maps priority weak action aliases ba
         { term: '\u611f\u89c9\u81ea\u5df1\u5f88\u5c4c', family: 'attack', meaning: 'mock arrogant self-image' },
         { term: '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f', family: 'attack', meaning: 'bossy steel chairman label' },
         { term: '\u6e2f\u6ef4\u5bf9', family: 'cooperation', meaning: 'homophone agreement marker' },
+        { term: '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5', family: 'cooperation', meaning: 'homophone agreement phrase' },
         { term: '\u6760\u7cbe', family: 'attack', meaning: 'contrarian label' },
       ],
     },
@@ -1830,10 +1831,10 @@ test('findDictionaryEntriesWithTextEvidence maps priority weak action aliases ba
       '\u4fdd\u62a4\u6211\u65b9up\uff0c\u5148\u522b\u55b7',
       '\u8fd9\u79cd\u53d1\u8a00\u771f\u60f3\u6247\u4f60\u6bd4\u515c',
       '\u7ed9\u4f60\u4e00\u4e2a\u5927\u6bd4\u515c\u6e05\u9192\u4e00\u4e0b',
-      '\u8fd9\u4e0b\u53c8\u88ab\u62e7\u75bc\u4e86\u5427',
-      '\u4f60\u662f\u4e0d\u662f\u771f\u89c9\u5f97\u81ea\u5df1\u5f88\u5c4c',
-      '\u67d0\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f\u53c8\u6765\u6307\u70b9\u4e86',
-      '\u8fd9\u53e5\u8bb2\u5f97\u5bf9\u6ca1\u6bdb\u75c5',
+      '\u8fd9\u6839\u672c\u4e0d\u662f\u813e\u6c14\u5dee\uff0c\u8fd9\u5c31\u662f\u88ab\u62e7\u75bc\u4e86\u6025\u4e86',
+      '\u56de\u590d\u522b\u4eba\u65f6\u8bf4\u611f\u89c9\u81ea\u5df1\u5f88\u5c4cdoge',
+      '\u54df\uff0c\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f',
+      '\u6e2f\u6ef4\u5bf9\uff0c\u6ca1\u6bdb\u75c5\u554a\u8001\u94c1',
       '\u8001\u6760\u7cbe\u53c8\u5f00\u59cb\u62ac\u6760\u4e86',
     ].join('\n'),
     {
@@ -1850,6 +1851,7 @@ test('findDictionaryEntriesWithTextEvidence maps priority weak action aliases ba
     '\u611f\u89c9\u81ea\u5df1\u5f88\u5c4c',
     '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f',
     '\u6e2f\u6ef4\u5bf9',
+    '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5',
     '\u6760\u7cbe',
   ]);
   assert.equal(entries.every((entry) => entry.evidenceCount >= 1), true);

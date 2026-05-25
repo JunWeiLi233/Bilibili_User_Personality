@@ -149,3 +149,36 @@ test('buildSentenceRadarMarks supplements sparse model impacts with full-sentenc
   assert.equal(marks.some((mark) => mark.axis === normalizeRadarAxis('evidence') && mark.direction === 'risk'), true);
   assert.equal(marks[0].quote, 'Everyone in that camp is a shill, but show the source and I will revise my conclusion.');
 });
+
+test('buildSentenceRadarMarks does not treat meme quotes as direct attacks', () => {
+  const quote = '\u8fd9\u53e5\u201c\u7ed9\u4f60\u4e00\u4e2a\u5927\u6bd4\u515c\u201d\u662f\u590d\u8ff0\u540d\u573a\u9762\u73a9\u6897\uff0c\u4e0d\u662f\u9a82\u4eba\u4e5f\u4e0d\u662f\u653b\u51fb\u8c01\u3002';
+  const marks = buildSentenceRadarMarks([
+    {
+      quote,
+      speechAct: '\u73a9\u6897\u5f15\u7528',
+      target: '\u539f\u53f0\u8bcd',
+      risk: 'neutral',
+      reasoning: '\u8bcd\u9762\u6709\u653b\u51fb\u6027\uff0c\u4f46\u6574\u53e5\u660e\u786e\u8bf4\u662f\u540d\u573a\u9762\u73a9\u6897\u548c\u975e\u653b\u51fb\u7528\u6cd5\u3002',
+    },
+  ]);
+
+  assert.equal(marks.some((mark) => mark.axis === normalizeRadarAxis('cooperation') && mark.direction === 'positive'), true);
+  assert.equal(marks.some((mark) => mark.axis === normalizeRadarAxis('attack') && mark.strength > 0.25), false);
+});
+
+test('buildSentenceRadarMarks caps model attack impact for explicit meme quote usage', () => {
+  const quote = 'Calling it a personal attack here is just a meme quote, not attacking the person.';
+  const marks = buildSentenceRadarMarks([
+    {
+      quote,
+      speechAct: 'meme quote',
+      target: 'quoted catchphrase',
+      risk: 'medium',
+      axisImpacts: [{ axis: 'attack', direction: 'risk', strength: 0.85, reasoning: 'Contains personal attack wording.' }],
+    },
+  ]);
+
+  const attackMark = marks.find((mark) => mark.axis === normalizeRadarAxis('attack'));
+  assert.equal(attackMark?.strength, 0.25);
+  assert.equal(marks.some((mark) => mark.axis === normalizeRadarAxis('cooperation') && mark.direction === 'positive'), true);
+});

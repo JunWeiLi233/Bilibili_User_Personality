@@ -176,11 +176,11 @@ const TERM_EVIDENCE_ALIASES = {
   '\u4fdd\u62a4\u6211\u65b9': ['\u4fdd\u62a4\u6211\u65b9up', '\u4fdd\u62a4\u6211\u65b9\u961f\u53cb', '\u4fdd\u62a4\u6211\u65b9\u53cb\u519b', '\u4fdd\u62a4\u6211\u65b9\u8001\u5e08'],
   '\u6bd4\u515c': ['\u6247\u4f60\u6bd4\u515c', '\u7ed9\u4f60\u4e00\u6bd4\u515c', '\u5927\u6bd4\u515c', '\u4e00\u4e2a\u6bd4\u515c'],
   '\u5927\u6bd4\u515c': ['\u6bd4\u515c', '\u6247\u4f60\u5927\u6bd4\u515c', '\u7ed9\u4f60\u4e00\u4e2a\u5927\u6bd4\u515c', '\u5927\u903c\u515c'],
-  '\u88ab\u62e7\u75bc\u4e86': ['\u62e7\u75bc\u4e86', '\u88ab\u62e7\u75db\u4e86', '\u53c8\u88ab\u62e7\u75bc\u4e86', '\u62e7\u75bc'],
-  '\u611f\u89c9\u81ea\u5df1\u5f88\u5c4c': ['\u89c9\u5f97\u81ea\u5df1\u5f88\u5c4c', '\u771f\u89c9\u5f97\u81ea\u5df1\u5f88\u5c4c', '\u611f\u89c9\u81ea\u5df1\u5f88\u725b', '\u89c9\u5f97\u81ea\u5df1\u5f88\u725b\u903c'],
-  '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f': ['\u94a2\u94c1\u8463\u4e8b\u957f', '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f\u662f\u5427', '\u67d0\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f', '\u94a2\u94c1\u516c\u53f8\u8001\u603b'],
-  '\u6e2f\u6ef4\u5bf9': ['\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5', '\u8bb2\u5f97\u5bf9', '\u8bb2\u7684\u5bf9', '\u521a\u6ef4\u5bf9'],
-  '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5': ['\u6e2f\u6ef4\u5bf9', '\u8bb2\u5f97\u5bf9\u6ca1\u6bdb\u75c5', '\u8bb2\u7684\u5bf9\u6ca1\u6bdb\u75c5'],
+  '\u88ab\u62e7\u75bc\u4e86': ['\u62e7\u75bc\u4e86', '\u88ab\u62e7\u75db\u4e86', '\u53c8\u88ab\u62e7\u75bc\u4e86', '\u62e7\u75bc', '\u88ab\u62e7\u75bc\u4e86\u6025\u4e86', '\u62e7\u75bc\u4e86\u6025\u4e86'],
+  '\u611f\u89c9\u81ea\u5df1\u5f88\u5c4c': ['\u89c9\u5f97\u81ea\u5df1\u5f88\u5c4c', '\u771f\u89c9\u5f97\u81ea\u5df1\u5f88\u5c4c', '\u611f\u89c9\u81ea\u5df1\u5f88\u725b', '\u89c9\u5f97\u81ea\u5df1\u5f88\u725b\u903c', '\u89c9\u5f97\u81ea\u5df1\u5c31\u662f\u6b63\u4e49\u4e4b\u58eb', '\u611f\u89c9\u81ea\u5df1\u5f88\u5c4cdoge'],
+  '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f': ['\u94a2\u94c1\u8463\u4e8b\u957f', '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f\u662f\u5427', '\u67d0\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f', '\u94a2\u94c1\u516c\u53f8\u8001\u603b', '\u54df\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f'],
+  '\u6e2f\u6ef4\u5bf9': ['\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5', '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5\u554a\u8001\u94c1', '\u8bb2\u5f97\u5bf9', '\u8bb2\u7684\u5bf9', '\u521a\u6ef4\u5bf9'],
+  '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5': ['\u6e2f\u6ef4\u5bf9', '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5\u554a\u8001\u94c1', '\u8bb2\u5f97\u5bf9\u6ca1\u6bdb\u75c5', '\u8bb2\u7684\u5bf9\u6ca1\u6bdb\u75c5'],
   '\u6760\u7cbe': ['\u62ac\u6760\u7cbe', '\u8001\u6760\u7cbe', '\u8fd9\u6760\u7cbe', '\u6760\u7cbe\u672c\u7cbe'],
   '\u61c2\u7684\u90fd\u61c2': ['dddd'],
   dddd: ['\u61c2\u7684\u90fd\u61c2'],
@@ -950,6 +950,7 @@ function buildKeywordMessages({ text, uid }) {
 2. 禁止输出类别词或普通说明词，例如：攻击、规避、证据、关键词、普通名词。
 3. 优先输出 2 到 12 字的中文互联网表达。
 4. Read the full comment sentence and its local context before deciding meaning; do not classify by isolated keyword hits, homophones, or meme words alone.
+4a. A keyword may appear as a meme, quote, copypasta, title, self-reference, or playful marker. Do not label it attack unless the full sentence uses it to target a person, group, motive, or proposition with hostile function.
 5. 如果候选表达不为“无”，必须从候选或样本原文中选择 1 到 8 个最有语用价值的关键词；只有候选表达为“无”且样本没有网络表达时才输出 {"keywords":[]}。
 6. 输出 JSON，结构必须是：
 {"keywords":[{"term":"词或短语","family":"attack|absolutes|evidence|evasion|cooperation|correction","meaning":"中文含义和语用功能","variants":["变体"],"risk":"high|medium|positive|neutral","confidence":0.0}]}
@@ -997,6 +998,7 @@ Rules:
 2. evidence must be an exact contiguous substring from SOURCE_TEXT.
 3. Read the full comment sentence and nearby context before deciding meaning; decide by semantic function, not just isolated keyword hits, spelling, or homophones.
 4. Do not output a term if the full sentence does not semantically support the dictionary meaning, even when the term text appears.
+4a. If the evidence phrase is only a meme, quote, copypasta, title, self-reference, or playful marker, map it only when that usage matches the dictionary meaning; do not treat it as attack by word surface alone.
 5. Do not output a term if you cannot quote exact source evidence.
 6. Do not output new terms, variants, explanations, or categories outside the existing dictionary.
 7. Output JSON only: {"matches":[{"term":"existing term","evidence":"exact source substring","confidence":0.0}]}
@@ -1302,6 +1304,7 @@ function buildAnalysisMessages({ text, uid, name }) {
 - 不要只按单个关键词或梗词定性；例如“不是我杠”可能是证据边界提醒，也可能是攻击开场，必须结合完整句子判断
 - sentenceAnalyses 必须保留原句 quote，并说明 speechAct、target、stance、contextRole、risk、axisImpacts 和 reasoning
 - axisImpacts 用来把完整句子标到 radar 轴上；每句 1-3 个，axis 只能是六个维度之一，direction 为 risk 或 positive，strength 为 0-1。不要只按词面命中给 axisImpacts，必须解释整句为什么影响该轴。
+- If an attack-looking keyword is used as a meme, quote, copypasta, title, self-reference, or playful marker, do not assign attack axis unless the complete sentence attacks a concrete target. Explain the meme/quote function in reasoning and keep risk neutral/low when appropriate.
 
 输出 JSON 结构：
 {

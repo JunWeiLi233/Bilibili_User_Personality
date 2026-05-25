@@ -354,11 +354,14 @@ function classifySpeechAct(comment, index, totalComments) {
 
 function findLexiconMarks(comment, index, totalComments, runtimeLexicon) {
   const marks = [];
+  const memeNonAttack = /(?:\u6897|\u73a9\u6897|\u540d\u573a\u9762|\u53f0\u8bcd|\u5f15\u7528|\u590d\u8ff0|\u8f6c\u8ff0|\u8868\u60c5\u5305|meme|quote|copypasta)/i.test(comment)
+    && /(?:\u4e0d\u662f\u9a82|\u4e0d\u662f\u653b\u51fb|\u6ca1\u6709\u9a82|\u6ca1\u6709\u653b\u51fb|\u53ea\u662f|\u5f00\u73a9\u7b11|\u8c03\u4f83|not attacking|not an attack|just a meme|as a joke)/i.test(comment);
   for (const family of familyOrder) {
     const meta = lexiconFamilyMeta[family];
     const terms = runtimeLexicon[family] || [];
     for (const term of terms) {
       if (!term || !comment.includes(term)) continue;
+      if (memeNonAttack && meta.polarity === 'risk') continue;
       marks.push({
         id: `lexicon-${index}-${family}-${term}`,
         source: '动态语库',

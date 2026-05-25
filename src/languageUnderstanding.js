@@ -78,6 +78,13 @@ function sentenceText(sentence = {}) {
     .join(' ');
 }
 
+function isMemeOrQuotedNonAttack(sentence = {}) {
+  const text = sentenceText(sentence);
+  const hasMemeFrame = /(?:\u6897|\u73a9\u6897|\u540d\u573a\u9762|\u53f0\u8bcd|\u5f15\u7528|\u590d\u8ff0|\u8f6c\u8ff0|\u8868\u60c5\u5305|\u539f\u8bdd|\u6bb5\u5b50|\u8c10\u97f3|meme|quote|quoted|copypasta|catchphrase|inside joke)/i.test(text);
+  if (!hasMemeFrame) return false;
+  return /(?:\u4e0d\u662f\u9a82|\u4e0d\u662f\u653b\u51fb|\u6ca1\u6709\u9a82|\u6ca1\u6709\u653b\u51fb|\u53ea\u662f|\u4ec5\u4ec5|\u7528\u6765\u8c03\u4f83|\u5f00\u73a9\u7b11|\u8c03\u4f83|\u73a9\u7b11|not attacking|not an attack|not insulting|just a meme|only a meme|as a joke|joking)/i.test(text);
+}
+
 function addImpact(impacts, impact) {
   const axis = normalizeRadarAxis(impact.axis);
   if (!axis) return;
@@ -95,6 +102,7 @@ function inferSentenceImpacts(sentence = {}) {
   const text = sentenceText(sentence);
   const risk = String(sentence.risk || '').trim().toLowerCase();
   const defaultDirection = POSITIVE_RISKS.has(risk) ? 'positive' : 'risk';
+  const memeNonAttack = isMemeOrQuotedNonAttack(sentence);
   const impacts = [];
 
   if (/修正|改结论|更正|承认|说重|错了|搞错|记错|收回|愿意改|可以改|感谢指正|谢谢指正/.test(text)) {
@@ -154,6 +162,20 @@ function inferSentenceImpacts(sentence = {}) {
     });
   }
 
+  if (memeNonAttack) {
+    addImpact(impacts, {
+      axis: 'cooperation',
+      direction: 'positive',
+      strength: 0.55,
+      reasoning: 'The sentence explicitly frames the keyword as meme, quote, or playful reuse, so the keyword alone is not attack evidence.',
+    });
+    const attackAxis = normalizeRadarAxis('attack');
+    return impacts
+      .filter((impact) => !(impact.axis === attackAxis && impact.direction === 'risk' && impact.strength > 0.25))
+      .sort((a, b) => b.strength - a.strength)
+      .slice(0, 3);
+  }
+
   return impacts
     .sort((a, b) => b.strength - a.strength)
     .slice(0, 3);
@@ -162,11 +184,17 @@ function inferSentenceImpacts(sentence = {}) {
 function normalizeAxisImpact(impact = {}, sentence = {}) {
   const axis = normalizeRadarAxis(impact.axis);
   if (!axis) return null;
+  const direction = normalizeDirection(impact.direction, sentence.risk);
+  const memeCappedAttack = isMemeOrQuotedNonAttack(sentence) && axis === normalizeRadarAxis('attack') && direction === 'risk';
   return {
     axis,
-    direction: normalizeDirection(impact.direction, sentence.risk),
-    strength: clamp01(impact.strength, 0.5),
-    reasoning: String(impact.reasoning || '').trim().slice(0, 240),
+    direction,
+    strength: memeCappedAttack ? Math.min(clamp01(impact.strength, 0.5), 0.25) : clamp01(impact.strength, 0.5),
+    reasoning: String(
+      memeCappedAttack
+        ? impact.reasoning || 'Keyword appears inside a meme/quote frame, so attack impact is capped without a hostile target.'
+        : impact.reasoning || '',
+    ).trim().slice(0, 240),
   };
 }
 

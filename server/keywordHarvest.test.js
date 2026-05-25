@@ -805,12 +805,17 @@ test('buildKeywordHarvestQueries starts with priority weak action aliases', () =
     {
       term: '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f',
       family: 'attack',
-      expectedAliasQuery: '\u94a2\u94c1\u8463\u4e8b\u957f \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      expectedAliasQuery: '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f \u8bc4\u8bba\u533a',
     },
     {
       term: '\u6e2f\u6ef4\u5bf9',
       family: 'cooperation',
-      expectedAliasQuery: '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      expectedAliasQuery: '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5 \u8bc4\u8bba\u533a',
+    },
+    {
+      term: '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5',
+      family: 'cooperation',
+      expectedAliasQuery: '\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5\u554a\u8001\u94c1 \u8bc4\u8bba',
     },
     {
       term: '\u6760\u7cbe',
