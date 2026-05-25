@@ -1650,6 +1650,13 @@ test('findDictionaryEntriesWithTextEvidence maps colloquial sentence tails back 
         { term: '\u5f88\u61c2\u561b', family: 'attack', meaning: 'sarcastic expertise jab' },
         { term: '\u8fd8\u6562\u53d1\u89c6\u9891', family: 'attack', meaning: 'mocking posting again' },
         { term: '\u7b11\u5760\u673a', family: 'attack', meaning: 'laughing crash hyperbole' },
+        { term: '\u7ecf\u5178\u4e0d\u770b\u5185\u5bb9', family: 'attack', meaning: 'classic no-content reading criticism' },
+        { term: '\u7cbe\u795e\u7537', family: 'attack', meaning: 'gendered mindset insult' },
+        { term: '\u6485\u9192', family: 'attack', meaning: 'mocked awakened identity' },
+        { term: '\u79d1\u6280\u4e0e\u72e0\u6d3b', family: 'attack', meaning: 'additive gimmick criticism' },
+        { term: '\u523b\u8fdbdna', family: 'attack', meaning: 'internalized trait criticism' },
+        { term: '\u4eae\u8840\u6761', family: 'attack', meaning: 'reveals hostility marker' },
+        { term: '\u8001\u62a0', family: 'attack', meaning: 'stingy person insult' },
       ],
     },
     [
@@ -1666,6 +1673,13 @@ test('findDictionaryEntriesWithTextEvidence maps colloquial sentence tails back 
       '\u5f88\u61c2\u561b\u8001\u94c1[doge]',
       '\u4f60\u8fd8\u6562\u53d1\u89c6\u9891\u5462',
       '\u8fd9\u8bc4\u8bba\u533a\u771f\u7ed9\u6211\u7b11\u5760\u673a\u4e86',
+      '\u8fd9\u5c31\u662f\u7ecf\u5178\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba',
+      '\u5979\u4e0d\u662f\u7cbe\u795e\u7537\uff0c\u800c\u662f\u7cbe\u795e\u7537\u4eba\u90a3\u4e00\u5957',
+      '\u8fd9\u7fa4\u6485\u9192\u4eba\u548c\u6485\u9192\u8005\u53c8\u6765\u4e86',
+      '\u8fd9\u5316\u5b66\u7b26\u53f7\u4e00\u770b\u5c31\u662f\u79d1\u6280\u4e0e\u72e0\u6d3b\u554a',
+      '\u8fd9\u79cd\u96cc\u7ade\u662f\u523b\u8fdbdna\u7684',
+      '\u4e3b\u6301\u4eba\u4e00\u4e0b\u573a\u5c31\u4eae\u8840\u6761\u4e86',
+      '\u8fd9\u4eba\u5c31\u662f\u8001\u62a0\u6bd4\u571f\u8d22\u4e3b',
     ].join('\n'),
     {
       source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-colloquial-alias/',
@@ -1687,6 +1701,13 @@ test('findDictionaryEntriesWithTextEvidence maps colloquial sentence tails back 
     '\u5f88\u61c2\u561b',
     '\u8fd8\u6562\u53d1\u89c6\u9891',
     '\u7b11\u5760\u673a',
+    '\u7ecf\u5178\u4e0d\u770b\u5185\u5bb9',
+    '\u7cbe\u795e\u7537',
+    '\u6485\u9192',
+    '\u79d1\u6280\u4e0e\u72e0\u6d3b',
+    '\u523b\u8fdbdna',
+    '\u4eae\u8840\u6761',
+    '\u8001\u62a0',
   ]);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-colloquial-alias'), true);
 });

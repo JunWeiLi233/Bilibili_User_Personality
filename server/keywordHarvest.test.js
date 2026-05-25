@@ -619,6 +619,34 @@ test('buildKeywordHarvestQueries generates colloquial aliases for weak attack ph
       term: '\u7b11\u5760\u673a',
       expectedAliasQuery: '\u7b11\u5760\u673a\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     },
+    {
+      term: '\u7ecf\u5178\u4e0d\u770b\u5185\u5bb9',
+      expectedAliasQuery: '\u7ecf\u5178\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u7cbe\u795e\u7537',
+      expectedAliasQuery: '\u7cbe\u795e\u7537\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u6485\u9192',
+      expectedAliasQuery: '\u6485\u9192\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u79d1\u6280\u4e0e\u72e0\u6d3b',
+      expectedAliasQuery: '\u79d1\u6280\u4e0e\u72e0\u6d3b\u554a \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u523b\u8fdbdna',
+      expectedAliasQuery: '\u523b\u8fdbdna\u7684 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u4eae\u8840\u6761',
+      expectedAliasQuery: '\u4eae\u8840\u6761\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u8001\u62a0',
+      expectedAliasQuery: '\u8001\u62a0\u6bd4 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
   ];
 
   for (const item of cases) {
