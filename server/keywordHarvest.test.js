@@ -876,6 +876,38 @@ test('buildKeywordHarvestQueryPlan annotates audit priority queries with term me
   });
 });
 
+test('buildKeywordHarvestQueryPlan accepts audit action objects as priority queries', () => {
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [{ term: 'weak', family: 'attack', evidenceCount: 0 }],
+    },
+    {
+      priorityQueries: [
+        {
+          term: 'weak',
+          family: 'attack',
+          nextQuery: 'weak 评论区',
+          evidenceCount: 0,
+          sourcedEvidence: false,
+          recommendationGroup: 'weak',
+          attempts: 2,
+          successfulAttempts: 0,
+        },
+      ],
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 1,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.equal(plan[0].query, 'weak 评论区');
+  assert.equal(plan[0].source, 'priority');
+  assert.equal(plan[0].term, 'weak');
+  assert.equal(plan[0].priorAttempts, 2);
+  assert.notEqual(plan[0].query, '[object Object]');
+});
+
 
 test('buildKeywordHarvestQueryPlan skips terms that exhausted every built-in query variant', () => {
   const allQueries = [

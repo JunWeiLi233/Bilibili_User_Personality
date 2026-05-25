@@ -814,8 +814,9 @@ function diversifyCoverageActions(actions, limit) {
 
 function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
   const actions = [...actionMap.values()];
-  return priorityQueries.map((query) => {
-    const cleanQuery = String(query || '').trim();
+  return priorityQueries.map((priorityItem) => {
+    const providedAction = priorityItem && typeof priorityItem === 'object' && !Array.isArray(priorityItem) ? priorityItem : null;
+    const cleanQuery = String(providedAction?.nextQuery || providedAction?.query || priorityItem || '').trim();
     const matchedAction = actions.find(
       (action) =>
         action.nextQuery === cleanQuery ||
@@ -825,17 +826,18 @@ function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
         precisionQueriesForTerm(action.term).includes(cleanQuery) ||
         negativeFeedbackQueriesForTerm(action.term).includes(cleanQuery),
     );
-    if (!matchedAction) return { query: cleanQuery, source: 'priority' };
+    const action = providedAction ? { ...(matchedAction || {}), ...providedAction } : matchedAction;
+    if (!action) return { query: cleanQuery, source: 'priority' };
     return {
       query: cleanQuery,
       source: 'priority',
-      term: matchedAction.term,
-      family: matchedAction.family,
-      evidenceCount: matchedAction.evidenceCount,
-      sourcedEvidence: matchedAction.sourcedEvidence,
-      recommendationGroup: matchedAction.recommendationGroup,
-      priorAttempts: matchedAction.attempts,
-      priorSuccessfulAttempts: matchedAction.successfulAttempts,
+      term: action.term,
+      family: action.family,
+      evidenceCount: action.evidenceCount,
+      sourcedEvidence: action.sourcedEvidence,
+      recommendationGroup: action.recommendationGroup,
+      priorAttempts: action.attempts,
+      priorSuccessfulAttempts: action.successfulAttempts,
       variantIndex: null,
       builtInVariant: true,
       previouslyTried: false,
@@ -845,7 +847,7 @@ function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
 
 export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
   const maxQueries = asPositiveInt(options.maxQueries, 12, 10000);
-  const priorityQueries = unique(options.priorityQueries || []);
+  const priorityQueries = Array.isArray(options.priorityQueries) ? options.priorityQueries : parseTemplateList(options.priorityQueries);
   const seedQueries = unique(options.seedQueries || DEFAULT_SEED_QUERIES);
   const coverageMode = String(options.coverageMode || 'balanced').trim().toLowerCase();
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
