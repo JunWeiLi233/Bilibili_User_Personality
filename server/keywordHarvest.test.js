@@ -1099,8 +1099,20 @@ test('buildKeywordHarvestQueries avoids noisy literal searches for obfuscated an
     {
       term: '\u516c\u5f0f\u5957\u53cd\u4e86',
       family: 'correction',
-      expectedAliasQuery: '\u516c\u5f0f\u7528\u53cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a',
+      expectedAliasQuery: '\u8fd9\u516c\u5f0f\u7528\u53cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a',
       noisyFragment: '\u5b89\u5168\u5957',
+    },
+    {
+      term: '\u516c\u5b50\u4eec\u53ef\u4ee5\u5f00\u59cb\u63d2\u79e7\u54af',
+      family: 'attack',
+      expectedAliasQuery: '\u6211\u5bb6\u516c\u5b50\u4f1a\u63d2\u79e7\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      noisyFragment: '\u516c\u5b50\u4eec\u53ef\u4ee5',
+    },
+    {
+      term: '\u653b\u51fb\u4ed6\u4eba\u6d6e\u6728',
+      family: 'attack',
+      expectedAliasQuery: '\u6d6e\u6728\u4fa0 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      noisyFragment: '\u653b\u51fb\u4ed6\u4eba',
     },
   ];
 
