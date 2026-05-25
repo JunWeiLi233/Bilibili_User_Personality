@@ -785,12 +785,12 @@ test('buildKeywordHarvestQueries starts with priority weak action aliases', () =
     {
       term: '\u6bd4\u515c',
       family: 'attack',
-      expectedAliasQuery: '\u6247\u4f60\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      expectedAliasQuery: '\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     },
     {
       term: '\u5927\u6bd4\u515c',
       family: 'attack',
-      expectedAliasQuery: '\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      expectedAliasQuery: '\u5927\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     },
     {
       term: '\u88ab\u62e7\u75bc\u4e86',
@@ -1940,6 +1940,35 @@ test('buildCoverageActions does not fall back to over-specific long contained ph
     byTerm['\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc'].nextQuery,
     '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc \u70ed\u8bc4',
   );
+});
+
+test('buildCoverageActions tries own variants before related contained terms after a miss', () => {
+  const actions = buildCoverageActions(
+    {
+      entries: [
+        { term: '\u6bd4\u515c', family: 'attack', evidenceCount: 2, evidenceSources: [{ source: 'Bilibili public comment', sample: '\u6bd4\u515c' }] },
+        { term: '\u5927\u6bd4\u515c', family: 'attack', evidenceCount: 2, evidenceSources: [{ source: 'Bilibili public comment', sample: '\u5927\u6bd4\u515c' }] },
+      ],
+    },
+    {
+      harvestStrategyVersion: 4,
+      searchedQueries: ['\u5927\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'],
+      termAttempts: {
+        [Buffer.from('\u6bd4\u515c', 'utf8').toString('base64url')]: {
+          term: '\u6bd4\u515c',
+          family: 'attack',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: '\u5927\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4', hit: false }],
+        },
+      },
+    },
+    { targetEvidence: 3, queryVariantsPerTerm: 4, requireCommentBackedEvidence: true },
+  );
+
+  const action = actions.find((item) => item.term === '\u6bd4\u515c');
+  assert.equal(action.action, 'retry_with_new_variant');
+  assert.equal(action.nextQuery, '\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
 });
 
 

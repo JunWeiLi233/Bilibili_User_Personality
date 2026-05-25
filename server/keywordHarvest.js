@@ -246,8 +246,6 @@ const ALIAS_FIRST_SEARCH_TERMS = new Set([
   '\u9ad8\u7ea7jn',
   '\u6401\u8fd9\u6401\u8fd9',
   '\u4fdd\u62a4\u6211\u65b9',
-  '\u6bd4\u515c',
-  '\u5927\u6bd4\u515c',
   '\u88ab\u62e7\u75bc\u4e86',
   '\u611f\u89c9\u81ea\u5df1\u5f88\u5c4c',
   '\u94a2\u94c1\u516c\u53f8\u8463\u4e8b\u957f',
@@ -1345,6 +1343,8 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       assumeLegacyQueriesCurrent,
     });
     const triedQueries = new Set([...attemptedVariantQueries(attempt), ...searchedQueries]);
+    const templateLimit = queryTemplatesFromOptions(options).length;
+    const ownVariants = queryVariantsForTerm(term, family, templateLimit, options);
     const relatedSearchTerms = relatedContainedSearchTerms(entries, entry).filter((relatedTerm) => {
       const cleanRelatedTerm = String(relatedTerm || '').trim();
       const relatedAttempt = getTermAttempt(attempts, cleanRelatedTerm);
@@ -1354,13 +1354,19 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
         Math.max(0, Number(relatedAttempt.successfulAttempts) || 0) === 0;
       return !(cleanRelatedTerm.length < term.length && (relatedMissed || hasIrrelevantQueryFeedback(state, cleanRelatedTerm)));
     });
-    const preferRelatedSearchTerms = attemptsCount > 0 && successfulAttempts === 0 && relatedSearchTerms.length > 0;
-    const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, {
+    const hasUntriedOwnVariant = ownVariants.some((variant) => !triedQueries.has(variant.query));
+    const relatedAnchorAlreadyTried = relatedSearchTerms.some((relatedTerm) => {
+      const [firstRelatedVariant] = queryVariantsForTerm(relatedTerm, family, 1, options);
+      return firstRelatedVariant && triedQueries.has(firstRelatedVariant.query);
+    });
+    const preferRelatedSearchTerms =
+      attemptsCount > 0 && successfulAttempts === 0 && relatedSearchTerms.length > 0 && !(hasUntriedOwnVariant && relatedAnchorAlreadyTried);
+    const availableVariants = preferRelatedSearchTerms ? queryVariantsForTerm(term, family, templateLimit, {
       ...options,
       searchTerms: relatedSearchTerms,
       preferSearchTerms: preferRelatedSearchTerms,
       onlySearchTerms: preferRelatedSearchTerms,
-    });
+    }) : ownVariants;
     const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(attempt, options.retryBeforeUnattemptedLimit);
     const irrelevantFeedback = hasIrrelevantQueryFeedback(state, term);
     const filteredSearchContextFeedback = hasFilteredSearchContextFeedback(state, term);
