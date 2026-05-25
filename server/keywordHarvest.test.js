@@ -84,6 +84,38 @@ test('buildKeywordHarvestQueries prioritizes exact searches for compact metric t
   assert.deepEqual(queries.slice(0, 3), ['10w', '10w \u70ed\u8bc4', '10w \u8bc4\u8bba\u533a']);
 });
 
+test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [{ term: '1w3', family: 'evidence', evidenceCount: 1 }],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 4,
+      queryVariantsPerTerm: 4,
+    },
+  );
+
+  assert.deepEqual(queries.slice(0, 3), ['1w3', '1w3 \u70ed\u8bc4', '1w3 \u8bc4\u8bba\u533a']);
+});
+
+test('buildKeywordHarvestQueries prioritizes exact searches for compact RMB shorthand terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [{ term: '10r', family: 'evidence', evidenceCount: 1 }],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 4,
+      queryVariantsPerTerm: 4,
+    },
+  );
+
+  assert.deepEqual(queries.slice(0, 3), ['10r', '10r \u70ed\u8bc4', '10r \u8bc4\u8bba\u533a']);
+});
+
 test('buildKeywordHarvestQueries uses stable search aliases for hard-to-find terms', () => {
   const queries = buildKeywordHarvestQueries(
     {

@@ -201,7 +201,7 @@ function searchTermsForTerm(term) {
 }
 
 function isCompactMetricSearchTerm(term) {
-  return /^[0-9]+(?:\.[0-9]+)?(?:[wW万kK秒sS])?$/.test(String(term || '').trim());
+  return /^[0-9]+(?:\.[0-9]+)?(?:[wW\u4e07kK\u79d2sSrR][0-9]*(?:\.[0-9]+)?)?$/.test(String(term || '').trim());
 }
 
 function contextualQueriesForTerm(term) {

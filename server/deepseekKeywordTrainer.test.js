@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -72,12 +72,38 @@ test('normalizes noisy punctuation and rejects low-quality keyword terms', () =>
     { term: '去问地理老师的）O', family: 'evasion', meaning: '噪声样本' },
     { term: '问百度！！', family: 'evasion', meaning: '把解释责任转移到搜索引擎' },
     { term: '[doge]', family: 'cooperation', meaning: '表情梗' },
+    { term: '᭙ᦔꪀꪑᦔ', family: 'attack', meaning: 'model copied decorative script noise' },
   ]);
 
   assert.deepEqual(entries.map((entry) => [entry.term, entry.family]), [
     ['问百度', 'evasion'],
     ['doge', 'cooperation'],
   ]);
+});
+
+test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise terms', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-noise-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          { term: 'doge', family: 'cooperation', meaning: 'common Bilibili expression', evidenceCount: 1 },
+          { term: '᭙ᦔꪀꪑᦔ', family: 'attack', meaning: 'decorative script noise', evidenceCount: 1 },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['doge']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 test('extracts JSON object from verbose DeepSeek responses', () => {

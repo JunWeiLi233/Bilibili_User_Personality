@@ -114,6 +114,7 @@ function dictionaryScopedToTerms(dictionary, targetTerms) {
 
 function isNoisyTerm(term) {
   if (!term || STOP_TERMS.has(term) || /^变体\d+$/.test(term)) return true;
+  if (/[^\p{Script=Han}A-Za-z0-9]/u.test(term)) return true;
   if (/^\d+$/.test(term)) return true;
   if (/^[A-Za-z]$/.test(term)) return true;
   if (/^去问(?!百度|谷歌|Google|搜索|老师|客服)/i.test(term)) return true;
