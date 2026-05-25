@@ -1047,7 +1047,8 @@ function buildAnalysisMessages({ text, uid, name }) {
 - 如果评论数很少或样本不具代表性，在 overall 中注明
 - 逐句分析每条完整发言：先看整句的命题、攻击对象、语气、证据关系和前后让步，再判断风险
 - 不要只按单个关键词或梗词定性；例如“不是我杠”可能是证据边界提醒，也可能是攻击开场，必须结合完整句子判断
-- sentenceAnalyses 必须保留原句 quote，并说明 speechAct、target、stance、contextRole、risk 和 reasoning
+- sentenceAnalyses 必须保留原句 quote，并说明 speechAct、target、stance、contextRole、risk、axisImpacts 和 reasoning
+- axisImpacts 用来把完整句子标到 radar 轴上；每句 1-3 个，axis 只能是六个维度之一，direction 为 risk 或 positive，strength 为 0-1。不要只按词面命中给 axisImpacts，必须解释整句为什么影响该轴。
 
 输出 JSON 结构：
 {
@@ -1060,7 +1061,7 @@ function buildAnalysisMessages({ text, uid, name }) {
     {"axis": "修正意愿", "score": 0-100, "evidence": ["原文引用..."], "reasoning": "判断依据..."}
   ],
   "sentenceAnalyses": [
-    {"quote": "完整原句...", "speechAct": "话语行为", "target": "命题/对象", "stance": "立场和语气", "contextRole": "这句话在上下文中的作用", "risk": "high|medium|low|positive|neutral", "reasoning": "为什么不能只按关键词判断..."}
+    {"quote": "完整原句...", "speechAct": "话语行为", "target": "命题/对象", "stance": "立场和语气", "contextRole": "这句话在上下文中的作用", "risk": "high|medium|low|positive|neutral", "axisImpacts": [{"axis": "对抗性动机|认知闭合|证据敏感|逻辑一致|合作讨论|修正意愿", "direction": "risk|positive", "strength": 0.0, "reasoning": "这句完整话如何影响该 radar 轴..."}], "reasoning": "为什么不能只按关键词判断..."}
   ],
   "overall": {"riskBand": "高风险对抗型|混合争辩型|低风险讨论型", "summary": "一句话总结..."},
   "confidence": 0.0
@@ -1138,6 +1139,18 @@ export async function analyzeCommentsWithDeepSeek(payload, options = {}) {
         stance: String(item.stance || '').trim().slice(0, 120),
         contextRole: String(item.contextRole || '').trim().slice(0, 180),
         risk: String(item.risk || 'neutral').trim().slice(0, 20),
+        axisImpacts: (Array.isArray(item.axisImpacts) ? item.axisImpacts : [])
+          .map((impact) => {
+            const strength = Number(impact.strength);
+            return {
+              axis: String(impact.axis || '').trim().slice(0, 20),
+              direction: String(impact.direction || '').trim().slice(0, 20),
+              strength: Number.isFinite(strength) ? Math.max(0, Math.min(1, strength)) : 0.5,
+              reasoning: String(impact.reasoning || '').trim().slice(0, 240),
+            };
+          })
+          .filter((impact) => impact.axis)
+          .slice(0, 3),
         reasoning: String(item.reasoning || '').trim().slice(0, 500),
       }))
       .filter((item) => item.quote);

@@ -32,6 +32,7 @@ Research-driven prototype for evaluating whether a selected Bilibili user's publ
   - Extracts Chinese internet terms, meanings, variants, and semantic families from crawled comments.
   - Writes learned terms to `server/deepseekKeywordDictionary.json` and merges them into the local analyzer.
   - Marks dictionary hits inside analyzed comments, maps each semantic family to a radar axis, and shows the vocabulary markers under the radar chart.
+  - In direct analysis mode, asks DeepSeek to analyze complete sentences and return `axisImpacts`, then shows sentence-level radar markers under the chart so each score has a traceable sentence target.
 
 ## Run Locally
 

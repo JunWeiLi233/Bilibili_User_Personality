@@ -15,6 +15,7 @@ import {
   ShieldWarning,
   WarningCircle,
 } from '@phosphor-icons/react';
+import { buildSentenceRadarMarks } from './languageUnderstanding.js';
 import './styles.css';
 
 const INVERSE_AXES = new Set(['证据敏感', '逻辑一致', '合作讨论', '修正意愿']);
@@ -991,16 +992,24 @@ function App() {
         confidence: result.confidence || 0.7,
       }));
     });
-    const sentenceErrors = (result.sentenceAnalyses || []).map((item, index) => ({
+    const sentenceAnalyses = Array.isArray(result.sentenceAnalyses) ? result.sentenceAnalyses : [];
+    const sentenceRadarMarks = buildSentenceRadarMarks(sentenceAnalyses, { confidence: result.confidence || 0.7 });
+    const sentenceMarkByQuote = new Map(sentenceRadarMarks.map((mark) => [mark.quote, mark]));
+    const sentenceErrors = sentenceAnalyses.map((item, index) => ({
       id: `deepseek-sentence-${index}`,
       source: 'DeepSeek V4 逐句分析',
       speechAct: item.speechAct || '完整句判断',
-      target: item.target || '整句语境',
+      target: sentenceMarkByQuote.get(item.quote || '')?.axis || item.target || '整句语境',
       type: item.risk === 'high' ? '高风险话语' : item.risk === 'medium' ? '中性话语' : '低风险话语',
       severity: item.risk === 'high' ? '高' : item.risk === 'medium' ? '中' : '低',
       comment: item.quote || '',
       highlight: (item.quote || '').slice(0, 40),
-      diagnosis: [item.stance, item.contextRole, item.reasoning].filter(Boolean).join('；'),
+      diagnosis: [
+        sentenceMarkByQuote.get(item.quote || '') ? `Radar: ${sentenceMarkByQuote.get(item.quote || '').axis}` : '',
+        item.stance,
+        item.contextRole,
+        item.reasoning,
+      ].filter(Boolean).join('；'),
       evidence: 'DeepSeek V4 按完整句子的命题、对象、语气、证据关系和上下文作用判断，不只按单个关键词定性。',
       confidence: result.confidence || 0.7,
     }));
@@ -1024,6 +1033,7 @@ function App() {
         mode: 'deepseek',
       },
       vocabularyMarks: [],
+      sentenceRadarMarks,
       scores,
       errors: combinedErrors.length > 0 ? combinedErrors : [{
         id: 'deepseek-empty',
@@ -1221,6 +1231,26 @@ function App() {
                       <b>{mark.term}</b>
                       <i>{mark.label} · {mark.axis}{mark.count > 1 ? ` ×${mark.count}` : ''}</i>
                     </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedUser.sentenceRadarMarks?.length > 0 && (
+              <div className="sentence-radar" aria-label="完整句 radar 标记">
+                <div className="vocabulary-radar-head">
+                  <strong>完整句 radar 标记</strong>
+                  <span>DeepSeek 按整句判断话语行为，并把每句映射到对应 radar 轴。</span>
+                </div>
+                <div className="sentence-radar-list">
+                  {selectedUser.sentenceRadarMarks.slice(0, 8).map((mark) => (
+                    <article className={`sentence-radar-item sentence-${mark.direction}`} key={mark.id}>
+                      <div className="sentence-radar-meta">
+                        <strong>{mark.axis}</strong>
+                        <span>{mark.speechAct} · {Math.round(mark.strength * 100)}%</span>
+                      </div>
+                      <p>{mark.quote}</p>
+                      <em>{mark.reasoning}</em>
+                    </article>
                   ))}
                 </div>
               </div>

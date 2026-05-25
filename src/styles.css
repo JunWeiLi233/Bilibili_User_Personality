@@ -609,6 +609,74 @@ h1 {
   background: rgba(162, 106, 45, 0.1);
 }
 
+.sentence-radar {
+  grid-column: 1 / -1;
+  padding: 16px 18px 18px;
+  border-top: 1px solid rgba(23, 23, 23, 0.12);
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.sentence-radar-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sentence-radar-item {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(23, 23, 23, 0.12);
+  background: rgba(255, 253, 247, 0.74);
+}
+
+.sentence-risk {
+  border-left: 4px solid #8a3f33;
+}
+
+.sentence-positive {
+  border-left: 4px solid #2f5d50;
+}
+
+.sentence-neutral {
+  border-left: 4px solid #756a54;
+}
+
+.sentence-radar-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sentence-radar-meta strong {
+  color: #20231f;
+  font-size: 13px;
+}
+
+.sentence-radar-meta span {
+  color: #756a54;
+  font-size: 11px;
+  text-align: right;
+}
+
+.sentence-radar-item p {
+  margin-top: 8px;
+  color: #24231f;
+  font-size: 13px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.sentence-radar-item em {
+  display: block;
+  margin-top: 7px;
+  color: #635d53;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
 .metric-strip {
   margin-top: 14px;
   border: 1px solid rgba(23, 23, 23, 0.16);
@@ -950,6 +1018,20 @@ mark {
     align-items: flex-start;
     flex-direction: column;
     gap: 3px;
+  }
+
+  .sentence-radar-list {
+    grid-template-columns: 1fr;
+  }
+
+  .sentence-radar-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sentence-radar-meta span {
+    text-align: left;
   }
 
   .metric-strip,

@@ -93,6 +93,20 @@ test('analyzeCommentsWithDeepSeek asks DeepSeek to analyze full sentence context
                         stance: '反驳但保留合作空间',
                         contextRole: '要求对方回到证据充分性',
                         risk: 'low',
+                        axisImpacts: [
+                          {
+                            axis: '证据敏感',
+                            direction: 'positive',
+                            strength: 0.8,
+                            reasoning: '这句话要求回到证据覆盖范围。',
+                          },
+                          {
+                            axis: '对抗性动机',
+                            direction: 'risk',
+                            strength: 0.2,
+                            reasoning: '有反驳语气但没有人身攻击。',
+                          },
+                        ],
                         reasoning: '完整句表达的是证据不足和反贴标签，不应按“杠”字单独判定。',
                       },
                     ],
@@ -123,9 +137,24 @@ test('analyzeCommentsWithDeepSeek asks DeepSeek to analyze full sentence context
       stance: '反驳但保留合作空间',
       contextRole: '要求对方回到证据充分性',
       risk: 'low',
+      axisImpacts: [
+        {
+          axis: '证据敏感',
+          direction: 'positive',
+          strength: 0.8,
+          reasoning: '这句话要求回到证据覆盖范围。',
+        },
+        {
+          axis: '对抗性动机',
+          direction: 'risk',
+          strength: 0.2,
+          reasoning: '有反驳语气但没有人身攻击。',
+        },
+      ],
       reasoning: '完整句表达的是证据不足和反贴标签，不应按“杠”字单独判定。',
     },
   ]);
+  assert.equal(userPrompt.includes('axisImpacts'), true);
 });
 
 test('normalizes DeepSeek keyword output into supported dictionary families', () => {
