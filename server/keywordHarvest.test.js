@@ -795,6 +795,39 @@ test('buildKeywordHarvestQueryPlan rotates repeatedly missed terms behind unatte
   assert.equal(plan[1].term, 'fresh');
 });
 
+test('buildKeywordHarvestQueryPlan rotates repeated comment misses behind unattempted terms', () => {
+  const plan = buildKeywordHarvestQueryPlan(
+    {
+      entries: [
+        { term: 'commentMissed', family: 'attack', evidenceCount: 1 },
+        { term: 'freshWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 2,
+      queryVariantsPerTerm: 2,
+      retryBeforeUnattemptedLimit: 3,
+      termAttempts: {
+        commentMissed: {
+          term: 'commentMissed',
+          evidenceAtPlanTime: 1,
+          attempts: 3,
+          successfulAttempts: 0,
+          queries: [
+            { query: 'commentMissed \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4', strategyVersion: 4, ok: true, hit: false, comments: 12 },
+            { query: 'commentMissed \u8bc4\u8bba\u533a', strategyVersion: 4, ok: true, hit: false, comments: 8 },
+            { query: 'commentMissed \u70ed\u8bc4', strategyVersion: 4, ok: true, hit: false, comments: 10 },
+          ],
+        },
+      },
+    },
+  );
+
+  assert.deepEqual(plan.map((item) => item.term), ['freshWeak', 'freshWeak']);
+});
+
 test('buildKeywordHarvestQueryPlan can prioritize source metadata gaps', () => {
   const plan = buildKeywordHarvestQueryPlan(
     {
@@ -1603,6 +1636,37 @@ test('buildDictionaryCoverageAudit rotates stale retries after unattempted harve
 
   assert.deepEqual(audit.nextActions.map((item) => item.term), ['fresh', 'missed']);
   assert.deepEqual(audit.recommendedQueries, ['fresh 评论区 梗 热评', 'missed 弹幕']);
+});
+
+test('buildDictionaryCoverageAudit rotates repeated comment misses after unattempted weak terms', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: 'commentMissed', family: 'attack', evidenceCount: 1 },
+        { term: 'freshWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      termAttempts: {
+        commentMissed: {
+          term: 'commentMissed',
+          family: 'attack',
+          evidenceAtPlanTime: 1,
+          attempts: 3,
+          successfulAttempts: 0,
+          queries: [
+            { query: 'commentMissed \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4', strategyVersion: 4, ok: true, hit: false, comments: 12 },
+            { query: 'commentMissed \u8bc4\u8bba\u533a', strategyVersion: 4, ok: true, hit: false, comments: 8 },
+            { query: 'commentMissed \u70ed\u8bc4', strategyVersion: 4, ok: true, hit: false, comments: 10 },
+          ],
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 3 },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['freshWeak', 'commentMissed']);
+  assert.equal(audit.nextActions[1].currentCommentMisses, 3);
 });
 
 test('buildDictionaryCoverageAudit defers compact metric fragments behind discourse terms', () => {

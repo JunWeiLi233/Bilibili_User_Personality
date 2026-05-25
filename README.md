@@ -142,6 +142,11 @@ To run the next audit-recommended queries first:
 ```
 
 `-PriorityQueryFile server\keywordCoverageQueries.txt` still works for plain one-query-per-line runs, but `-PriorityActionFile` is better for coverage work because it keeps the backend target-term metadata from the audit.
+Add `-IncludeDanmaku` to the same command when the current priority terms are short meme phrases that often appear in public danmaku before they appear in replies:
+
+```powershell
+.\run-bilibili-video.ps1 -PriorityActionFile server\keywordCoverageActions.json -RequireCommentEvidence -ExistingTermsOnly -IncludeDanmaku
+```
 
 To run a bounded audit-harvest loop without manually copying query files:
 
