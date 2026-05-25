@@ -208,6 +208,31 @@ function isHardMissedZeroEvidenceAttempt(attempt, threshold = 3) {
   return isRepeatedlyMissedAttempt(attempt, retryThreshold) && Math.max(0, Number(attempt?.attempts) || 0) >= retryThreshold * 2 && evidenceAtPlanTime === 0 && lastEvidenceCount === 0;
 }
 
+function isHardMissedPlanItem(planItem, termAttempts, retryBeforeUnattemptedLimit) {
+  if (!planItem?.term) return false;
+  return isHardMissedZeroEvidenceAttempt(getTermAttempt(termAttempts, planItem.term), retryBeforeUnattemptedLimit);
+}
+
+function selectHarvestPlan(candidatePlan, options = {}) {
+  const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
+  const maxHardMissedQueries = Math.max(0, Number(options.maxHardMissedQueries ?? 2) || 0);
+  const termAttempts = options.termAttempts && typeof options.termAttempts === 'object' ? options.termAttempts : {};
+  const searchedQuerySet = options.searchedQuerySet instanceof Set ? options.searchedQuerySet : new Set();
+  const skipSeen = options.skipSeen !== false;
+  const selected = [];
+  let hardMissedQueries = 0;
+  for (const item of candidatePlan) {
+    if (selected.length >= maxQueries) break;
+    const query = String(item?.query || '').trim();
+    if (!query || (skipSeen && searchedQuerySet.has(query))) continue;
+    const hardMissed = isHardMissedPlanItem(item, termAttempts, options.retryBeforeUnattemptedLimit);
+    if (hardMissed && hardMissedQueries >= maxHardMissedQueries) continue;
+    selected.push(item);
+    if (hardMissed) hardMissedQueries += 1;
+  }
+  return selected;
+}
+
 function sortEntriesForCoverage(entries) {
   return [...entries].sort((a, b) => evidenceCount(a) - evidenceCount(b) || String(a.term || '').localeCompare(String(b.term || '')));
 }
@@ -741,7 +766,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const candidatePlan = buildKeywordHarvestQueryPlan(before, {
     priorityQueries: options.priorityQueries,
     seedQueries: options.seedQueries,
-    maxQueries: skipSeen ? Math.min(10000, maxQueries + searchedQuerySet.size) : maxQueries,
+    maxQueries: skipSeen ? Math.min(10000, maxQueries + searchedQuerySet.size + 100) : Math.min(10000, maxQueries + 100),
     termsPerFamily: options.termsPerFamily,
     queryVariantsPerTerm: options.queryVariantsPerTerm,
     targetEvidence: options.targetEvidence,
@@ -750,7 +775,14 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     termAttempts,
     extraQueryTemplates: options.extraQueryTemplates,
   });
-  const plan = (skipSeen ? candidatePlan.filter((item) => !searchedQuerySet.has(item.query)) : candidatePlan).slice(0, maxQueries);
+  const plan = selectHarvestPlan(candidatePlan, {
+    maxQueries,
+    maxHardMissedQueries: options.maxHardMissedQueries,
+    termAttempts,
+    retryBeforeUnattemptedLimit: options.retryBeforeUnattemptedLimit,
+    searchedQuerySet,
+    skipSeen,
+  });
   const candidateQueries = candidatePlan.map((item) => item.query);
   const queries = plan.map((item) => item.query);
   const results = [];

@@ -1163,6 +1163,91 @@ test('harvestKeywordDictionary escalates zero-evidence repeatedly missed scans',
   }
 });
 
+test('harvestKeywordDictionary caps hard zero-evidence scans per run', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-hard-cap-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const searched = [];
+    const state = {
+      version: 1,
+      updatedAt: null,
+      searchedQueries: [],
+      scannedBvids: [],
+      termAttempts: {
+        hardA: {
+          term: 'hardA',
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 6,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [{ query: 'hardA \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+        },
+        hardB: {
+          term: 'hardB',
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 6,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [{ query: 'hardB \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+        },
+        normal: {
+          term: 'normal',
+          family: 'attack',
+          evidenceAtPlanTime: 2,
+          attempts: 1,
+          successfulAttempts: 1,
+          lastEvidenceCount: 1,
+          queries: [{ query: 'normal \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+        },
+      },
+      runs: [],
+    };
+    await writeFile(statePath, JSON.stringify(state), 'utf8');
+
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 3,
+        maxHardMissedQueries: 1,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        retryBeforeUnattemptedLimit: 3,
+        discoveryLimit: 2,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: 'hardA', family: 'attack', evidenceCount: 0 },
+            { term: 'hardB', family: 'attack', evidenceCount: 0 },
+            { term: 'normal', family: 'attack', evidenceCount: 2 },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          searched.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(result.plan.map((item) => item.term), ['hardA', 'normal', 'normal']);
+    assert.equal(searched.length, 3);
+    assert.equal(searched[0].discoveryLimit, 8);
+    assert.equal(searched[1].discoveryLimit, 2);
+    assert.equal(searched[2].discoveryLimit, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary writes ASCII-safe term attempt state for Chinese terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-ascii-state-'));
   const statePath = join(dir, 'state.json');
