@@ -84,6 +84,63 @@ test('searchVideoKeywords skips already harvested discovered videos', async () =
   assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BV1xx411c7mD']);
 });
 
+test('searchVideoKeywords prioritizes target-relevant discovered videos during existing-only coverage', async () => {
+  const scannedBvids = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u7c73\u7c89\u63a7\u8bc4 SU7',
+      discoveryMode: 'search',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u8f66\u5bb6\u519b', '\u6ca1\u6709\u8f66\u5bb6\u519b'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVgeneric1',
+          title: '\u65b0SU7\u5f00\u4e86186\u516c\u91cc \u4f18\u70b9\u7f3a\u70b9',
+          desc: '\u666e\u901a\u8bd5\u9a7e\u4f53\u9a8c',
+          sourceUrl: 'https://www.bilibili.com/video/BVgeneric1/',
+        },
+        {
+          bvid: 'BVtarget1',
+          title: '\u5c0f\u7c73SU7\u8bc4\u8bba\u533a\u8f66\u5bb6\u519b\u548c\u7c73\u7c89\u63a7\u8bc4\u4e89\u8bae',
+          desc: '\u8ba8\u8bba\u6ca1\u6709\u8f66\u5bb6\u519b\u8fd9\u79cd\u8bf4\u6cd5',
+          sourceUrl: 'https://www.bilibili.com/video/BVtarget1/',
+        },
+        {
+          bvid: 'BVgeneric2',
+          title: 'SU7 \u7eed\u822a\u6d4b\u8bd5',
+          desc: '\u80fd\u8017\u6570\u636e',
+          sourceUrl: 'https://www.bilibili.com/video/BVgeneric2/',
+        },
+      ],
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          scannedBvids.push(bvid);
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BVtarget1', 'BVgeneric1']);
+  assert.deepEqual(scannedBvids.slice(0, 2), ['BVtarget1', 'BVgeneric1']);
+});
+
 test('searchVideoKeywords can discover popular videos without a search query', async () => {
   const requestedUrls = [];
   const result = await searchVideoKeywords(

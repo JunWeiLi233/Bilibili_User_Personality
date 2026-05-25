@@ -90,6 +90,44 @@ function envFlag(value, fallback = false) {
   return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
 }
 
+function cleanSearchText(value) {
+  return String(value || '')
+    .normalize('NFKC')
+    .replace(/[^\p{Script=Han}\p{Letter}\p{Number}]+/gu, '')
+    .toLowerCase();
+}
+
+function videoSearchText(video) {
+  return cleanSearchText([video?.title, video?.desc, video?.description, video?.dynamic].filter(Boolean).join(' '));
+}
+
+function searchNeedlesForRelevance(searchQueries = [], targetExistingTerms = []) {
+  return uniqueByKey(
+    [...targetExistingTerms, ...searchQueries.flatMap((query) => parseList(query))]
+      .map(cleanSearchText)
+      .filter((item) => item.length >= 2),
+    (item) => item,
+  );
+}
+
+function relevanceScoreForVideo(video, needles = []) {
+  const text = videoSearchText(video);
+  if (!text) return 0;
+  return needles.reduce((score, needle) => {
+    if (!needle || !text.includes(needle)) return score;
+    return score + (needle.length >= 4 ? 3 : 1);
+  }, 0);
+}
+
+function sortVideosByRelevance(videos = [], searchQueries = [], targetExistingTerms = []) {
+  const needles = searchNeedlesForRelevance(searchQueries, targetExistingTerms);
+  if (needles.length === 0) return videos;
+  return videos
+    .map((video, index) => ({ video, index, score: relevanceScoreForVideo(video, needles) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((item) => item.video);
+}
+
 function buildVideoContextText(videos = []) {
   return uniqueByKey(
     videos
@@ -307,6 +345,9 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       discoveryLimit,
       (video) => video.bvid,
     );
+    if (existingTermsOnly || targetExistingTerms.length > 0) {
+      discoveredVideos = sortVideosByRelevance(discoveredVideos, searchQueries, targetExistingTerms);
+    }
     if (discoveredVideos.length === 0) {
       const videoContextText = includeVideoContext ? buildVideoContextText(discoveryContextVideos) : '';
       const trainingText = videoContextText.trim();
