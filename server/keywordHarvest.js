@@ -818,10 +818,18 @@ function diversifyCoverageActions(actions, limit) {
 
 function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
   const actions = [...actionMap.values()];
+  const providedTargetsByQuery = new Map();
+  for (const priorityItem of priorityQueries) {
+    if (!priorityItem || typeof priorityItem !== 'object' || Array.isArray(priorityItem)) continue;
+    const query = String(priorityItem.nextQuery || priorityItem.query || '').trim();
+    const term = String(priorityItem.term || '').trim();
+    if (!query || !term) continue;
+    providedTargetsByQuery.set(query, unique([...(providedTargetsByQuery.get(query) || []), term]));
+  }
   return priorityQueries.map((priorityItem) => {
     const providedAction = priorityItem && typeof priorityItem === 'object' && !Array.isArray(priorityItem) ? priorityItem : null;
     const cleanQuery = String(providedAction?.nextQuery || providedAction?.query || priorityItem || '').trim();
-    const matchedAction = actions.find(
+    const matchedActions = actions.filter(
       (action) =>
         action.nextQuery === cleanQuery ||
         (Array.isArray(action.suggestedQueries) && action.suggestedQueries.includes(cleanQuery)) ||
@@ -830,8 +838,14 @@ function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
         precisionQueriesForTerm(action.term).includes(cleanQuery) ||
         negativeFeedbackQueriesForTerm(action.term).includes(cleanQuery),
     );
+    const matchedAction = matchedActions[0] || null;
     const action = providedAction ? { ...(matchedAction || {}), ...providedAction } : matchedAction;
     if (!action) return { query: cleanQuery, source: 'priority' };
+    const targetExistingTerms = unique([
+      ...matchedActions.map((item) => item.term),
+      ...(providedTargetsByQuery.get(cleanQuery) || []),
+      action.term,
+    ]);
     return {
       query: cleanQuery,
       source: 'priority',
@@ -842,6 +856,7 @@ function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
       recommendationGroup: action.recommendationGroup,
       priorAttempts: action.attempts,
       priorSuccessfulAttempts: action.successfulAttempts,
+      ...(targetExistingTerms.length > 1 ? { targetExistingTerms } : {}),
       variantIndex: null,
       builtInVariant: true,
       previouslyTried: false,
@@ -1564,7 +1579,10 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         searchPayload.existingTermsOnly = options.existingTermsOnly;
       }
       if (options.existingTermsOnly === true && planItem.term) {
-        searchPayload.targetExistingTerms = relatedTargetExistingTerms(before, planItem, options);
+        searchPayload.targetExistingTerms = unique([
+          ...(Array.isArray(planItem.targetExistingTerms) ? planItem.targetExistingTerms : []),
+          ...relatedTargetExistingTerms(before, planItem, options),
+        ]);
       }
       if (options.requireCommentBackedEvidence === true) {
         searchPayload.includeVideoContext = false;

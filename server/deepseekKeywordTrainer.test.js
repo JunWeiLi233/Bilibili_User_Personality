@@ -1561,6 +1561,9 @@ test('trainKeywordDictionary uses DeepSeek V4 to map exact source phrases to exi
     assert.equal(result.dictionary.entries.some((entry) => entry.term === '\u65b0\u8bcd'), false);
     assert.equal(chatBodies[0].model, 'deepseek-v4-flash');
     assert.equal(chatBodies[0].reasoning_effort, 'medium');
+    const userMessage = chatBodies[0].messages.find((message) => message.role === 'user')?.content || '';
+    assert.equal(userMessage.includes('Read the full comment sentence'), true);
+    assert.equal(userMessage.includes('not just isolated keyword hits'), true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

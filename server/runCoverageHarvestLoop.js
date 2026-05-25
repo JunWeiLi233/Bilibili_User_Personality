@@ -38,6 +38,17 @@ function flagFromEnv(name, fallback = false) {
   return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
 }
 
+function priorityQueryItemsFromAudit(audit, limit) {
+  return (audit.nextActions || [])
+    .flatMap((item) => {
+      const queries = [item.nextQuery, ...(Array.isArray(item.suggestedQueries) ? item.suggestedQueries : [])]
+        .map((query) => String(query || '').trim())
+        .filter(Boolean);
+      return queries.map((query) => ({ ...item, query, nextQuery: query }));
+    })
+    .slice(0, limit);
+}
+
 async function writeJson(path, payload) {
   await mkdir(dirname(path), { recursive: true });
   const json = JSON.stringify(payload, null, 2).replace(/[\u007f-\uffff]/g, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
@@ -110,14 +121,14 @@ console.log('Coverage harvest loop');
 console.log(`Initial coverage: ${(audit.coverage.coverageRatio * 100).toFixed(2)}%, weak ${audit.coverage.weakTerms}, zero ${audit.coverage.zeroEvidenceTerms}`);
 
 for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
-  const priorityQueries = audit.recommendedQueries.slice(0, maxQueries);
+  const priorityQueries = priorityQueryItemsFromAudit(audit, maxQueries);
   if (priorityQueries.length === 0) {
     stopReason = 'no_recommended_queries';
     break;
   }
   console.log(`\nCycle ${cycle}/${maxCycles}`);
   console.log(`Priority queries: ${priorityQueries.length}`);
-  for (const query of priorityQueries.slice(0, 8)) console.log(`- ${query}`);
+  for (const item of priorityQueries.slice(0, 8)) console.log(`- ${item.query}`);
 
   const harvest = await harvestKeywordDictionaryRounds({
     priorityQueries,

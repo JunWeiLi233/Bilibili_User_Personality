@@ -4406,6 +4406,53 @@ test('harvestKeywordDictionary keeps target terms for feedback priority queries'
   }
 });
 
+test('harvestKeywordDictionary carries duplicate priority action targets into one query', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-duplicate-priority-targets-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        priorityQueries: [
+          { term: 'alphaTerm', family: 'attack', nextQuery: 'shared query 评论区', evidenceCount: 1 },
+          { term: 'betaTerm', family: 'evasion', nextQuery: 'shared query 评论区', evidenceCount: 1 },
+        ],
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: 'alphaTerm', family: 'attack', evidenceCount: 1 },
+            { term: 'betaTerm', family: 'evasion', evidenceCount: 1 },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BV1111111111' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0].searchQueries[0], 'shared query 评论区');
+    assert.deepEqual(new Set(payloads[0].targetExistingTerms), new Set(['alphaTerm', 'betaTerm']));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary targets context-only source gaps during existing-only refresh', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-context-source-gap-target-'));
   const statePath = join(dir, 'state.json');

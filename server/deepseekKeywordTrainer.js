@@ -696,8 +696,9 @@ function buildKeywordMessages({ text, uid }) {
 1. term 必须是发言样本中连续出现的原文片段，或候选表达中的一项。
 2. 禁止输出类别词或普通说明词，例如：攻击、规避、证据、关键词、普通名词。
 3. 优先输出 2 到 12 字的中文互联网表达。
-4. 如果候选表达不为“无”，必须从候选或样本原文中选择 1 到 8 个最有语用价值的关键词；只有候选表达为“无”且样本没有网络表达时才输出 {"keywords":[]}。
-5. 输出 JSON，结构必须是：
+4. Read the full comment sentence and its local context before deciding meaning; do not classify by isolated keyword hits, homophones, or meme words alone.
+5. 如果候选表达不为“无”，必须从候选或样本原文中选择 1 到 8 个最有语用价值的关键词；只有候选表达为“无”且样本没有网络表达时才输出 {"keywords":[]}。
+6. 输出 JSON，结构必须是：
 {"keywords":[{"term":"词或短语","family":"attack|absolutes|evidence|evasion|cooperation|correction","meaning":"中文含义和语用功能","variants":["变体"],"risk":"high|medium|positive|neutral","confidence":0.0}]}
 
 分类规则：
@@ -741,9 +742,11 @@ function buildExistingEvidenceMessages(dictionary, { text, uid }) {
 Rules:
 1. term must exactly equal one term from EXISTING_TERMS.
 2. evidence must be an exact contiguous substring from SOURCE_TEXT.
-3. Do not output a term if you cannot quote exact source evidence.
-4. Do not output new terms, variants, explanations, or categories outside the existing dictionary.
-5. Output JSON only: {"matches":[{"term":"existing term","evidence":"exact source substring","confidence":0.0}]}
+3. Read the full comment sentence and nearby context before deciding meaning; decide by semantic function, not just isolated keyword hits, spelling, or homophones.
+4. Do not output a term if the full sentence does not semantically support the dictionary meaning, even when the term text appears.
+5. Do not output a term if you cannot quote exact source evidence.
+6. Do not output new terms, variants, explanations, or categories outside the existing dictionary.
+7. Output JSON only: {"matches":[{"term":"existing term","evidence":"exact source substring","confidence":0.0}]}
 
 EXISTING_TERMS:
 ${JSON.stringify(candidates)}
