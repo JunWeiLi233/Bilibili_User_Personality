@@ -2,22 +2,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { readKeywordDictionary } from './deepseekKeywordTrainer.js';
+import { buildCoverageRuntimeOptions } from './coverageCliOptions.js';
 import { buildDictionaryCoverageAudit, DEFAULT_HARVEST_STATE_PATH, readKeywordHarvestState } from './keywordHarvest.js';
-
-function positiveIntFromEnv(name, fallback) {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
-}
-
-function nonNegativeIntFromEnv(name, fallback) {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
-}
-
-function numberFromEnv(name, fallback) {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) ? value : fallback;
-}
 
 async function writeJson(path, payload) {
   await mkdir(dirname(path), { recursive: true });
@@ -39,18 +25,17 @@ const statePath = process.env.BILIBILI_HARVEST_STATE_PATH || DEFAULT_HARVEST_STA
 const reportPath = process.env.BILIBILI_COVERAGE_AUDIT_REPORT_PATH || join(process.cwd(), 'server', 'keywordCoverageAudit.json');
 const queryFilePath = process.env.BILIBILI_COVERAGE_QUERY_FILE_PATH || join(process.cwd(), 'server', 'keywordCoverageQueries.txt');
 const actionFilePath = process.env.BILIBILI_COVERAGE_ACTION_FILE_PATH || join(process.cwd(), 'server', 'keywordCoverageActions.json');
-const targetEvidence = positiveIntFromEnv('BILIBILI_HARVEST_TARGET_EVIDENCE', 3);
-const maxActions = positiveIntFromEnv('BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS', 20);
-const minCoverageRatio = numberFromEnv('BILIBILI_COVERAGE_AUDIT_MIN_RATIO', 1);
-const requireComplete = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMPLETE !== '0';
-const requireSourceBackedEvidence =
-  process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES === '1' ||
-  process.env.BILIBILI_HARVEST_REQUIRE_SOURCES === '1';
-const requireCommentBackedEvidence = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS === '1';
-const strict = process.env.BILIBILI_COVERAGE_AUDIT_STRICT === '1';
+const runtimeOptions = buildCoverageRuntimeOptions({ maxActionsFallback: 20 });
+const targetEvidence = runtimeOptions.targetEvidence;
+const maxActions = runtimeOptions.maxActions;
+const minCoverageRatio = runtimeOptions.minCoverageRatio;
+const requireComplete = runtimeOptions.requireComplete;
+const requireSourceBackedEvidence = runtimeOptions.requireSourceBackedEvidence;
+const requireCommentBackedEvidence = runtimeOptions.requireCommentBackedEvidence;
+const strict = runtimeOptions.strict;
 const extraQueryTemplates = process.env.BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES || '';
 const exhaustedSuggestionTemplates = process.env.BILIBILI_HARVEST_EXHAUSTED_SUGGESTION_TEMPLATES || '';
-const retryBeforeUnattemptedLimit = nonNegativeIntFromEnv('BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT', 3);
+const retryBeforeUnattemptedLimit = runtimeOptions.retryBeforeUnattemptedLimit;
 
 const dictionary = await readKeywordDictionary(dictionaryPath ? { dictionaryPath } : {});
 const state = await readKeywordHarvestState(statePath);

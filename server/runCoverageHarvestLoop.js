@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { readKeywordDictionary } from './deepseekKeywordTrainer.js';
 import { coverageDelta, hasCoverageGateProgress } from './coverageProgress.js';
+import { buildCoverageRuntimeOptions } from './coverageCliOptions.js';
 import {
   buildDictionaryCoverageAudit,
   DEFAULT_HARVEST_STATE_PATH,
@@ -25,11 +26,6 @@ function positiveIntFromEnv(name, fallback, max = Number.MAX_SAFE_INTEGER) {
 function nonNegativeIntFromEnv(name, fallback, max = Number.MAX_SAFE_INTEGER) {
   const value = Number(process.env[name]);
   return Number.isFinite(value) && value >= 0 ? Math.min(Math.floor(value), max) : fallback;
-}
-
-function numberFromEnv(name, fallback) {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) ? value : fallback;
 }
 
 function flagFromEnv(name, fallback = false) {
@@ -67,14 +63,13 @@ const reportPath = process.env.BILIBILI_COVERAGE_LOOP_REPORT_PATH || join(proces
 const maxCycles = nonNegativeIntFromEnv('BILIBILI_COVERAGE_LOOP_MAX_CYCLES', 3, 50);
 const roundsPerCycle = positiveIntFromEnv('BILIBILI_COVERAGE_LOOP_ROUNDS_PER_CYCLE', positiveIntFromEnv('BILIBILI_HARVEST_ROUNDS', 1), 20);
 const maxQueries = positiveIntFromEnv('BILIBILI_HARVEST_MAX_QUERIES', 12, 100);
-const targetEvidence = positiveIntFromEnv('BILIBILI_HARVEST_TARGET_EVIDENCE', 3, 1000);
-const maxActions = positiveIntFromEnv('BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS', maxQueries, 1000);
-const minCoverageRatio = numberFromEnv('BILIBILI_COVERAGE_AUDIT_MIN_RATIO', 1);
-const requireComplete = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMPLETE !== '0';
-const requireSourceBackedEvidence =
-  process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_SOURCES === '1' ||
-  process.env.BILIBILI_HARVEST_REQUIRE_SOURCES === '1';
-const requireCommentBackedEvidence = process.env.BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS === '1';
+const runtimeOptions = buildCoverageRuntimeOptions({ maxActionsFallback: maxQueries });
+const targetEvidence = runtimeOptions.targetEvidence;
+const maxActions = runtimeOptions.maxActions;
+const minCoverageRatio = runtimeOptions.minCoverageRatio;
+const requireComplete = runtimeOptions.requireComplete;
+const requireSourceBackedEvidence = runtimeOptions.requireSourceBackedEvidence;
+const requireCommentBackedEvidence = runtimeOptions.requireCommentBackedEvidence;
 const existingTermsOnly = process.env.BILIBILI_HARVEST_EXISTING_TERMS_ONLY === '1';
 const coverageMode = String(process.env.BILIBILI_HARVEST_COVERAGE_MODE || 'all-weak').trim().toLowerCase();
 const seedQueries = parseList(process.env.BILIBILI_VIDEO_SEARCH_QUERIES || process.env.BILIBILI_VIDEO_SEARCH_QUERY);
@@ -91,13 +86,13 @@ const includeDanmaku = flagFromEnv('BILIBILI_HARVEST_INCLUDE_DANMAKU', false);
 const pages = positiveIntFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2, 20);
 const queryVariantsPerTerm = positiveIntFromEnv('BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM', 2, 20);
 const termsPerFamily = positiveIntFromEnv('BILIBILI_HARVEST_TERMS_PER_FAMILY', 4, 20);
-const retryBeforeUnattemptedLimit = nonNegativeIntFromEnv('BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT', 3, 20);
+const retryBeforeUnattemptedLimit = runtimeOptions.retryBeforeUnattemptedLimit;
 const maxHardMissedQueries = nonNegativeIntFromEnv('BILIBILI_HARVEST_MAX_HARD_MISSED_QUERIES', Math.max(2, Math.ceil(maxQueries / 2)), 100);
 const staleMissedDiscoveryLimit = nonNegativeIntFromEnv('BILIBILI_HARVEST_STALE_MISSED_DISCOVERY_LIMIT', 4, 20);
 const staleMissedPages = nonNegativeIntFromEnv('BILIBILI_HARVEST_STALE_MISSED_COMMENT_PAGES', 3, 5);
 const skipSeen = process.env.BILIBILI_HARVEST_SKIP_SEEN !== '0';
 const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
-const strict = process.env.BILIBILI_COVERAGE_LOOP_STRICT === '1';
+const strict = runtimeOptions.strict;
 
 const auditOptions = {
   dictionaryPath,
