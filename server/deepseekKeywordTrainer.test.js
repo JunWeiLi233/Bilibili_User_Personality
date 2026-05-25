@@ -771,6 +771,47 @@ test('findDictionaryEntriesWithTextEvidence maps short missed phrase aliases bac
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-short-miss-alias'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps long missed phrase anchors back to weak terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u4e0d\u662f\u4eba\u4e86\u5457', family: 'attack', meaning: 'long rhetorical attack variant' },
+        { term: '\u6211\u4e0d\u674e\u59d0', family: 'attack', meaning: 'homophone not understand variant' },
+        { term: '\u4e0d\u7edd\u5bf9\u4f46\u97e9\u56fd\u4e0d\u5c11', family: 'cooperation', meaning: 'hedged probability judgment' },
+        { term: '\u8fb9\u70b8\u8fb9\u79ef\u5fb7', family: 'attack', meaning: 'nuclear bombing sarcasm' },
+        { term: '\u5dee\u8bc4\u591a\u7684\u4e1c\u897f\u4e00\u5b9a\u4e0d\u597d', family: 'absolutes', meaning: 'absolute review judgment' },
+        { term: '\u8f66\u8f71\u8f98', family: 'evasion', meaning: 'repetitive talk' },
+        { term: '\u5b58\u7591\u7f57\u9a6c\u4eba', family: 'correction', meaning: 'historical identity caveat' },
+      ],
+    },
+    [
+      '\u5176\u4ed6\u4eba\u4e0d\u662f\u4eba\u4e86\u5457',
+      '\u6211\u4e0d\u7406\u89e3\u8fd9\u79cd\u8bf4\u6cd5',
+      '\u8fd9\u4e8b\u4e0d\u7edd\u5bf9\u4f46\u4e0d\u5c11',
+      '\u6c22\u5f39\u8fb9\u70b8\u8fb9\u79ef\u5fb7',
+      '\u5dee\u8bc4\u591a\u5c31\u4e00\u5b9a\u4e0d\u597d\u5417',
+      '\u522b\u8f66\u8f71\u8f98\u8bdd\u4e86',
+      '\u7f57\u9a6c\u4eba\u5b58\u7591',
+    ].join('\n'),
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-long-miss-alias/',
+      uid: 'BV-long-miss-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u4e0d\u662f\u4eba\u4e86\u5457',
+    '\u6211\u4e0d\u674e\u59d0',
+    '\u4e0d\u7edd\u5bf9\u4f46\u97e9\u56fd\u4e0d\u5c11',
+    '\u8fb9\u70b8\u8fb9\u79ef\u5fb7',
+    '\u5dee\u8bc4\u591a\u7684\u4e1c\u897f\u4e00\u5b9a\u4e0d\u597d',
+    '\u8f66\u8f71\u8f98',
+    '\u5b58\u7591\u7f57\u9a6c\u4eba',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceCount >= 1), true);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-long-miss-alias'), true);
+});
+
 test('findDictionaryEntriesWithTextEvidence maps persistent zero-evidence attack aliases back to dictionary terms', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

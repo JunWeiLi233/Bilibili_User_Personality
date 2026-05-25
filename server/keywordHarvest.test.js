@@ -334,6 +334,33 @@ test('buildKeywordHarvestQueries starts with comment variants for short missed p
   ]);
 });
 
+test('buildKeywordHarvestQueries starts with anchored variants for long missed phrases', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u4e0d\u662f\u4eba\u4e86\u5457', family: 'attack', evidenceCount: 1 },
+        { term: '\u6211\u4e0d\u674e\u59d0', family: 'attack', evidenceCount: 1 },
+        { term: '\u8fb9\u70b8\u8fb9\u79ef\u5fb7', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 6,
+      queryVariantsPerTerm: 2,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u6c22\u5f39 \u8fb9\u70b8\u8fb9\u79ef\u5fb7 \u8bc4\u8bba',
+    '\u6838\u7206 \u79ef\u5fb7 \u70ed\u8bc4',
+    '\u5176\u4ed6\u4eba\u4e0d\u662f\u4eba\u4e86\u5457 \u8bc4\u8bba',
+    '\u4e0d\u662f\u4eba\u4e86\u5457 \u5f39\u5e55',
+    '\u6211\u4e0d\u7406\u89e3 \u8bc4\u8bba',
+    '\u6211\u4e0d\u674e\u59d0 \u5f39\u5e55',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses topic contexts for hard zero-evidence terms', () => {
   const cases = [
     {
