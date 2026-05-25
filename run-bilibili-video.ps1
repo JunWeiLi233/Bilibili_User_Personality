@@ -88,7 +88,11 @@ $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
 $env:BILIBILI_HARVEST_MAX_QUERIES = [string]$MaxQueries
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY = [string]$TermsPerFamily
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM = [string]$QueryVariantsPerTerm
-$env:BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT = [string]$RetryBeforeUnattemptedLimit
+$effectiveRetryBeforeUnattemptedLimit = $RetryBeforeUnattemptedLimit
+if ($RequireCommentEvidence -and -not $PSBoundParameters.ContainsKey("RetryBeforeUnattemptedLimit")) {
+  $effectiveRetryBeforeUnattemptedLimit = 1
+}
+$env:BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT = [string]$effectiveRetryBeforeUnattemptedLimit
 $env:BILIBILI_HARVEST_STALE_MISSED_DISCOVERY_LIMIT = [string]$StaleMissedDiscoveryLimit
 $env:BILIBILI_HARVEST_STALE_MISSED_COMMENT_PAGES = [string]$StaleMissedCommentPages
 $env:BILIBILI_HARVEST_TARGET_EVIDENCE = [string]$TargetEvidence
@@ -148,7 +152,7 @@ Write-Host "Comment pages per video: $CommentPages"
 Write-Host "Max harvest queries: $MaxQueries"
 Write-Host "Dictionary terms per family: $TermsPerFamily"
 Write-Host "Query variants per term: $QueryVariantsPerTerm"
-Write-Host "Retry-before-unattempted limit: $RetryBeforeUnattemptedLimit"
+Write-Host "Retry-before-unattempted limit: $effectiveRetryBeforeUnattemptedLimit"
 Write-Host "Stale missed discovery limit: $StaleMissedDiscoveryLimit"
 Write-Host "Stale missed comment pages: $StaleMissedCommentPages"
 Write-Host "Extra query templates: $($ExtraQueryTemplate.Count)"
