@@ -1150,6 +1150,18 @@ test('buildKeywordHarvestQueries avoids noisy literal searches for obfuscated an
       expectedAliasQuery: '\u8fd9\u6d3b\u5173\u4e86\u5427\u6ca1\u610f\u601d \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
       noisyFragment: '\u5047\u5531',
     },
+    {
+      term: '\u5e7f\u897f\u4e0d\u5168\u662f\u7cbe\u795e\u5c0f\u4f19',
+      family: 'cooperation',
+      expectedAliasQuery: '\u5e7f\u897f\u7cbe\u795e\u5c0f\u4f19\u523b\u677f\u5370\u8c61 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      noisyFragment: '\u5e7f\u897f\u75ab\u60c5',
+    },
+    {
+      term: '\u8d35\u5bbe\u5f52\u96f6',
+      family: 'attack',
+      expectedAliasQuery: '\u798f\u888b\u4e00\u505c\u8d35\u5bbe\u5f52\u96f6 \u76f4\u64ad \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      noisyFragment: 'Bitcoin',
+    },
   ];
 
   for (const item of cases) {

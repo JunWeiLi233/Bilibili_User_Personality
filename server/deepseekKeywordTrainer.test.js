@@ -1964,6 +1964,8 @@ test('findDictionaryEntriesWithTextEvidence maps obfuscated and corrected wordin
         { term: '\u62d0\u53cb\u5546', family: 'evasion', meaning: 'drag competitor comparison into the topic' },
         { term: '\u5173\u4e86\u5427', family: 'attack', meaning: 'dismiss content as worth shutting down' },
         { term: '\u5173\u4e86\u5427\u6ca1\u610f\u601d', family: 'attack', meaning: 'dismiss content as boring and should close' },
+        { term: '\u5e7f\u897f\u4e0d\u5168\u662f\u7cbe\u795e\u5c0f\u4f19', family: 'cooperation', meaning: 'push back on Guangxi stereotype' },
+        { term: '\u8d35\u5bbe\u5f52\u96f6', family: 'attack', meaning: 'mock streamer viewer count dropping to zero' },
       ],
     },
     [
@@ -1977,6 +1979,8 @@ test('findDictionaryEntriesWithTextEvidence maps obfuscated and corrected wordin
       '\u62ffDNF\u6765\u62d0\u90a3\u80fd\u4e00\u6837\u5417\uff0c\u53cb\u5546\u56f4\u730e\u53c8\u6765\u4e86',
       '\u8fd9\u6d3b\u5173\u4e86\u5427\uff0c\u771f\u6ca1\u5fc5\u8981\u7ee7\u7eed',
       '\u8fd9\u6d3b\u5173\u4e86\u5427\u6ca1\u610f\u601d\uff0c\u8bc4\u8bba\u533a\u90fd\u770b\u817b\u4e86',
+      '\u522b\u523b\u677f\u5370\u8c61\u4e86\uff0c\u5e7f\u897f\u4eba\u4e5f\u4e0d\u5168\u662f\u7cbe\u795e\u5c0f\u4f19',
+      '\u798f\u888b\u4e00\u505c\u8d35\u5bbe\u5f52\u96f6\uff0c\u76f4\u64ad\u95f4\u7acb\u523b\u6ca1\u4eba\u4e86',
     ].join('\n'),
     {
       source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-obfuscated-correction/',
@@ -1995,6 +1999,8 @@ test('findDictionaryEntriesWithTextEvidence maps obfuscated and corrected wordin
     '\u62d0\u53cb\u5546',
     '\u5173\u4e86\u5427',
     '\u5173\u4e86\u5427\u6ca1\u610f\u601d',
+    '\u5e7f\u897f\u4e0d\u5168\u662f\u7cbe\u795e\u5c0f\u4f19',
+    '\u8d35\u5bbe\u5f52\u96f6',
   ]);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-obfuscated-correction'), true);
 });
