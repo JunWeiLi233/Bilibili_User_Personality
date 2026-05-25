@@ -2149,6 +2149,68 @@ test('harvestKeywordDictionary persists per-query collection diagnostics', async
   }
 });
 
+test('harvestKeywordDictionary preserves target diagnostics for failed discovery attempts', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-failed-query-diagnostics-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        discoveryLimit: 1,
+        pages: 1,
+        existingTermsOnly: true,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            {
+              term: '\u76ee\u6807\u5931\u8d25\u8bcd',
+              family: 'attack',
+              evidenceCount: 1,
+              meaning: 'same failed target',
+            },
+            {
+              term: '\u76ee\u6807\u5931\u8d25\u8bcd\u5427',
+              family: 'attack',
+              evidenceCount: 1,
+              meaning: 'same failed target',
+            },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => ({
+          ok: false,
+          error: 'No Bilibili videos were discovered from the backend discovery mode.',
+          warnings: [],
+          videos: [],
+          comments: [],
+          entries: [],
+          collectionDiagnostics: {
+            discoveredVideos: 0,
+            discoveryContextVideos: 0,
+            scannedVideos: 0,
+            commentsCollected: 0,
+            trainingTextChars: 0,
+            targetExistingTerms: payload.targetExistingTerms,
+            acceptedTerms: [],
+            evidenceRejected: 0,
+            sampleVideos: [],
+          },
+        }),
+      },
+    );
+
+    assert.equal(result.queryDiagnostics.length, 1);
+    assert.deepEqual(new Set(result.queryDiagnostics[0].targetExistingTerms), new Set(['\u76ee\u6807\u5931\u8d25\u8bcd', '\u76ee\u6807\u5931\u8d25\u8bcd\u5427']));
+    const persisted = JSON.parse(await readFile(statePath, 'utf8'));
+    const attempts = Object.values(persisted.termAttempts);
+    assert.equal(attempts.some((attempt) => attempt.term === '\u76ee\u6807\u5931\u8d25\u8bcd\u5427'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary uses untried query variants after prior missed attempts', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-retry-variant-'));
   const statePath = join(dir, 'state.json');

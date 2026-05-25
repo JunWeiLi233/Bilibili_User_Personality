@@ -490,6 +490,28 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
         ok: false,
         error: discoveryWarnings[0] || 'No Bilibili videos were discovered from the backend discovery mode.',
         warnings: discoveryWarnings,
+        discoveredVideos,
+        discoveryContextVideos,
+        searchQueries,
+        controversyQueries: discoveryMode === 'controversial' ? controversyQueries : [],
+        controversialPopularQueries: discoveryMode === 'controversial' ? controversyQueries.slice(0, controversialPopularQueryLimit) : [],
+        controversialPopularSearchOrder: discoveryMode === 'controversial' ? controversialPopularSearchOrder : null,
+        discoveryMode,
+        videos: [],
+        comments: [],
+        commentText: '',
+        videoContextText: '',
+        entries: [],
+        keywordTraining: null,
+        dictionary: null,
+        collectionDiagnostics: buildCollectionDiagnostics({
+          discoveredVideos,
+          discoveryContextVideos,
+          videos: [],
+          comments: [],
+          trainingText: '',
+          targetExistingTerms,
+        }),
       };
     }
   }
@@ -498,16 +520,50 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const warnings = [...discoveryWarnings];
   const scanTargets = videoLinks.length > 0 ? videoLinks : discoveredVideos.map((video) => video.bvid || video.sourceUrl);
   for (const videoLink of scanTargets) {
-    const scan = await fetchRepliesForVideo(videoLink, { pages: payload.pages }, deps);
-    if (scan.ok) {
-      scans.push(scan);
-    } else {
-      warnings.push(`${videoLink}: ${scan.error}`);
+    try {
+      const scan = await fetchRepliesForVideo(videoLink, { pages: payload.pages }, deps);
+      if (scan.ok) {
+        scans.push(scan);
+      } else {
+        warnings.push(`${videoLink}: ${scan.error}`);
+      }
+    } catch (error) {
+      warnings.push(`${videoLink}: ${error.message}`);
     }
   }
 
   if (scans.length === 0) {
-    return { ok: false, error: warnings[0] || 'No valid Bilibili videos were found.', warnings };
+    return {
+      ok: false,
+      error: warnings[0] || 'No valid Bilibili videos were found.',
+      warnings,
+      discoveredVideos,
+      discoveryContextVideos,
+      searchQueries: videoLinks.length === 0 ? searchQueries : [],
+      controversyQueries: videoLinks.length === 0 && discoveryMode === 'controversial' ? controversyQueries : [],
+      controversialPopularQueries:
+        videoLinks.length === 0 && discoveryMode === 'controversial'
+          ? controversyQueries.slice(0, controversialPopularQueryLimit)
+          : [],
+      controversialPopularSearchOrder:
+        videoLinks.length === 0 && discoveryMode === 'controversial' ? controversialPopularSearchOrder : null,
+      discoveryMode: videoLinks.length === 0 ? discoveryMode : 'explicit',
+      videos: [],
+      comments: [],
+      commentText: '',
+      videoContextText: '',
+      entries: [],
+      keywordTraining: null,
+      dictionary: null,
+      collectionDiagnostics: buildCollectionDiagnostics({
+        discoveredVideos,
+        discoveryContextVideos,
+        videos: [],
+        comments: [],
+        trainingText: '',
+        targetExistingTerms,
+      }),
+    };
   }
 
   const comments = uniqueByKey(

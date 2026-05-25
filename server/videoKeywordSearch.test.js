@@ -46,6 +46,55 @@ test('searchVideoKeywords rejects an explicitly invalid video link', async () =>
   assert.match(result.error, /BV/);
 });
 
+test('searchVideoKeywords reports target diagnostics when no backend videos are discovered', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86 \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86'],
+    },
+    {
+      discoverVideosByKeyword: async () => [],
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.collectionDiagnostics.targetExistingTerms, ['\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86']);
+  assert.equal(result.collectionDiagnostics.discoveredVideos, 0);
+  assert.equal(result.collectionDiagnostics.scannedVideos, 0);
+  assert.deepEqual(result.searchQueries, ['\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86 \u70ed\u8bc4']);
+});
+
+test('searchVideoKeywords reports target diagnostics when discovered video scans fail', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u75c5\u5927\u90ce \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u75c5\u5927\u90ce'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVfailscan01',
+          title: '\u75c5\u5927\u90ce \u70ed\u8bc4\u590d\u76d8',
+          sourceUrl: 'https://www.bilibili.com/video/BVfailscan01/',
+        },
+      ],
+      fetchJson: async () => ({ code: -404, message: 'not found' }),
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.collectionDiagnostics.targetExistingTerms, ['\u75c5\u5927\u90ce']);
+  assert.equal(result.collectionDiagnostics.discoveredVideos, 1);
+  assert.equal(result.collectionDiagnostics.scannedVideos, 0);
+  assert.equal(result.warnings.length > 0, true);
+});
+
 test('searchVideoKeywords skips already harvested discovered videos', async () => {
   const result = await searchVideoKeywords(
     {
