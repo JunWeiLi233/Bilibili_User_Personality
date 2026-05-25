@@ -94,6 +94,44 @@ test('normalizes away suffix-only Bilibili emote variants', () => {
   assert.deepEqual(entries.map((entry) => entry.term), ['Catconfuse']);
 });
 
+test('normalizes Bilibili emote wrapper artifacts to the spoken keyword', () => {
+  const entries = normalizeKeywordEntries([
+    { term: '\u70ed\u8bcd\u7cfb\u5217_\u77e5\u8bc6\u76f2\u533a', family: 'evasion', meaning: 'Bilibili hot-word emote wrapper' },
+    { term: '\u70ed\u8bcd\u7cfb\u5217\u5999\u554a', family: 'cooperation', meaning: 'Bilibili hot-word emote wrapper' },
+    { term: '\u61c2\u4e86\u5427doge', family: 'evasion', meaning: 'comment phrase with a trailing doge emote' },
+    { term: 'doge', family: 'cooperation', meaning: 'standalone Bilibili emote shorthand' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u77e5\u8bc6\u76f2\u533a', '\u5999\u554a', '\u61c2\u4e86\u5427', 'doge']);
+});
+
+test('mergeEntriesIntoDictionary compacts persisted Bilibili emote wrapper artifacts', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-emote-wrapper-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          { term: '\u70ed\u8bcd\u7cfb\u5217\u77e5\u8bc6\u76f2\u533a', family: 'evasion', meaning: 'Bilibili hot-word emote wrapper', evidenceCount: 1 },
+          { term: '\u77e5\u8bc6\u76f2\u533a', family: 'evasion', meaning: 'spoken phrase from the same emote', evidenceCount: 1 },
+          { term: '\u61c2\u4e86\u5427doge', family: 'evasion', meaning: 'comment phrase with trailing doge emote', evidenceCount: 1 },
+          { term: '\u61c2\u4e86\u5427', family: 'evasion', meaning: 'spoken phrase without the emote suffix', evidenceCount: 1 },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['\u61c2\u4e86\u5427', '\u77e5\u8bc6\u76f2\u533a']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('normalizes away standalone URL host fragments from keyword terms', () => {
   const entries = normalizeKeywordEntries([
     { term: 'mps', family: 'evidence', meaning: 'domain fragment copied from cyberpolice.mps.gov.cn URL' },

@@ -160,6 +160,14 @@ function cleanTerm(term) {
     .trim();
 }
 
+function cleanKeywordTerm(term) {
+  let cleaned = cleanTerm(term).replace(/^热词系列/u, '').trim();
+  if (/[\p{Script=Han}]/u.test(cleaned) && /doge$/i.test(cleaned) && cleaned.length > 'doge'.length + 1) {
+    cleaned = cleaned.replace(/doge$/i, '');
+  }
+  return cleaned;
+}
+
 function parseTargetTerms(...values) {
   const terms = [];
   for (const value of values) {
@@ -169,14 +177,14 @@ function parseTargetTerms(...values) {
       terms.push(...String(value).split(/[\r\n,;|]+/));
     }
   }
-  return new Set(terms.map(cleanTerm).filter(Boolean));
+  return new Set(terms.map(cleanKeywordTerm).filter(Boolean));
 }
 
 function dictionaryScopedToTerms(dictionary, targetTerms) {
   if (!targetTerms || targetTerms.size === 0) return dictionary;
   return {
     ...dictionary,
-    entries: (Array.isArray(dictionary?.entries) ? dictionary.entries : []).filter((entry) => targetTerms.has(cleanTerm(entry?.term))),
+    entries: (Array.isArray(dictionary?.entries) ? dictionary.entries : []).filter((entry) => targetTerms.has(cleanKeywordTerm(entry?.term))),
   };
 }
 
@@ -366,7 +374,7 @@ export function normalizeKeywordEntries(rawEntries = []) {
   for (const item of rawEntries) {
     const family = normalizeFamily(item.family);
     const variants = Array.isArray(item.variants) ? item.variants : [];
-    const cleanedTerms = unique([item.term, ...variants].map(cleanTerm)).filter((term) => term.length >= 2 && term.length <= 12);
+    const cleanedTerms = unique([item.term, ...variants].map(cleanKeywordTerm)).filter((term) => term.length >= 2 && term.length <= 12);
     const terms = cleanedTerms.filter((term) => !cleanedTerms.some((candidate) => candidate !== term && isAsciiSuffixFragmentOf(term, candidate)));
     const meaning = String(item.meaning || item.reason || '').trim();
     if (!meaning || /中文含义|语用功能|^含义$|^解释$/.test(meaning)) continue;
@@ -823,7 +831,7 @@ async function generateExistingDictionaryEvidenceEntries(dictionary, payload, co
     const accepted = [];
     let rejected = 0;
     for (const match of rawMatches) {
-      const term = cleanTerm(match?.term);
+      const term = cleanKeywordTerm(match?.term);
       const evidence = String(match?.evidence || match?.evidencePhrase || match?.sample || '').trim();
       const entry = entryMap.get(term);
       const evidenceEntry = entry ? evidenceFromExactSourcePhrase(entry, evidence, payload.text, { source: payload.source, uid: payload.uid }) : null;
