@@ -181,6 +181,33 @@ test('findDictionaryEntriesWithTextEvidence matches bidirectional short-form ali
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-short-alias'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps harvest aliases back to hard zero-evidence terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u7cbe\u795e\u5916\u56fd\u4eba', family: 'attack', meaning: 'long form political insult' },
+        { term: '\u524d\u9762\u8bf4\u91cd\u4e86', family: 'correction', meaning: 'self correction phrase' },
+        { term: '\u95ee\u8001\u9a6c\u672c\u4eba', family: 'evasion', meaning: 'ask the principal actor' },
+        { term: '\u53ef\u4ee5\u8d34', family: 'cooperation', meaning: 'request to paste evidence' },
+      ],
+    },
+    '\u53c8\u5728\u8bf4\u7cbe\u5916\u4e86\n\u6211\u8bf4\u91cd\u4e86\uff0c\u5148\u6536\u56de\n\u8fd9\u4e2a\u4f60\u5f97\u53bb\u95ee\u672c\u4eba\n\u53ef\u4ee5\u53d1\u51fa\u6765\u770b\u770b',
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-hard-alias/',
+      uid: 'BV-hard-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u7cbe\u795e\u5916\u56fd\u4eba',
+    '\u524d\u9762\u8bf4\u91cd\u4e86',
+    '\u95ee\u8001\u9a6c\u672c\u4eba',
+    '\u53ef\u4ee5\u8d34',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceCount === 1), true);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-hard-alias'), true);
+});
+
 test('trainKeywordDictionary updates evidence for existing terms found in crawled comments', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-train-existing-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');
