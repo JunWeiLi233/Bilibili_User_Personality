@@ -453,6 +453,16 @@ test('buildKeywordHarvestQueries uses follow-up weak aliases before exact stale 
       family: 'cooperation',
       expectedAliasQuery: '\u5e72\u8d27 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
+    {
+      term: '\u5965\u5229\u7ed9',
+      family: 'attack',
+      expectedAliasQuery: '\u5965\u529b\u7ed9 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u767e\u53d8\u9a6c\u4e01',
+      family: 'cooperation',
+      expectedAliasQuery: '\u9a6c\u4e01 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
   ];
 
   for (const item of cases) {

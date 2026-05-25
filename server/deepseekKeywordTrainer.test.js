@@ -1526,6 +1526,8 @@ test('findDictionaryEntriesWithTextEvidence maps follow-up weak variants back to
         { term: '\u5e72\u5d29\u963f', family: 'attack', meaning: 'platform attack shorthand' },
         { term: '\u5e72\u8d27', family: 'cooperation', meaning: 'substantive content praise' },
         { term: '\u5e72\u8d27up', family: 'cooperation', meaning: 'substantive creator praise' },
+        { term: '\u5965\u5229\u7ed9', family: 'attack', meaning: 'hype slogan' },
+        { term: '\u767e\u53d8\u9a6c\u4e01', family: 'cooperation', meaning: 'changing stance meme' },
       ],
     },
     [
@@ -1543,6 +1545,8 @@ test('findDictionaryEntriesWithTextEvidence maps follow-up weak variants back to
       '\u9053\u53cb\u4eec\u8bf4\u8981\u5e72\u5d29\u963fB\uff0c\u522b\u771f\u641e\u5d29\u963fB\u4e86',
       '\u8fd9\u671f\u771f\u5e72\u8d27\uff0c\u6709\u5e72\u8d27\u7684\u5185\u5bb9\u53ef\u4ee5\u591a\u6765\u70b9',
       '\u8fd9\u79cd\u5e72\u8d27up\u4e3b\u548c\u5e72\u8d27\u535a\u4e3b\u503c\u5f97\u5173\u6ce8',
+      '\u5965\u5229\u7ed9\u5144\u5f1f\u4eec\uff0c\u5965\u529b\u7ed9\u5e72\u4e86',
+      '\u8fd9\u53d8\u6765\u53d8\u53bb\u50cf\u767e\u53d8\u9a6c\u4e01',
     ].join('\n'),
     {
       source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-follow-up-alias/',
@@ -1565,6 +1569,8 @@ test('findDictionaryEntriesWithTextEvidence maps follow-up weak variants back to
     '\u5e72\u5d29\u963f',
     '\u5e72\u8d27',
     '\u5e72\u8d27up',
+    '\u5965\u5229\u7ed9',
+    '\u767e\u53d8\u9a6c\u4e01',
   ]);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-follow-up-alias'), true);
 });
