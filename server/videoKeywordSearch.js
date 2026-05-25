@@ -129,13 +129,54 @@ function searchQueryNeedles(query) {
   return [raw, ...raw.split(/\s+/)].map(cleanSearchText).filter((item) => item.length >= 2);
 }
 
+const GENERIC_TARGET_SEARCH_NEEDLES = new Set(
+  [
+    'b站',
+    'bilibili',
+    '视频',
+    '投稿',
+    '合集',
+    '全集',
+    '完整版',
+    '免费观看',
+    '评论',
+    '评论区',
+    '弹幕',
+    '热评',
+    '回复',
+    '互动',
+    '讨论',
+    '争议',
+    '热点',
+    '热门',
+    '梗图',
+    '名场面',
+    '切片',
+    '盘点',
+    '复盘',
+    '链接',
+    '自取',
+    '出处',
+    '来源',
+    '是什么梗',
+    '什么意思',
+  ].map(cleanSearchText),
+);
+
+function isGenericTargetSearchNeedle(needle) {
+  return GENERIC_TARGET_SEARCH_NEEDLES.has(cleanSearchText(needle));
+}
+
 function searchNeedlesForRelevance(searchQueries = [], targetExistingTerms = []) {
-  return uniqueByKey(
-    [...targetExistingTerms, ...searchQueries.flatMap((query) => parseList(query).flatMap(searchQueryNeedles))]
-      .map(cleanSearchText)
-      .filter((item) => item.length >= 2),
+  const targetNeedles = uniqueByKey(
+    targetExistingTerms.map(cleanSearchText).filter((item) => item.length >= 2),
     (item) => item,
   );
+  const queryNeedles = searchQueries
+    .flatMap((query) => parseList(query).flatMap(searchQueryNeedles))
+    .filter((item) => targetNeedles.length === 0 || !isGenericTargetSearchNeedle(item));
+  const uniqueQueryNeedles = uniqueByKey(queryNeedles.map(cleanSearchText).filter((item) => item.length >= 2), (item) => item);
+  return targetNeedles.length > 0 ? [...targetNeedles, ...targetNeedles, ...uniqueQueryNeedles] : uniqueQueryNeedles;
 }
 
 function relevanceScoreForVideo(video, needles = []) {

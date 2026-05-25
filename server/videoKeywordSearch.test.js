@@ -334,6 +334,55 @@ test('searchVideoKeywords avoids scanning zero-relevance videos for target cover
   assert.equal(trainedPayloads[0].text.includes('\u8e6d\u6982\u5ff5'), false);
 });
 
+test('searchVideoKeywords ignores generic query scaffolding when filtering target videos', async () => {
+  const scannedBvids = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u5982\u6b64\u91cd\u8981 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u4ece\u672a\u611f\u89c9\u81ea\u5df1\u5982\u6b64\u91cd\u8981'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVgeneric1',
+          title: '#\u84b8\u6c7d\u8fb9\u57ce\u3010\u706b\u7206\u6f2b\u5267\u91cd\u78c5\u6765\u88ad\uff0c\u514d\u8d39\u89c2\u770b\u5168\u96c6\uff0c\u8bc4\u8bba\u533a\u94fe\u63a5\u81ea\u53d6\u3011',
+          sourceUrl: 'https://www.bilibili.com/video/BVgeneric1/',
+        },
+        {
+          bvid: 'BVtarget1',
+          title: '\u8fd9\u4e00\u523b\u4ece\u672a\u611f\u89c9\u81ea\u5df1\u5982\u6b64\u91cd\u8981',
+          sourceUrl: 'https://www.bilibili.com/video/BVtarget1/',
+        },
+      ],
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          scannedBvids.push(bvid);
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionaryEvidenceEntries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BVtarget1']);
+  assert.deepEqual(scannedBvids, ['BVtarget1']);
+});
+
 test('searchVideoKeywords can discover popular videos without a search query', async () => {
   const requestedUrls = [];
   const result = await searchVideoKeywords(
