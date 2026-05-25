@@ -1044,6 +1044,49 @@ test('buildCoverageActions broadens long contained phrase variants through short
   );
 });
 
+test('buildCoverageActions does not fall back to over-specific long contained phrases after shorter anchors miss', () => {
+  const shortQuery = '\u5927\u8c61\u611f\u5192\u4e86 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4';
+  const shortCommentQuery = '\u5927\u8c61\u611f\u5192\u4e86 \u8bc4\u8bba\u533a';
+  const shortHotQuery = '\u5927\u8c61\u611f\u5192\u4e86 \u70ed\u8bc4';
+  const actions = buildCoverageActions(
+    {
+      entries: [
+        {
+          term: '\u5927\u8c61\u611f\u5192\u4e86',
+          family: 'evasion',
+          meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+          evidenceCount: 1,
+        },
+        {
+          term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+          family: 'evasion',
+          meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+          evidenceCount: 1,
+        },
+      ],
+    },
+    {
+      searchedQueries: [shortQuery, shortCommentQuery, shortHotQuery],
+      termAttempts: {
+        '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc': {
+          term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+          attempts: 2,
+          successfulAttempts: 0,
+          queries: [{ query: shortQuery }, { query: shortCommentQuery }],
+        },
+      },
+    },
+    { targetEvidence: 3 },
+  );
+
+  const byTerm = Object.fromEntries(actions.map((item) => [item.term, item]));
+  assert.equal(byTerm['\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc'].status, 'weak_missed');
+  assert.notEqual(
+    byTerm['\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc'].nextQuery,
+    '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc \u70ed\u8bc4',
+  );
+});
+
 
 test('buildDictionaryCoverageAudit reports gate status and next harvest actions', () => {
   const audit = buildDictionaryCoverageAudit(
@@ -1443,6 +1486,57 @@ test('buildDictionaryCoverageAudit keeps comment-backed source refreshes on comm
   assert.equal(audit.nextActions[0].status, 'source_gap');
   assert.equal(audit.nextActions[0].nextQuery, 'sourceGap \u4e89\u8bae \u8bc4\u8bba\u533a');
   assert.equal(audit.recommendedQueries[0].includes('\u662f\u4ec0\u4e48\u6897'), false);
+});
+
+test('buildDictionaryCoverageAudit rotates source gaps behind fresh weak terms after a current comment miss', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'contextOnly',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext/',
+              uid: 'BVcontext',
+              sample: 'Bilibili video context: contextOnly from a title',
+            },
+          ],
+        },
+        { term: 'freshWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      termAttempts: {
+        contextOnly: {
+          term: 'contextOnly',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: 'contextOnly \u8bc4\u8bba\u533a',
+              strategyVersion: 4,
+              ok: true,
+              hit: false,
+              comments: 18,
+            },
+          ],
+        },
+      },
+    },
+    {
+      targetEvidence: 3,
+      maxActions: 2,
+      requireSourceBackedEvidence: true,
+      requireCommentBackedEvidence: true,
+      prioritizeSourceGaps: true,
+    },
+  );
+
+  assert.equal(audit.nextActions[0].term, 'freshWeak');
+  assert.equal(audit.nextActions[1].term, 'contextOnly');
+  assert.equal(audit.nextActions[1].currentCommentMisses, 1);
 });
 
 test('buildDictionaryCoverageAudit diversifies recommendations across related weak term groups', () => {
@@ -2234,11 +2328,87 @@ test('harvestKeywordDictionary caps hard zero-evidence scans per run', async () 
       },
     );
 
-    assert.deepEqual(result.plan.map((item) => item.term), ['hardA', 'normal', 'normal']);
+    assert.deepEqual(result.plan.map((item) => item.term), ['hardA', 'normal', undefined]);
     assert.equal(searched.length, 3);
     assert.equal(searched[0].discoveryLimit, 8);
     assert.equal(searched[1].discoveryLimit, 2);
     assert.equal(searched[2].discoveryLimit, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary fills limited runs with distinct term groups before duplicate variants', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-distinct-groups-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const searched = [];
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: null,
+        searchedQueries: [],
+        scannedBvids: [],
+        termAttempts: {
+          '\u5927\u8c61\u611f\u5192\u4e86': {
+            term: '\u5927\u8c61\u611f\u5192\u4e86',
+            attempts: 1,
+            successfulAttempts: 0,
+            queries: [{ query: '\u5927\u8c61\u611f\u5192\u4e86 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4' }],
+          },
+          '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc': {
+            term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+            attempts: 1,
+            successfulAttempts: 0,
+            queries: [{ query: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4' }],
+          },
+        },
+        runs: [],
+      }),
+      'utf8',
+    );
+
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 2,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            {
+              term: '\u5927\u8c61\u611f\u5192\u4e86',
+              family: 'evasion',
+              meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+              evidenceCount: 1,
+            },
+            {
+              term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+              family: 'evasion',
+              meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+              evidenceCount: 1,
+            },
+            { term: '\u767d\u5ad6', family: 'attack', evidenceCount: 1 },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          searched.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(result.plan.map((item) => item.term), ['\u5927\u8c61\u611f\u5192\u4e86', '\u767d\u5ad6']);
+    assert.equal(searched.length, 2);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -2778,6 +2948,125 @@ test('harvestKeywordDictionary targets same-meaning contained phrase variants du
     );
 
     assert.deepEqual(new Set(payloads[0].targetExistingTerms), new Set(['\u5403\u4e86\u4e09\u5768\u7fd4', '\u903c\u6211\u5403\u4e86\u4e09\u5768\u7fd4']));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary records attempts for related target terms from one scan', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-related-target-attempts-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            {
+              term: '\u5927\u8c61\u611f\u5192\u4e86',
+              family: 'evasion',
+              meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+              evidenceCount: 1,
+            },
+            {
+              term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+              family: 'evasion',
+              meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+              evidenceCount: 1,
+            },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+          collectionDiagnostics: {
+            targetExistingTerms: payload.targetExistingTerms,
+            acceptedTerms: [],
+          },
+        }),
+      },
+    );
+
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    const shortAttempt = state.termAttempts[Buffer.from('\u5927\u8c61\u611f\u5192\u4e86', 'utf8').toString('base64url')];
+    const longAttempt = state.termAttempts[Buffer.from('\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc', 'utf8').toString('base64url')];
+
+    assert.equal(shortAttempt.attempts, 1);
+    assert.equal(longAttempt.attempts, 1);
+    assert.equal(longAttempt.lastQuery, shortAttempt.lastQuery);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary backfills shorter-anchor searched queries for related contained terms', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-contained-backfill-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        harvestStrategyVersion: 4,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        searchedQueries: ['\u5927\u8c61\u611f\u5192\u4e86 \u70ed\u8bc4'],
+        scannedBvids: [],
+        termAttempts: {},
+        runs: [],
+      }),
+      'utf8',
+    );
+
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            {
+              term: '\u5927\u8c61\u611f\u5192\u4e86',
+              family: 'evasion',
+              meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+              evidenceCount: 1,
+            },
+            {
+              term: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+              family: 'evasion',
+              meaning: '\u7f51\u7edc\u8c1c\u8bed\u9677\u9631',
+              evidenceCount: 1,
+            },
+          ],
+        }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    const longAttempt = state.termAttempts[Buffer.from('\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc', 'utf8').toString('base64url')];
+
+    assert.equal(longAttempt.queries.some((item) => item.query === '\u5927\u8c61\u611f\u5192\u4e86 \u70ed\u8bc4'), true);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

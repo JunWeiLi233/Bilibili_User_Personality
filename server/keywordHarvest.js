@@ -307,7 +307,12 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
   const templateItems = queryTemplatesFromOptions(options);
   const baseSearchTerms = searchTermsForTerm(term);
   const extraSearchTerms = Array.isArray(options.searchTerms) ? options.searchTerms : [];
-  const searchTerms = options.preferSearchTerms === true ? unique([...extraSearchTerms, ...baseSearchTerms]) : unique([...baseSearchTerms, ...extraSearchTerms]);
+  const searchTerms =
+    options.onlySearchTerms === true
+      ? unique(extraSearchTerms)
+      : options.preferSearchTerms === true
+        ? unique([...extraSearchTerms, ...baseSearchTerms])
+        : unique([...baseSearchTerms, ...extraSearchTerms]);
   const pushManualVariant = (query, builtIn = true) => {
     variants.push({
       query: normalizeQueryText(query),
@@ -433,17 +438,32 @@ function selectHarvestPlan(candidatePlan, options = {}) {
   const skipSeen = options.skipSeen !== false;
   const selected = [];
   const selectedHardMissedTerms = new Set();
-  for (const item of candidatePlan) {
-    if (selected.length >= maxQueries) break;
+  const selectedGroups = new Set();
+  const selectedQueries = new Set();
+  const trySelect = (item, enforceNewGroup) => {
+    if (selected.length >= maxQueries) return;
     const query = String(item?.query || '').trim();
+    const term = String(item?.term || '').trim();
+    const group = term ? recommendationGroupForTerm(term) : '';
     const hardMissed = isHardMissedPlanItem(item, termAttempts, options.retryBeforeUnattemptedLimit);
     const canRetrySeenPriority = hardMissed && item?.source === 'priority';
-    if (!query || (skipSeen && searchedQuerySet.has(query) && !canRetrySeenPriority)) continue;
-    const hardMissedTerm = String(item?.term || '').trim();
-    if (hardMissed && !selectedHardMissedTerms.has(hardMissedTerm) && selectedHardMissedTerms.size >= maxHardMissedQueries) continue;
-    if (hardMissed && selectedHardMissedTerms.has(hardMissedTerm)) continue;
+    if (!query || selectedQueries.has(query) || (skipSeen && searchedQuerySet.has(query) && !canRetrySeenPriority)) return;
+    if (enforceNewGroup && group && selectedGroups.has(group)) return;
+    const hardMissedTerm = term;
+    if (hardMissed && !selectedHardMissedTerms.has(hardMissedTerm) && selectedHardMissedTerms.size >= maxHardMissedQueries) return;
+    if (hardMissed && selectedHardMissedTerms.has(hardMissedTerm)) return;
     selected.push(item);
+    selectedQueries.add(query);
+    if (group) selectedGroups.add(group);
     if (hardMissed && hardMissedTerm) selectedHardMissedTerms.add(hardMissedTerm);
+  };
+  for (const item of candidatePlan) {
+    trySelect(item, true);
+    if (selected.length >= maxQueries) break;
+  }
+  for (const item of candidatePlan) {
+    trySelect(item, false);
+    if (selected.length >= maxQueries) break;
   }
   return selected;
 }
@@ -477,6 +497,7 @@ function actionSortRank(action, options = {}) {
   const attempts = Math.max(0, Number(action?.attempts) || 0);
   const successfulAttempts = Math.max(0, Number(action?.successfulAttempts) || 0);
   const evidence = Math.max(0, Number(action?.evidenceCount) || 0);
+  const currentCommentMisses = Math.max(0, Number(action?.currentCommentMisses) || 0);
   if (
     options.prioritizeHardZeroEvidence === true &&
     action?.action === 'retry_with_new_variant' &&
@@ -488,6 +509,7 @@ function actionSortRank(action, options = {}) {
     return coverageActionRank('harvest') - 0.5 + priorityPenalty;
   }
   if (options.prioritizeSourceGaps === true && action?.action === 'refresh_source_metadata') {
+    if (currentCommentMisses > 0) return coverageActionRank('harvest') + 0.75 + priorityPenalty;
     return coverageActionRank('retry_with_new_variant') - 0.25 + priorityPenalty;
   }
   if (action?.action === 'retry_with_new_variant' && retryLimit > 0 && attempts >= retryLimit) {
@@ -501,6 +523,7 @@ function recommendationGroupForTerm(term) {
   if (clean.startsWith('\u4e0d\u4f1a\u771f\u6709\u4eba')) return '\u4e0d\u4f1a\u771f\u6709\u4eba';
   if (clean.includes('\u8f66\u5bb6\u519b')) return '\u8f66\u5bb6\u519b';
   if (clean.includes('\u8e6d\u6982\u5ff5')) return '\u8e6d\u6982\u5ff5';
+  if (clean.includes('\u5927\u8c61\u611f\u5192\u4e86')) return '\u5927\u8c61\u611f\u5192\u4e86';
   if (clean === '\u7cbe\u795e\u5916\u56fd\u4eba' || clean === '\u7cbe\u5916') return '\u7cbe\u795e\u5916\u56fd\u4eba';
   return clean;
 }
@@ -535,6 +558,16 @@ function hasIrrelevantQueryFeedback(state = {}, term) {
       (commentsCollected > 0 || trainingTextChars > 0)
     );
   });
+}
+
+function currentStrategyCommentMisses(attempt) {
+  return (attempt?.queries || []).filter(
+    (query) =>
+      Number(query?.strategyVersion || 0) >= HARVEST_STRATEGY_VERSION &&
+      query?.ok !== false &&
+      Boolean(query?.hit) === false &&
+      Math.max(0, Number(query?.comments) || 0) > 0,
+  ).length;
 }
 
 function diversifyCoverageActions(actions, limit) {
@@ -854,6 +887,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       ...options,
       searchTerms: relatedSearchTerms,
       preferSearchTerms: preferRelatedSearchTerms,
+      onlySearchTerms: preferRelatedSearchTerms,
     });
     const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(attempt, options.retryBeforeUnattemptedLimit);
     const irrelevantFeedback = hasIrrelevantQueryFeedback(state, term);
@@ -911,6 +945,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       evidenceNeeded: Math.max(0, targetEvidence - count),
       attempts: attemptsCount,
       successfulAttempts,
+      currentCommentMisses: currentStrategyCommentMisses(attempt),
       exhausted,
       nextQuery: nextVariant?.query || '',
       suggestedQueries: exhausted ? suggestedQueriesForExhaustedTerm(term, family, attempt, options) : [],
@@ -1092,6 +1127,31 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
   };
 }
 
+function updateRelatedTargetTermAttempts(termAttempts, dictionary, planItem, result, finishedAt) {
+  if (!planItem?.term) return;
+  const diagnostics = result?.collectionDiagnostics || {};
+  const targets = Array.isArray(diagnostics.targetExistingTerms) ? diagnostics.targetExistingTerms : [];
+  if (targets.length === 0) return;
+  const entries = new Map((Array.isArray(dictionary?.entries) ? dictionary.entries : []).map((entry) => [String(entry?.term || '').trim(), entry]));
+  const primaryTerm = String(planItem.term || '').trim();
+  for (const target of targets) {
+    const term = String(target || '').trim();
+    if (!term || term === primaryTerm) continue;
+    const entry = entries.get(term);
+    updateTermAttempt(
+      termAttempts,
+      {
+        ...planItem,
+        term,
+        family: entry?.family || planItem.family,
+        evidenceCount: entry ? evidenceCount(entry) : planItem.evidenceCount,
+      },
+      result,
+      finishedAt,
+    );
+  }
+}
+
 function backfillTermAttemptsFromSearchedQueries(termAttempts, dictionary, searchedQueries, options = {}) {
   const entries = Array.isArray(dictionary?.entries) ? dictionary.entries : [];
   const searchedQuerySet = new Set(searchedQueries);
@@ -1105,7 +1165,11 @@ function backfillTermAttemptsFromSearchedQueries(termAttempts, dictionary, searc
     const key = termAttemptKey(term);
     const current = getTermAttempt(termAttempts, term) || {};
     const triedQueries = attemptedVariantQueries(current);
-    for (const variant of queryVariantsForTerm(term, family, templateCount, options)) {
+    for (const variant of queryVariantsForTerm(term, family, templateCount, {
+      ...options,
+      searchTerms: relatedContainedSearchTerms(entries, entry),
+      preferSearchTerms: true,
+    })) {
       if (!searchedQuerySet.has(variant.query) || triedQueries.has(variant.query)) continue;
       const queryRecord = {
         at: current.lastAttemptAt || backfilledAt,
@@ -1249,6 +1313,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       for (const warning of result.warnings || []) warnings.push(`${query}: ${warning}`);
       searchedQuerySet.add(query);
       updateTermAttempt(termAttempts, planItem, result, attemptFinishedAt);
+      updateRelatedTargetTermAttempts(termAttempts, before, planItem, result, attemptFinishedAt);
       for (const video of result.videos || []) {
         if (video.bvid) scannedBvidSet.add(video.bvid);
       }
