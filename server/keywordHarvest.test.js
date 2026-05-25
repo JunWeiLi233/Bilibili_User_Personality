@@ -88,7 +88,7 @@ test('buildKeywordHarvestQueries uses stable search aliases for hard-to-find ter
   assert.deepEqual(queries, [
     '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
-    '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc1\u636e \u8bc4\u8bba\u533a',
+    '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     '\u61c2\u7684\u90fd\u61c2 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     'dddd \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u61c2\u7684\u90fd\u61c2 \u8bc4\u8bba\u533a',
@@ -269,6 +269,32 @@ test('buildKeywordHarvestQueries broadens repeatedly missed conversational hard 
   assert.equal(queries.includes('\u6d3b\u4e0d\u8fc7\u4e24\u4e2a\u6708 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
   assert.equal(queries.includes('\u54ea\u513f\u90fd\u6709\u4f60 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
   assert.equal(queries.includes('\u574f\u7b11 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+});
+
+test('buildKeywordHarvestQueries broadens persistent zero-evidence attack terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427', family: 'attack', evidenceCount: 0 },
+        { term: '\u6ca1\u6709\u8f66\u5bb6\u519b', family: 'attack', evidenceCount: 0 },
+        { term: '\u8c01\u662f\u8e6d\u6982\u5ff5', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 36,
+      queryVariantsPerTerm: 12,
+      targetEvidence: 3,
+    },
+  );
+
+  assert.equal(queries.includes('\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u8fd9\u4e5f\u53eb\u8bc1\u636e \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u54ea\u6709\u4ec0\u4e48\u8f66\u5bb6\u519b \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u7c73\u7c89\u63a7\u8bc4 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u8c01\u5728\u8e6d\u6982\u5ff5 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u8c01\u5728\u8e6dAI \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
 });
 
 test('buildKeywordHarvestQueries all-weak mode targets every weak term before broad seeds', () => {

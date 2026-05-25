@@ -284,6 +284,35 @@ test('findDictionaryEntriesWithTextEvidence maps repeatedly missed conversationa
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-missed-alias'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps persistent zero-evidence attack aliases back to dictionary terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', family: 'attack', meaning: 'sarcastic gatekeeping stem' },
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427', family: 'attack', meaning: 'sarcastic gatekeeping question' },
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427', family: 'attack', meaning: 'dismiss evidence sarcastically' },
+        { term: '\u6ca1\u6709\u8f66\u5bb6\u519b', family: 'attack', meaning: 'deny car fandom brigading' },
+        { term: '\u8c01\u662f\u8e6d\u6982\u5ff5', family: 'attack', meaning: 'ask who is concept riding' },
+      ],
+    },
+    '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97\u8fd9\u4e5f\u53eb\u8bc1\u636e\u5427\n\u54ea\u6709\u4ec0\u4e48\u8f66\u5bb6\u519b\uff0c\u90fd\u662f\u7c73\u7c89\u63a7\u8bc4\n\u8fd9\u4e2a\u9879\u76ee\u5230\u5e95\u8c01\u5728\u8e6d\u6982\u5ff5',
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-zero-attack-alias/',
+      uid: 'BV-zero-attack-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97',
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427',
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427',
+    '\u6ca1\u6709\u8f66\u5bb6\u519b',
+    '\u8c01\u662f\u8e6d\u6982\u5ff5',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceCount >= 1), true);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-zero-attack-alias'), true);
+});
+
 test('trainKeywordDictionary updates evidence for existing terms found in crawled comments', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-train-existing-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');
