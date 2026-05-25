@@ -71,11 +71,14 @@ const TERM_SEARCH_ALIASES = {
   pink: ['\u7c89\u7ea2', '\u5c0f\u7c89\u7ea2'],
 };
 const TERM_TOPIC_CONTEXTS = {
+  '\u4e0d\u4f1a\u771f\u6709\u4eba': ['\u8bc1\u636e', '\u79d1\u666e', '\u6d4b\u8bc4'],
   '\u8f66\u5bb6\u519b': ['\u5c0f\u7c73\u6c7d\u8f66', '\u7279\u65af\u62c9', '\u65b0\u80fd\u6e90\u8f66'],
   '\u6ca1\u6709\u8f66\u5bb6\u519b': ['\u5c0f\u7c73\u6c7d\u8f66', '\u7279\u65af\u62c9', '\u65b0\u80fd\u6e90\u8f66'],
   '\u8e6d\u6982\u5ff5': ['AI', '\u6e38\u620f', '\u79d1\u6280\u516c\u53f8'],
   '\u8c01\u662f\u8e6d\u6982\u5ff5': ['AI', '\u6e38\u620f', '\u79d1\u6280\u516c\u53f8'],
   '\u7cbe\u795e\u5916\u56fd\u4eba': ['\u56fd\u9645\u653f\u6cbb', '\u65f6\u653f', '\u7559\u5b66'],
+  '\u6211\u8bf4\u91cd\u4e86': ['\u76f4\u64ad\u5207\u7247', '\u66f4\u6b63', '\u9053\u6b49'],
+  '\u95ee\u9a6c\u65af\u514b\u672c\u4eba': ['\u7279\u65af\u62c9', '\u5c0f\u7c73\u6c7d\u8f66', '\u8bbf\u8c08'],
 };
 
 function asPositiveInt(value, fallback, max = Number.MAX_SAFE_INTEGER) {
@@ -137,9 +140,12 @@ function searchTermsForTerm(term) {
 }
 
 function contextualQueriesForTerm(term) {
-  const normalizedTerm = String(term || '').trim();
-  const contexts = TERM_TOPIC_CONTEXTS[normalizedTerm] || [];
-  return unique(contexts.flatMap((context) => [`${normalizedTerm} ${context} \u8bc4\u8bba\u533a`, `${context} ${normalizedTerm} \u70ed\u8bc4`]));
+  return unique(
+    searchTermsForTerm(term).flatMap((searchTerm) => {
+      const contexts = TERM_TOPIC_CONTEXTS[searchTerm] || [];
+      return contexts.flatMap((context) => [`${searchTerm} ${context} \u8bc4\u8bba\u533a`, `${context} ${searchTerm} \u70ed\u8bc4`]);
+    }),
+  );
 }
 
 function queryVariantCountForTerm(term, options = {}) {

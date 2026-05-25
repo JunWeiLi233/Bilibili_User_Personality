@@ -88,7 +88,7 @@ test('buildKeywordHarvestQueries uses stable search aliases for hard-to-find ter
   assert.deepEqual(queries, [
     '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
-    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97 \u8bc4\u8bba\u533a',
+    '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc1\u636e \u8bc4\u8bba\u533a',
     '\u61c2\u7684\u90fd\u61c2 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     'dddd \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u61c2\u7684\u90fd\u61c2 \u8bc4\u8bba\u533a',
@@ -162,6 +162,42 @@ test('buildKeywordHarvestQueries uses topic contexts for hard zero-evidence term
         coverageMode: 'all-weak',
         maxQueries: 32,
         queryVariantsPerTerm: 32,
+      },
+    );
+
+    assert.equal(queries.includes(item.expectedContextQuery), true);
+  }
+});
+
+test('buildKeywordHarvestQueries applies topic contexts to search aliases', () => {
+  const cases = [
+    {
+      term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427',
+      family: 'attack',
+      expectedContextQuery: '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc1\u636e \u8bc4\u8bba\u533a',
+    },
+    {
+      term: '\u524d\u9762\u8bf4\u91cd\u4e86',
+      family: 'correction',
+      expectedContextQuery: '\u6211\u8bf4\u91cd\u4e86 \u76f4\u64ad\u5207\u7247 \u8bc4\u8bba\u533a',
+    },
+    {
+      term: '\u95ee\u8001\u9a6c\u672c\u4eba',
+      family: 'evasion',
+      expectedContextQuery: '\u95ee\u9a6c\u65af\u514b\u672c\u4eba \u7279\u65af\u62c9 \u8bc4\u8bba\u533a',
+    },
+  ];
+
+  for (const item of cases) {
+    const queries = buildKeywordHarvestQueries(
+      {
+        entries: [{ term: item.term, family: item.family, evidenceCount: 0 }],
+      },
+      {
+        seedQueries: [],
+        coverageMode: 'all-weak',
+        maxQueries: 40,
+        queryVariantsPerTerm: 40,
       },
     );
 
