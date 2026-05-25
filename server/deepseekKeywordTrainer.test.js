@@ -253,6 +253,48 @@ test('mergeEntriesIntoDictionary shares evidence across same-family ASCII case v
   }
 });
 
+test('mergeEntriesIntoDictionary shares evidence across same-meaning Chinese phrase variants', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-contained-evidence-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u903c\u6211\u5403\u4e86\u4e09\u5768\u7fd4',
+            family: 'attack',
+            meaning: 'same complaint phrase',
+            evidenceCount: 1,
+            evidenceSamples: ['\u771f\u7684\u662f\u903c\u6211\u5403\u4e86\u4e09\u5768\u7fd4'],
+            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-contained', sample: '\u771f\u7684\u662f\u903c\u6211\u5403\u4e86\u4e09\u5768\u7fd4' }],
+          },
+          {
+            term: '\u5403\u4e86\u4e09\u5768\u7fd4',
+            family: 'attack',
+            meaning: 'same complaint phrase',
+            evidenceCount: 0,
+            evidenceSamples: [],
+            evidenceSources: [],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+    const shorter = dictionary.entries.find((entry) => entry.term === '\u5403\u4e86\u4e09\u5768\u7fd4');
+
+    assert.equal(shorter.evidenceCount, 1);
+    assert.deepEqual(shorter.evidenceSamples, ['\u771f\u7684\u662f\u903c\u6211\u5403\u4e86\u4e09\u5768\u7fd4']);
+    assert.equal(shorter.evidenceSources[0].uid, 'BV-contained');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('mergeEntriesIntoDictionary does not share case-fold evidence across different families', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-casefold-family-'));
   const dictionaryPath = join(dir, 'dictionary.json');

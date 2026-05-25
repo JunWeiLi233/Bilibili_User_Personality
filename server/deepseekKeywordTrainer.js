@@ -225,9 +225,38 @@ function caseFoldEvidenceEntriesForEntry(entryMap, entry) {
     }));
 }
 
+function containedPhraseEvidenceEntriesForEntry(entryMap, entry) {
+  const term = cleanTerm(entry?.term);
+  const meaning = String(entry?.meaning || '').trim();
+  if (!meaning || term.length < 2 || !/\p{Script=Han}/u.test(term)) return [];
+  return [...entryMap.values()]
+    .filter((candidate) => {
+      const candidateTerm = cleanTerm(candidate?.term);
+      return (
+        candidate !== entry &&
+        candidate.family === entry.family &&
+        String(candidate.meaning || '').trim() === meaning &&
+        /\p{Script=Han}/u.test(candidateTerm) &&
+        candidateTerm !== term &&
+        (candidateTerm.includes(term) || term.includes(candidateTerm)) &&
+        Number(candidate.evidenceCount || 0) > 0
+      );
+    })
+    .map((candidate) => ({
+      ...entry,
+      evidenceCount: Math.max(0, Number(candidate.evidenceCount) || 0),
+      evidenceSamples: candidate.evidenceSamples || [],
+      evidenceSources: candidate.evidenceSources || [],
+    }));
+}
+
 function propagateAliasEvidence(entryMap, now) {
   for (const entry of [...entryMap.values()]) {
-    for (const aliasEvidenceEntry of [...aliasEvidenceEntriesForEntry(entryMap, entry), ...caseFoldEvidenceEntriesForEntry(entryMap, entry)]) {
+    for (const aliasEvidenceEntry of [
+      ...aliasEvidenceEntriesForEntry(entryMap, entry),
+      ...caseFoldEvidenceEntriesForEntry(entryMap, entry),
+      ...containedPhraseEvidenceEntriesForEntry(entryMap, entry),
+    ]) {
       entryMap.set(entry.term, mergeKeywordEntry(entryMap.get(entry.term), aliasEvidenceEntry, now));
     }
   }
