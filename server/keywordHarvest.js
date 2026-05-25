@@ -620,7 +620,7 @@ function currentStrategyCommentMisses(attempt) {
       Number(query?.strategyVersion || 0) >= HARVEST_STRATEGY_VERSION &&
       query?.ok !== false &&
       Boolean(query?.hit) === false &&
-      Math.max(0, Number(query?.comments) || 0) > 0,
+      (Math.max(0, Number(query?.comments) || 0) > 0 || Math.max(0, Number(query?.videos) || 0) > 0),
   ).length;
 }
 
