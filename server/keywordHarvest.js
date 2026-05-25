@@ -1036,7 +1036,8 @@ export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, option
     .filter((item) => item.action !== 'none')
     .sort(
       (a, b) =>
-        actionSortRank(a, { ...options, prioritizeHardZeroEvidence: true }) - actionSortRank(b, { ...options, prioritizeHardZeroEvidence: true }) ||
+        actionSortRank(a, { ...options, prioritizeHardZeroEvidence: true, prioritizeSourceGaps: true }) -
+          actionSortRank(b, { ...options, prioritizeHardZeroEvidence: true, prioritizeSourceGaps: true }) ||
         a.evidenceCount - b.evidenceCount ||
         sameRecommendationGroupSort(a, b) ||
         String(a.term || '').localeCompare(String(b.term || '')),
