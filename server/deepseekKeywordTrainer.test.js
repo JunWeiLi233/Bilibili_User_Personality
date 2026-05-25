@@ -1961,6 +1961,9 @@ test('findDictionaryEntriesWithTextEvidence maps obfuscated and corrected wordin
         { term: '\u72d7\u5c4e\u673a\u5236', family: 'attack', meaning: 'bad game mechanism complaint' },
         { term: '\u82df\u76841b', family: 'attack', meaning: 'overly passive play insult' },
         { term: '\u53e4\u5c38\u7ea7', family: 'attack', meaning: 'old fossil level insult variant' },
+        { term: '\u62d0\u53cb\u5546', family: 'evasion', meaning: 'drag competitor comparison into the topic' },
+        { term: '\u5173\u4e86\u5427', family: 'attack', meaning: 'dismiss content as worth shutting down' },
+        { term: '\u5173\u4e86\u5427\u6ca1\u610f\u601d', family: 'attack', meaning: 'dismiss content as boring and should close' },
       ],
     },
     [
@@ -1971,6 +1974,9 @@ test('findDictionaryEntriesWithTextEvidence maps obfuscated and corrected wordin
       '\u738b\u8005\u8fd9\u72d7\u5c4e\u5339\u914d\u673a\u5236\u771f\u5e26\u4e0d\u52a8',
       '\u8fd9\u4eba\u6253\u6cd5\u592a\u82df\u4e86\uff0c\u82df\u52301b',
       '\u9aa8\u7070\u7ea7\u8001\u73a9\u5bb6\u90fd\u770b\u4e0d\u4e0b\u53bb\u4e86',
+      '\u62ffDNF\u6765\u62d0\u90a3\u80fd\u4e00\u6837\u5417\uff0c\u53cb\u5546\u56f4\u730e\u53c8\u6765\u4e86',
+      '\u8fd9\u6d3b\u5173\u4e86\u5427\uff0c\u771f\u6ca1\u5fc5\u8981\u7ee7\u7eed',
+      '\u8fd9\u6d3b\u5173\u4e86\u5427\u6ca1\u610f\u601d\uff0c\u8bc4\u8bba\u533a\u90fd\u770b\u817b\u4e86',
     ].join('\n'),
     {
       source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-obfuscated-correction/',
@@ -1986,6 +1992,9 @@ test('findDictionaryEntriesWithTextEvidence maps obfuscated and corrected wordin
     '\u72d7\u5c4e\u673a\u5236',
     '\u82df\u76841b',
     '\u53e4\u5c38\u7ea7',
+    '\u62d0\u53cb\u5546',
+    '\u5173\u4e86\u5427',
+    '\u5173\u4e86\u5427\u6ca1\u610f\u601d',
   ]);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-obfuscated-correction'), true);
 });

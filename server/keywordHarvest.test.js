@@ -642,7 +642,7 @@ test('buildKeywordHarvestQueries generates colloquial aliases for weak attack ph
     },
     {
       term: '\u5173\u4e86\u5427',
-      expectedAliasQuery: '\u5173\u4e86\u5427\u6ca1\u610f\u601d \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      expectedAliasQuery: '\u8fd9\u6d3b\u5173\u4e86\u5427 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     },
     {
       term: '\u597d\u81ea\u4e3a\u4e4b',
@@ -1131,6 +1131,24 @@ test('buildKeywordHarvestQueries avoids noisy literal searches for obfuscated an
       family: 'attack',
       expectedAliasQuery: '\u9aa8\u7070\u7ea7 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
       noisyFragment: '\u53e4\u5c38',
+    },
+    {
+      term: '\u62d0\u53cb\u5546',
+      family: 'evasion',
+      expectedAliasQuery: '\u62ffDNF\u6765\u62d0 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      noisyFragment: '\u62d0\u53cb\u5546',
+    },
+    {
+      term: '\u5173\u4e86\u5427',
+      family: 'attack',
+      expectedAliasQuery: '\u8fd9\u6d3b\u5173\u4e86\u5427 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      noisyFragment: '\u6709\u610f\u601d',
+    },
+    {
+      term: '\u5173\u4e86\u5427\u6ca1\u610f\u601d',
+      family: 'attack',
+      expectedAliasQuery: '\u8fd9\u6d3b\u5173\u4e86\u5427\u6ca1\u610f\u601d \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      noisyFragment: '\u5047\u5531',
     },
   ];
 
