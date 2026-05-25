@@ -295,6 +295,47 @@ test('mergeEntriesIntoDictionary shares evidence across same-meaning Chinese phr
   }
 });
 
+test('mergeEntriesIntoDictionary shares evidence across contained Chinese variants with shared samples', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-contained-sample-evidence-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u6025\u4e86',
+            family: 'attack',
+            meaning: 'generic emotional accusation',
+            evidenceCount: 2,
+            evidenceSamples: ['\u4e8b\u5b9e\u7f62\u4e86\uff0c\u662f\u4f60\u6025\u4e86', '\u4f60\u600e\u4e48\u53c8\u6025\u4e86'],
+            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-shared', sample: '\u4e8b\u5b9e\u7f62\u4e86\uff0c\u662f\u4f60\u6025\u4e86' }],
+          },
+          {
+            term: '\u4f60\u6025\u4e86',
+            family: 'attack',
+            meaning: 'direct second-person emotional accusation',
+            evidenceCount: 1,
+            evidenceSamples: ['\u4e8b\u5b9e\u7f62\u4e86\uff0c\u662f\u4f60\u6025\u4e86'],
+            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-shared', sample: '\u4e8b\u5b9e\u7f62\u4e86\uff0c\u662f\u4f60\u6025\u4e86' }],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+    const longer = dictionary.entries.find((entry) => entry.term === '\u4f60\u6025\u4e86');
+
+    assert.equal(longer.evidenceCount, 2);
+    assert.deepEqual(longer.evidenceSamples, ['\u4e8b\u5b9e\u7f62\u4e86\uff0c\u662f\u4f60\u6025\u4e86', '\u4f60\u600e\u4e48\u53c8\u6025\u4e86']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('mergeEntriesIntoDictionary does not share case-fold evidence across different families', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-casefold-family-'));
   const dictionaryPath = join(dir, 'dictionary.json');

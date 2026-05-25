@@ -228,14 +228,17 @@ function caseFoldEvidenceEntriesForEntry(entryMap, entry) {
 function containedPhraseEvidenceEntriesForEntry(entryMap, entry) {
   const term = cleanTerm(entry?.term);
   const meaning = String(entry?.meaning || '').trim();
-  if (!meaning || term.length < 2 || !/\p{Script=Han}/u.test(term)) return [];
+  if (term.length < 2 || !/\p{Script=Han}/u.test(term)) return [];
+  const evidenceSamples = entry.evidenceSamples || [];
   return [...entryMap.values()]
     .filter((candidate) => {
       const candidateTerm = cleanTerm(candidate?.term);
+      const sameMeaning = meaning && String(candidate.meaning || '').trim() === meaning;
+      const sharedEvidenceSample = (candidate.evidenceSamples || []).some((sample) => evidenceSamples.includes(sample));
       return (
         candidate !== entry &&
         candidate.family === entry.family &&
-        String(candidate.meaning || '').trim() === meaning &&
+        (sameMeaning || sharedEvidenceSample) &&
         /\p{Script=Han}/u.test(candidateTerm) &&
         candidateTerm !== term &&
         (candidateTerm.includes(term) || term.includes(candidateTerm)) &&
