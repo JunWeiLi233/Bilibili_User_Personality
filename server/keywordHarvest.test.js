@@ -1941,7 +1941,55 @@ test('buildDictionaryCoverageAudit treats filtered search-context misses as irre
     { targetEvidence: 3, maxActions: 1 },
   );
 
-  assert.equal(audit.nextActions[0].nextQuery, `${term} \u56de\u590d`);
+  assert.equal(audit.nextActions[0].nextQuery, term);
+});
+
+test('buildDictionaryCoverageAudit tries bare aliases after scaffolded search results filter out', () => {
+  const term = '\u4f60\u88c5\u4ec0\u4e48';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [{ term, family: 'attack', evidenceCount: 1 }],
+    },
+    {
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'attack',
+          evidenceAtPlanTime: 1,
+          attempts: 2,
+          successfulAttempts: 0,
+          lastEvidenceCount: 1,
+          queries: [
+            { query: '\u88c5\u4ec0\u4e48 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4', strategyVersion: 4, ok: false, hit: false },
+            { query: '\u4f60\u88c5\u4ec0\u4e48 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4', strategyVersion: 4, ok: false, hit: false },
+          ],
+          lastQuery: '\u4f60\u88c5\u4ec0\u4e48 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+        },
+      },
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                query: '\u4f60\u88c5\u4ec0\u4e48 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+                discoveredVideos: 0,
+                discoveryContextVideos: 10,
+                scannedVideos: 0,
+                commentsCollected: 0,
+                trainingTextChars: 0,
+                targetExistingTerms: [term, '\u88c5\u4ec0\u4e48'],
+                acceptedTerms: [],
+                sampleVideos: [{ title: '\u4e2d\u6587\u8bc4\u8bba\u533ameme' }],
+              },
+            ],
+          ],
+        },
+      ],
+    },
+    { targetEvidence: 3, maxActions: 1 },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, term);
 });
 
 test('buildDictionaryCoverageAudit does not recommend globally searched feedback queries again', () => {

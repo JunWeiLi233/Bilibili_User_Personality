@@ -574,8 +574,28 @@ function exactFeedbackQueriesForTerm(term) {
   ).slice(0, 16);
 }
 
+function bareFeedbackQueriesForTerm(term) {
+  return unique(searchTermsForTerm(term)).slice(0, 16);
+}
+
 function flattenQueryDiagnostics(runs = []) {
   return runs.flatMap((run) => (Array.isArray(run?.queryDiagnostics) ? run.queryDiagnostics.flat() : []));
+}
+
+function isFilteredSearchContextMiss(item = {}) {
+  const accepted = Array.isArray(item?.acceptedTerms) ? item.acceptedTerms.map((target) => String(target || '').trim()).filter(Boolean) : [];
+  const discoveredVideos = Math.max(0, Number(item?.discoveredVideos) || 0);
+  const discoveryContextVideos = Math.max(0, Number(item?.discoveryContextVideos) || 0);
+  return accepted.length === 0 && discoveredVideos === 0 && discoveryContextVideos > 0;
+}
+
+function hasFilteredSearchContextFeedback(state = {}, term) {
+  const cleanTerm = String(term || '').trim();
+  if (!cleanTerm) return false;
+  return flattenQueryDiagnostics(state.runs || []).some((item) => {
+    const targets = Array.isArray(item?.targetExistingTerms) ? item.targetExistingTerms.map((target) => String(target || '').trim()) : [];
+    return targets.includes(cleanTerm) && isFilteredSearchContextMiss(item);
+  });
 }
 
 function hasIrrelevantQueryFeedback(state = {}, term) {
@@ -586,12 +606,10 @@ function hasIrrelevantQueryFeedback(state = {}, term) {
     const accepted = Array.isArray(item?.acceptedTerms) ? item.acceptedTerms.map((target) => String(target || '').trim()).filter(Boolean) : [];
     const commentsCollected = Math.max(0, Number(item?.commentsCollected) || 0);
     const trainingTextChars = Math.max(0, Number(item?.trainingTextChars) || 0);
-    const discoveredVideos = Math.max(0, Number(item?.discoveredVideos) || 0);
-    const discoveryContextVideos = Math.max(0, Number(item?.discoveryContextVideos) || 0);
     return (
       targets.includes(cleanTerm) &&
       accepted.length === 0 &&
-      (commentsCollected > 0 || trainingTextChars > 0 || (discoveredVideos === 0 && discoveryContextVideos > 0))
+      (commentsCollected > 0 || trainingTextChars > 0 || isFilteredSearchContextMiss(item))
     );
   });
 }
@@ -930,6 +948,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     });
     const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(attempt, options.retryBeforeUnattemptedLimit);
     const irrelevantFeedback = hasIrrelevantQueryFeedback(state, term);
+    const filteredSearchContextFeedback = hasFilteredSearchContextFeedback(state, term);
     const missedWithIrrelevantFeedback = attemptsCount > 0 && successfulAttempts === 0 && irrelevantFeedback;
     const needsSourceRefresh =
       count >= targetEvidence && options.requireSourceBackedEvidence === true && count > 0 && !hasCoverageEvidenceSource(entry, options);
@@ -939,7 +958,9 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
         : '';
     const exactFeedbackQuery =
       !needsSourceRefresh && missedWithIrrelevantFeedback
-        ? exactFeedbackQueriesForTerm(term).find((query) => !currentStrategyTriedQueries.has(query))
+        ? (filteredSearchContextFeedback ? bareFeedbackQueriesForTerm(term) : exactFeedbackQueriesForTerm(term)).find(
+            (query) => !currentStrategyTriedQueries.has(query),
+          )
         : '';
     const precisionQuery = !needsSourceRefresh && hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
     const sourceRefreshVariant =
