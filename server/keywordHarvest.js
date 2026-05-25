@@ -960,6 +960,12 @@ function actionSortRank(action, options = {}) {
   const successfulAttempts = Math.max(0, Number(action?.successfulAttempts) || 0);
   const evidence = Math.max(0, Number(action?.evidenceCount) || 0);
   const currentCommentMisses = Math.max(0, Number(action?.currentCommentMisses) || 0);
+  const noVideoDiscoveryMiss =
+    action?.action === 'retry_with_new_variant' &&
+    attempts > 0 &&
+    successfulAttempts === 0 &&
+    currentCommentMisses === 0 &&
+    /No Bilibili videos were discovered/u.test(String(action?.lastError || ''));
   if (
     options.prioritizeHardZeroEvidence === true &&
     action?.action === 'retry_with_new_variant' &&
@@ -972,6 +978,9 @@ function actionSortRank(action, options = {}) {
   }
   if (options.prioritizeSourceGaps === true && action?.action === 'refresh_source_metadata') {
     return coverageActionRank('retry_with_new_variant') - 0.25 + priorityPenalty;
+  }
+  if (noVideoDiscoveryMiss) {
+    return coverageActionRank('harvest') - 0.25 + priorityPenalty;
   }
   if (action?.action === 'retry_with_new_variant' && retryLimit > 0 && attempts >= retryLimit) {
     return coverageActionRank('harvest') + 0.5 + priorityPenalty;

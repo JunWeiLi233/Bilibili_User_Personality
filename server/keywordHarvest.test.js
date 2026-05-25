@@ -2286,6 +2286,46 @@ test('buildDictionaryCoverageAudit rotates repeated comment misses after unattem
   assert.equal(audit.nextActions[1].currentCommentMisses, 3);
 });
 
+test('buildDictionaryCoverageAudit retries no-video discovery misses before fresh weak terms', () => {
+  const missed = 'noVideoMiss';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: missed, family: 'attack', evidenceCount: 1 },
+        { term: 'freshWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      termAttempts: {
+        [missed]: {
+          term: missed,
+          family: 'attack',
+          evidenceAtPlanTime: 1,
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: 'noVideoMiss \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+              strategyVersion: 4,
+              ok: false,
+              hit: false,
+              videos: 0,
+              comments: 0,
+              error: 'No Bilibili videos were discovered from the backend discovery mode.',
+            },
+          ],
+          lastQuery: 'noVideoMiss \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+          lastError: 'No Bilibili videos were discovered from the backend discovery mode.',
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 1 },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), [missed, 'freshWeak']);
+  assert.equal(audit.nextActions[0].nextQuery, 'noVideoMiss \u8bc4\u8bba\u533a');
+});
+
 test('buildDictionaryCoverageAudit defers compact metric fragments behind discourse terms', () => {
   const audit = buildDictionaryCoverageAudit(
     {
