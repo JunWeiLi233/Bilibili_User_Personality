@@ -201,6 +201,13 @@ function isRepeatedlyMissedAttempt(attempt, threshold = 3) {
   );
 }
 
+function isHardMissedZeroEvidenceAttempt(attempt, threshold = 3) {
+  const retryThreshold = Math.max(1, Number(threshold) || 1);
+  const evidenceAtPlanTime = Math.max(0, Number(attempt?.evidenceAtPlanTime) || 0);
+  const lastEvidenceCount = Math.max(0, Number(attempt?.lastEvidenceCount) || 0);
+  return isRepeatedlyMissedAttempt(attempt, retryThreshold) && Math.max(0, Number(attempt?.attempts) || 0) >= retryThreshold * 2 && evidenceAtPlanTime === 0 && lastEvidenceCount === 0;
+}
+
 function sortEntriesForCoverage(entries) {
   return [...entries].sort((a, b) => evidenceCount(a) - evidenceCount(b) || String(a.term || '').localeCompare(String(b.term || '')));
 }
@@ -754,12 +761,22 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     const attemptFinishedAt = new Date().toISOString();
     const priorAttempt = planItem.term ? getTermAttempt(termAttempts, planItem.term) : null;
     const deepenScan = isRepeatedlyMissedAttempt(priorAttempt, options.retryBeforeUnattemptedLimit);
+    const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(priorAttempt, options.retryBeforeUnattemptedLimit);
+    const hardMissedDiscoveryLimit =
+      options.hardMissedDiscoveryLimit ?? Math.max(Number(options.staleMissedDiscoveryLimit) || 1, (Number(options.discoveryLimit) || 1) * 4);
+    const hardMissedPages = options.hardMissedPages ?? Math.max(Number(options.staleMissedPages) || 1, (Number(options.pages) || 1) + 4);
     const effectiveDiscoveryLimit =
-      deepenScan && options.staleMissedDiscoveryLimit
+      hardMissedZeroEvidence
+        ? Math.max(Number(options.discoveryLimit) || 1, Number(hardMissedDiscoveryLimit) || 1)
+        : deepenScan && options.staleMissedDiscoveryLimit
         ? Math.max(Number(options.discoveryLimit) || 1, Number(options.staleMissedDiscoveryLimit) || 1)
         : options.discoveryLimit;
     const effectivePages =
-      deepenScan && options.staleMissedPages ? Math.max(Number(options.pages) || 1, Number(options.staleMissedPages) || 1) : options.pages;
+      hardMissedZeroEvidence
+        ? Math.max(Number(options.pages) || 1, Number(hardMissedPages) || 1)
+        : deepenScan && options.staleMissedPages
+        ? Math.max(Number(options.pages) || 1, Number(options.staleMissedPages) || 1)
+        : options.pages;
     try {
       const searchPayload = {
         searchQueries: [query],

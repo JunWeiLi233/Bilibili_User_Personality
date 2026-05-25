@@ -1099,6 +1099,70 @@ test('harvestKeywordDictionary deepens scans for repeatedly missed terms', async
   }
 });
 
+test('harvestKeywordDictionary escalates zero-evidence repeatedly missed scans', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-hard-missed-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const searched = [];
+    const state = {
+      version: 1,
+      updatedAt: null,
+      searchedQueries: [],
+      scannedBvids: ['BVprevious'],
+      termAttempts: {
+        doge: {
+          term: 'doge',
+          family: 'cooperation',
+          evidenceAtPlanTime: 0,
+          attempts: 6,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: 'doge \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4' },
+            { query: 'doge \u8bc4\u8bba\u533a' },
+            { query: 'doge \u70ed\u8bc4' },
+          ],
+        },
+      },
+      runs: [],
+    };
+    await writeFile(statePath, JSON.stringify(state), 'utf8');
+
+    await harvestKeywordDictionary(
+      {
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        retryBeforeUnattemptedLimit: 3,
+        discoveryLimit: 2,
+        pages: 1,
+        staleMissedDiscoveryLimit: 4,
+        staleMissedPages: 3,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({ entries: [{ term: 'doge', family: 'cooperation', evidenceCount: 0 }] }),
+        searchVideoKeywords: async (payload) => {
+          searched.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BVstale' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.equal(searched[0].discoveryLimit, 8);
+    assert.equal(searched[0].pages, 5);
+    assert.deepEqual(searched[0].excludeBvids, []);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary writes ASCII-safe term attempt state for Chinese terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-ascii-state-'));
   const statePath = join(dir, 'state.json');
