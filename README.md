@@ -136,7 +136,7 @@ npm run dictionary:prune
 To run the next audit-recommended queries first:
 
 ```powershell
-.\run-bilibili-video.ps1 -PriorityQueryFile server\keywordCoverageQueries.txt -RequireEvidenceSources
+.\run-bilibili-video.ps1 -PriorityQueryFile server\keywordCoverageQueries.txt -RequireEvidenceSources -RequireCommentEvidence -ExistingTermsOnly
 ```
 
 To run a bounded audit-harvest loop without manually copying query files:

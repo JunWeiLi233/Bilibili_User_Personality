@@ -21,6 +21,7 @@ param(
   [ValidateSet("search", "popular", "mixed", "controversial")]
   [string]$DiscoveryMode = "controversial",
   [switch]$RequireEvidenceSources,
+  [switch]$RequireCommentEvidence,
   [switch]$ExistingTermsOnly,
   [switch]$IncludeGenericPopular,
   [switch]$ResetHarvestState
@@ -86,6 +87,11 @@ if ($RequireEvidenceSources) {
 } else {
   Remove-Item Env:\BILIBILI_HARVEST_REQUIRE_SOURCES -ErrorAction SilentlyContinue
 }
+if ($RequireCommentEvidence) {
+  $env:BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS = "1"
+} else {
+  Remove-Item Env:\BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS -ErrorAction SilentlyContinue
+}
 if ($ExistingTermsOnly) {
   $env:BILIBILI_HARVEST_EXISTING_TERMS_ONLY = "1"
 } else {
@@ -134,6 +140,7 @@ Write-Host "Harvest rounds: $Rounds"
 Write-Host "Coverage mode: $CoverageMode"
 Write-Host "Discovery mode: $DiscoveryMode"
 Write-Host "Require evidence sources: $RequireEvidenceSources"
+Write-Host "Require Bilibili comment evidence: $RequireCommentEvidence"
 Write-Host "Existing dictionary terms only: $ExistingTermsOnly"
 Write-Host "Reset harvest state: $ResetHarvestState"
 Write-Host ""

@@ -1,7 +1,8 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 
-import { DEFAULT_HARVEST_STATE_PATH, harvestKeywordDictionaryRounds } from './keywordHarvest.js';
+import { harvestKeywordDictionaryRounds } from './keywordHarvest.js';
+import { buildVideoKeywordDiscoveryOptions } from './runVideoKeywordDiscoveryOptions.js';
 
 function parseList(value) {
   return String(value || '')
@@ -18,22 +19,6 @@ async function readListFile(path) {
     console.warn(`Could not read query file ${path}: ${error.message}`);
     return [];
   }
-}
-
-function numberFromEnv(name, fallback) {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
-}
-
-function nonNegativeNumberFromEnv(name, fallback) {
-  const value = Number(process.env[name]);
-  return Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
-}
-
-function flagFromEnv(name, fallback = false) {
-  const value = process.env[name];
-  if (value == null || value === '') return fallback;
-  return ['1', 'true', 'yes', 'on'].includes(String(value).trim().toLowerCase());
 }
 
 function printKeyword(entry) {
@@ -150,55 +135,16 @@ const seedQueries = [
 const controversyQueries = parseList(process.env.BILIBILI_CONTROVERSY_SEARCH_QUERIES || process.env.BILIBILI_CONTROVERSY_SEARCH_QUERY);
 const extraQueryTemplates = parseList(process.env.BILIBILI_HARVEST_EXTRA_QUERY_TEMPLATES);
 const exhaustedSuggestionTemplates = parseList(process.env.BILIBILI_HARVEST_EXHAUSTED_SUGGESTION_TEMPLATES);
-const maxQueries = numberFromEnv('BILIBILI_HARVEST_MAX_QUERIES', seedQueries.length || 12);
-const termsPerFamily = numberFromEnv('BILIBILI_HARVEST_TERMS_PER_FAMILY', 4);
-const queryVariantsPerTerm = numberFromEnv('BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM', 2);
-const targetEvidence = numberFromEnv('BILIBILI_HARVEST_TARGET_EVIDENCE', 3);
-const retryBeforeUnattemptedLimit = nonNegativeNumberFromEnv('BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT', 3);
-const staleMissedDiscoveryLimit = nonNegativeNumberFromEnv('BILIBILI_HARVEST_STALE_MISSED_DISCOVERY_LIMIT', 4);
-const staleMissedPages = nonNegativeNumberFromEnv('BILIBILI_HARVEST_STALE_MISSED_COMMENT_PAGES', 3);
-const coverageMode = String(process.env.BILIBILI_HARVEST_COVERAGE_MODE || 'all-weak').trim().toLowerCase();
-const requireSourceBackedEvidence = process.env.BILIBILI_HARVEST_REQUIRE_SOURCES === '1';
-const existingTermsOnly = process.env.BILIBILI_HARVEST_EXISTING_TERMS_ONLY === '1';
-const discoveryLimit = numberFromEnv('BILIBILI_VIDEO_DISCOVERY_LIMIT', 6);
-const pages = numberFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2);
-const rounds = numberFromEnv('BILIBILI_HARVEST_ROUNDS', 1);
-const discoveryMode = String(process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial').trim().toLowerCase();
-const controversialPopularQueryLimit = nonNegativeNumberFromEnv('BILIBILI_CONTROVERSIAL_POPULAR_QUERY_LIMIT', 4);
-const controversialPopularSearchOrder = String(process.env.BILIBILI_CONTROVERSIAL_POPULAR_SEARCH_ORDER || 'click').trim().toLowerCase();
-const includeGenericPopular = flagFromEnv('BILIBILI_CONTROVERSIAL_INCLUDE_GENERIC_POPULAR', false);
-const statePath = process.env.BILIBILI_HARVEST_STATE_PATH || DEFAULT_HARVEST_STATE_PATH;
-const reportPath = process.env.BILIBILI_HARVEST_REPORT_PATH || join(process.cwd(), 'server', 'keywordHarvestReport.json');
-const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
-const skipSeen = process.env.BILIBILI_HARVEST_SKIP_SEEN !== '0';
-
-const result = await harvestKeywordDictionaryRounds({
+const harvestOptions = buildVideoKeywordDiscoveryOptions({
   priorityQueries,
   seedQueries,
   controversyQueries,
-  maxQueries,
-  termsPerFamily,
-  queryVariantsPerTerm,
-  retryBeforeUnattemptedLimit,
-  staleMissedDiscoveryLimit,
-  staleMissedPages,
   extraQueryTemplates,
   exhaustedSuggestionTemplates,
-  targetEvidence,
-  coverageMode,
-  requireSourceBackedEvidence,
-  existingTermsOnly,
-  discoveryMode,
-  discoveryLimit,
-  controversialPopularQueryLimit,
-  controversialPopularSearchOrder,
-  includeGenericPopular,
-  pages,
-  rounds,
-  statePath,
-  resetState,
-  skipSeen,
 });
+const { statePath, reportPath } = harvestOptions;
+
+const result = await harvestKeywordDictionaryRounds(harvestOptions);
 
 for (let index = 0; index < result.rounds.length; index += 1) {
   reportRound(result.rounds[index], index, result.requestedRounds);
