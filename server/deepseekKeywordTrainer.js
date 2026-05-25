@@ -81,8 +81,8 @@ const TERM_EVIDENCE_ALIASES = {
   '\u81ea\u5df1\u67e5': ['\u81ea\u5df1\u641c', '\u4f60\u81ea\u5df1\u641c', '\u81ea\u5df1\u67e5\u53bb'],
   '\u81ea\u5df1\u67e5\u53bb': ['\u81ea\u5df1\u67e5', '\u81ea\u5df1\u641c'],
   '\u81ea\u5df1\u641c': ['\u81ea\u5df1\u67e5'],
-  '\u95ee\u767e\u5ea6': ['\u4e0d\u4f1a\u767e\u5ea6', '\u767e\u5ea6\u4e00\u4e0b', '\u81ea\u5df1\u767e\u5ea6', '\u4f60\u4e0d\u4f1a\u767e\u5ea6\u5417'],
-  '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528': ['\u4e0d\u4f1a\u767e\u5ea6', '\u767e\u5ea6\u4e00\u4e0b', '\u81ea\u5df1\u767e\u5ea6', '\u95ee\u767e\u5ea6'],
+  '\u95ee\u767e\u5ea6': ['\u4e0d\u4f1a\u767e\u5ea6', '\u81ea\u5df1\u767e\u5ea6', '\u4f60\u4e0d\u4f1a\u767e\u5ea6\u5417', '\u4e0d\u4f1a\u81ea\u5df1\u767e\u5ea6\u5417'],
+  '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528': ['\u4e0d\u4f1a\u767e\u5ea6', '\u81ea\u5df1\u767e\u5ea6', '\u4f60\u4e0d\u4f1a\u767e\u5ea6\u5417', '\u95ee\u767e\u5ea6'],
   '\u5835\u4f4f\u4eba\u6c11\u5634': ['\u6342\u4f4f\u4eba\u6c11\u7684\u5634', '\u6342\u4f4f\u4eba\u6c11\u5634', '\u5835\u4f4f\u4eba\u6c11\u7684\u5634', '\u5835\u5634'],
   '\u9ad8\u4f4e\u5f97\u7ed9\u4f60\u9001\u4e0a\u53bb': ['\u9ad8\u4f4e\u7ed9\u4f60\u9001\u4e0a\u53bb', '\u7ed9\u4f60\u9001\u4e0a\u53bb', '\u9001\u4e0a\u53bb', '\u9876\u4e0a\u53bb'],
   '\u6ca1\u6d3b\u8fc7\u4e24\u4e2a\u6708': ['\u6d3b\u4e0d\u8fc7\u4e24\u4e2a\u6708', '\u6d3b\u4e0d\u8fc7\u4fe9\u6708', '\u6ca1\u6d3b\u8fc7\u4fe9\u6708'],
@@ -985,7 +985,10 @@ export async function trainKeywordDictionary(payload, options = {}) {
   const acceptedEntries = normalizeKeywordEntries([...generated.entries, ...dictionaryEvidenceEntries]).filter(
     (entry) => !existingTermsOnly || currentTermSet.has(entry.term),
   );
-  const dictionary = await mergeEntriesIntoDictionary(acceptedEntries, options);
+  const dictionary =
+    acceptedEntries.length > 0
+      ? await mergeEntriesIntoDictionary(acceptedEntries, options)
+      : currentDictionary;
   return {
     ok: true,
     provider: config.provider,

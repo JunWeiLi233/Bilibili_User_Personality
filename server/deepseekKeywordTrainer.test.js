@@ -1518,6 +1518,66 @@ test('trainKeywordDictionary scopes existing-only evidence to target terms', asy
   }
 });
 
+test('trainKeywordDictionary existing-only no-hit runs do not propagate stale alias evidence', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-train-existing-nohit-no-alias-propagation-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u95ee\u767e\u5ea6',
+            family: 'evasion',
+            meaning: 'dismiss by telling someone to search',
+            evidenceCount: 0,
+            evidenceSamples: [],
+          },
+          {
+            term: '\u4e0d\u4f1a\u767e\u5ea6',
+            family: 'evasion',
+            meaning: 'literal search tutorial phrase from older data',
+            evidenceCount: 1,
+            evidenceSamples: ['old unrelated sample'],
+            evidenceSources: [{ source: 'old source', uid: 'old', sample: 'old unrelated sample' }],
+          },
+        ],
+      }),
+      'utf8',
+    );
+    const before = await readFile(dictionaryPath, 'utf8');
+
+    const result = await trainKeywordDictionary(
+      {
+        text: '\u8fd9\u91cc\u53ea\u6709\u666e\u901a\u8bc4\u8bba\uff0c\u6ca1\u6709\u641c\u7d22\u6253\u53d1\u8bdd\u672f',
+        uid: 'BV-existing-nohit',
+        source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-existing-nohit/',
+        existingTermsOnly: true,
+        targetExistingTerms: ['\u95ee\u767e\u5ea6'],
+      },
+      {
+        dictionaryPath,
+        env: { DEEPSEEK_API_KEY: 'test-key', DEEPSEEK_MODEL: 'deepseek-v4-flash' },
+        fetch: async (url) => {
+          if (String(url).endsWith('/models')) {
+            return { ok: true, json: async () => ({ data: [{ id: 'deepseek-v4-flash' }] }) };
+          }
+          return { ok: true, json: async () => ({ choices: [{ message: { content: '{"matches":[]}' } }] }) };
+        },
+      },
+    );
+
+    const after = await readFile(dictionaryPath, 'utf8');
+    assert.deepEqual(result.entries, []);
+    assert.equal(result.dictionary.entries.find((entry) => entry.term === '\u95ee\u767e\u5ea6').evidenceCount || 0, 0);
+    assert.equal(after, before);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('merges learned keyword entries into a persistent local dictionary', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-keywords-'));
   const dictionaryPath = join(dir, 'dictionary.json');

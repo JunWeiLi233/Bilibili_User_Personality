@@ -2,6 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { readKeywordDictionary } from './deepseekKeywordTrainer.js';
+import { coverageDelta, hasCoverageGateProgress } from './coverageProgress.js';
 import {
   buildDictionaryCoverageAudit,
   DEFAULT_HARVEST_STATE_PATH,
@@ -47,17 +48,6 @@ async function buildAudit(options) {
   const dictionary = await readKeywordDictionary(options.dictionaryPath ? { dictionaryPath: options.dictionaryPath } : {});
   const state = await readKeywordHarvestState(options.statePath);
   return buildDictionaryCoverageAudit(dictionary, state, options);
-}
-
-function coverageDelta(before = {}, after = {}) {
-  return {
-    evidenceDeficitReduced: Math.max(0, Number(before.evidenceDeficit || 0) - Number(after.evidenceDeficit || 0)),
-    zeroEvidenceResolved: Math.max(0, Number(before.zeroEvidenceTerms || 0) - Number(after.zeroEvidenceTerms || 0)),
-    weakTermsResolved: Math.max(0, Number(before.weakTerms || 0) - Number(after.weakTerms || 0)),
-    sourceBackedTermsGained: Math.max(0, Number(after.sourcedEvidenceTerms || 0) - Number(before.sourcedEvidenceTerms || 0)),
-    totalEvidenceGained: Math.max(0, Number(after.totalEvidence || 0) - Number(before.totalEvidence || 0)),
-    coverageRatioDelta: Number((Number(after.coverageRatio || 0) - Number(before.coverageRatio || 0)).toFixed(4)),
-  };
 }
 
 const dictionaryPath = process.env.DEEPSEEK_KEYWORD_DICTIONARY_PATH;
@@ -182,18 +172,14 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
   });
   console.log(`Coverage after cycle: ${(nextAudit.coverage.coverageRatio * 100).toFixed(2)}%, weak ${nextAudit.coverage.weakTerms}, zero ${nextAudit.coverage.zeroEvidenceTerms}`);
   console.log(
-    `Delta: deficit -${delta.evidenceDeficitReduced}, zero -${delta.zeroEvidenceResolved}, source-backed +${delta.sourceBackedTermsGained}, evidence +${delta.totalEvidenceGained}`,
+    `Delta: deficit -${delta.evidenceDeficitReduced}, zero -${delta.zeroEvidenceResolved}, weak -${delta.weakTermsResolved}, unsourced -${delta.unsourcedEvidenceReduced}, evidence +${delta.totalEvidenceGained}, terms +${delta.termsAdded}`,
   );
   if (executedQueries.length === 0) {
     stopReason = 'no_queries_run';
     audit = nextAudit;
     break;
   }
-  const progressed =
-    nextAudit.coverage.evidenceDeficit < audit.coverage.evidenceDeficit ||
-    nextAudit.coverage.zeroEvidenceTerms < audit.coverage.zeroEvidenceTerms ||
-    nextAudit.coverage.sourcedEvidenceTerms > audit.coverage.sourcedEvidenceTerms;
-  if (!progressed && process.env.BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS === '1') {
+  if (!hasCoverageGateProgress(audit.coverage, nextAudit.coverage) && process.env.BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS === '1') {
     stopReason = 'no_coverage_progress';
     audit = nextAudit;
     break;
