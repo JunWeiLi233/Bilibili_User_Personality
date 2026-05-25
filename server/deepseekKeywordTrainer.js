@@ -278,6 +278,21 @@ function isTitleSplicedVideoContextOnlyTerm(term, evidenceSamples = [], evidence
   return /^\u5361\p{Script=Han}{2,8}\u8116\u5b50$/u.test(clean);
 }
 
+function isAskBaiduSongVideoContextOnlyTerm(term, evidenceSamples = [], evidenceSources = []) {
+  const clean = cleanTerm(term);
+  const askBaiduTerms = new Set(['\u95ee\u767e\u5ea6', '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528']);
+  if (!askBaiduTerms.has(clean)) return false;
+  if (!hasVideoContextOnlyEvidence(evidenceSamples, evidenceSources)) return false;
+  const samples = unique([
+    ...evidenceSamples.map((sample) => String(sample || '').trim()),
+    ...evidenceSources.map((source) => String(source?.sample || '').trim()),
+  ]).filter(Boolean);
+  return samples.every((sample) => {
+    const text = sample.replace(/^Bilibili video context:\s*/u, '');
+    return /\u300a\u95ee\u767e\u5ea6\u300b/u.test(text) && /(?:\u6b4c\u66f2|\u6f14\u5531|\u539f\u5531|\u7ffb\u5531|\u6b4c\u8bcd|MV|\u9648\u745e|\u8bf7\u6b23\u8d4f)/iu.test(text);
+  });
+}
+
 function evidenceSourceSortKey(source = {}) {
   return isVideoContextSource(source) ? 1 : 0;
 }
@@ -411,6 +426,58 @@ function normalizeEvidenceSources(rawSources = []) {
   ).slice(0, 8);
 }
 
+function normalizeAnalysisQuoteText(text) {
+  return String(text || '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/\s+/g, '');
+}
+
+function splitAnalysisSourceSentences(text) {
+  return unique(
+    String(text || '')
+      .split(/[\r\n]+/)
+      .flatMap((line) => String(line || '').split(/(?<=[\u3002\uff01\uff1f!?;；])/u))
+      .map((line) => line.trim())
+      .filter(Boolean),
+  );
+}
+
+function textUnits(text) {
+  const normalized = normalizeAnalysisQuoteText(text);
+  if (normalized.length <= 1) return new Set(normalized ? [normalized] : []);
+  const units = new Set();
+  for (let index = 0; index < normalized.length - 1; index += 1) {
+    units.add(normalized.slice(index, index + 2));
+  }
+  return units;
+}
+
+function textOverlapScore(a, b) {
+  const left = textUnits(a);
+  const right = textUnits(b);
+  if (left.size === 0 || right.size === 0) return 0;
+  let shared = 0;
+  for (const unit of left) {
+    if (right.has(unit)) shared += 1;
+  }
+  return shared / Math.min(left.size, right.size);
+}
+
+function groundSentenceQuote(quote, sourceSentences = []) {
+  const rawQuote = String(quote || '').trim();
+  const normalizedQuote = normalizeAnalysisQuoteText(rawQuote);
+  if (!normalizedQuote) return '';
+  const exact = sourceSentences.find((sentence) => sentence.includes(rawQuote));
+  if (exact) return exact;
+  const normalizedExact = sourceSentences.find((sentence) => normalizeAnalysisQuoteText(sentence).includes(normalizedQuote));
+  if (normalizedExact) return normalizedExact;
+  const best = sourceSentences
+    .map((sentence) => ({ sentence, score: textOverlapScore(rawQuote, sentence) }))
+    .sort((a, b) => b.score - a.score)[0];
+  return best?.score >= 0.45 ? best.sentence : '';
+}
+
 function authHeaders(apiKey) {
   return {
     'content-type': 'application/json',
@@ -445,6 +512,7 @@ export function normalizeKeywordEntries(rawEntries = []) {
     for (const term of terms) {
       if (isNoisyTerm(term)) continue;
       if (isTitleSplicedVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
+      if (isAskBaiduSongVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
       entries.push({
         term,
         family,
@@ -1138,9 +1206,10 @@ export async function analyzeCommentsWithDeepSeek(payload, options = {}) {
       if (found) Object.assign(item, found);
     }
 
+    const sourceSentences = splitAnalysisSourceSentences(payload?.text);
     const sentenceAnalyses = (Array.isArray(parsed.sentenceAnalyses) ? parsed.sentenceAnalyses : [])
       .map((item) => ({
-        quote: String(item.quote || '').trim().slice(0, 300),
+        quote: groundSentenceQuote(item.quote, sourceSentences).slice(0, 300),
         speechAct: String(item.speechAct || '').trim().slice(0, 80),
         target: String(item.target || '').trim().slice(0, 120),
         stance: String(item.stance || '').trim().slice(0, 120),

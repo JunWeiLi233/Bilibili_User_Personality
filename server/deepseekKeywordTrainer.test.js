@@ -159,6 +159,64 @@ test('analyzeCommentsWithDeepSeek asks DeepSeek to analyze full sentence context
   assert.equal(userPrompt.includes('axisImpacts'), true);
 });
 
+test('analyzeCommentsWithDeepSeek grounds sentence radar quotes to original comments', async () => {
+  const originalSentence = '\u4e0d\u662f\u6211\u6760\uff0c\u4f60\u8fd9\u4e2a\u8bc1\u636e\u94fe\u53ea\u8986\u76d6\u4e00\u4e2a\u6837\u672c\uff0c\u5148\u522b\u6025\u7740\u6263\u5e3d\u5b50\u3002';
+  const result = await analyzeCommentsWithDeepSeek(
+    {
+      uid: 'mid 2',
+      name: 'quote grounding tester',
+      text: [originalSentence, '\u5982\u679c\u6709\u539f\u59cb\u6570\u636e\u6211\u613f\u610f\u6539\u7ed3\u8bba\u3002'].join('\n'),
+    },
+    {
+      env: {
+        DEEPSEEK_API_KEY: 'test-key',
+        DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
+        DEEPSEEK_MODEL: 'deepseek-v4-flash',
+      },
+      fetch: async (url) => {
+        if (String(url).endsWith('/models')) {
+          return { ok: true, json: async () => ({ data: [{ id: 'deepseek-v4-flash' }] }) };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    axes: [],
+                    sentenceAnalyses: [
+                      {
+                        quote: '\u4f60\u8fd9\u4e2a\u8bc1\u636e\u94fe\u53ea\u8986\u76d6\u4e00\u4e2a\u6837\u672c\uff0c\u522b\u6025\u7740\u6263\u5e3d\u5b50',
+                        speechAct: '\u8bc1\u636e\u8fb9\u754c\u63d0\u9192',
+                        target: '\u8bc1\u636e\u94fe\u8986\u76d6\u8303\u56f4',
+                        risk: 'low',
+                        axisImpacts: [{ axis: '\u8bc1\u636e\u654f\u611f', direction: 'positive', strength: 0.8 }],
+                      },
+                      {
+                        quote: '\u8fd9\u662f\u539f\u6587\u6ca1\u6709\u7684\u5e7b\u89c9\u53e5\u5b50',
+                        speechAct: '\u5e7b\u89c9\u5f15\u7528',
+                        target: '\u4e0d\u5b58\u5728\u7684\u539f\u6587',
+                        risk: 'high',
+                        axisImpacts: [{ axis: '\u5bf9\u6297\u6027\u52a8\u673a', direction: 'risk', strength: 0.9 }],
+                      },
+                    ],
+                    overall: { riskBand: '\u4f4e\u98ce\u9669\u8ba8\u8bba\u578b', summary: '\u6837\u672c\u504f\u8bc1\u636e\u8ba8\u8bba\u3002' },
+                    confidence: 0.82,
+                  }),
+                },
+              },
+            ],
+          }),
+        };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.sentenceAnalyses.map((item) => item.quote), [originalSentence]);
+});
+
 test('normalizes DeepSeek keyword output into supported dictionary families', () => {
   const entries = normalizeKeywordEntries([
     { term: '不会真有人', family: 'sarcasm', meaning: '反讽式资格审查', variants: ['不会真有人觉得'] },
@@ -279,6 +337,53 @@ test('normalizes away title-spliced video-context-only keyword terms', () => {
   ]);
 
   assert.deepEqual(entries.map((entry) => entry.term), ['\u5361\u8116\u5b50']);
+});
+
+test('normalizes away ask-baidu song title video-context evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u95ee\u767e\u5ea6',
+      family: 'evasion',
+      meaning: '\u628a\u89e3\u91ca\u8d23\u4efb\u8f6c\u79fb\u7ed9\u641c\u7d22\u5f15\u64ce',
+      evidenceCount: 2,
+      evidenceSamples: [
+        'Bilibili video context: \u8bf7\u6b23\u8d4f\u9648\u745e\u6f14\u5531\u7684\u6b4c\u66f2\u300a\u95ee\u767e\u5ea6\u300b',
+        'Bilibili video context: \u8fd9\u6bb5\u65f6\u95f4\u8fd9\u9996\u6b4c\u53c8\u706b\u4e86\u300a\u95ee\u767e\u5ea6\u300b\u9648\u745e\u6f14\u5531',
+      ],
+      evidenceSources: [
+        {
+          source: 'Bilibili public search-discovered video comment scan plus video context: https://www.bilibili.com/video/BV-baidu-song/',
+          uid: 'BV-baidu-song',
+          sample: 'Bilibili video context: \u8bf7\u6b23\u8d4f\u9648\u745e\u6f14\u5531\u7684\u6b4c\u66f2\u300a\u95ee\u767e\u5ea6\u300b',
+        },
+      ],
+    },
+    {
+      term: '\u95ee\u767e\u5ea6\u6709\u4ec0\u4e48\u7528',
+      family: 'evasion',
+      meaning: '\u62d2\u7edd\u63d0\u4f9b\u4fe1\u606f\u5e76\u8d2c\u4f4e\u641c\u7d22\u5f15\u64ce',
+      evidenceCount: 1,
+      evidenceSamples: ['Bilibili video context: \u300a\u95ee\u767e\u5ea6\u300bMV\u539f\u5531\u6b4c\u66f2'],
+      evidenceSources: [
+        {
+          source: 'Bilibili public search-discovered video context',
+          uid: 'BV-baidu-mv',
+          sample: 'Bilibili video context: \u300a\u95ee\u767e\u5ea6\u300bMV\u539f\u5531\u6b4c\u66f2',
+        },
+      ],
+    },
+    {
+      term: '\u95ee\u767e\u5ea6',
+      family: 'evasion',
+      meaning: '\u771f\u5b9e\u8bc4\u8bba\u91cc\u628a\u8bf4\u660e\u8d23\u4efb\u8f6c\u79fb\u7ed9\u641c\u7d22',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u4f60\u90fd\u4e0d\u4f1a\u81ea\u5df1\u95ee\u767e\u5ea6\u5417'],
+      evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-baidu-comment', sample: '\u8fd9\u4f60\u90fd\u4e0d\u4f1a\u81ea\u5df1\u95ee\u767e\u5ea6\u5417' }],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u95ee\u767e\u5ea6']);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u4f60\u90fd\u4e0d\u4f1a\u81ea\u5df1\u95ee\u767e\u5ea6\u5417']);
 });
 
 test('mergeEntriesIntoDictionary prunes persisted title-spliced video-context-only terms', async () => {
