@@ -309,6 +309,25 @@ function perThousand(text, terms) {
 }
 
 function classifySpeechAct(comment, index, totalComments) {
+  if (isMemeOrQuotedNonAttackText(comment)) {
+    return [
+      {
+        id: `semantic-meme-${index}`,
+        source: '\u8bed\u4e49\u88c1\u5224',
+        speechAct: '\u6897\u6587\u5316/\u5f15\u7528\u7528\u6cd5',
+        target: '\u6574\u53e5\u8bed\u7528\u8bed\u5883',
+        type: '\u975e\u76f4\u63a5\u653b\u51fb',
+        severity: '\u4f4e',
+        comment,
+        highlight: comment,
+        diagnosis: '\u53e5\u5b50\u5c06\u5173\u952e\u8bcd\u6846\u5b9a\u4e3a\u73a9\u6897\u3001\u590d\u8bfb\u3001\u53f0\u8bcd\u6216\u5f15\u7528\uff0c\u6ca1\u6709\u660e\u786e\u628a\u653b\u51fb\u6307\u5411\u5bf9\u65b9\u3002',
+        evidence: `\u7b2c ${index + 1}/${totalComments} \u6761\u8bc4\u8bba\u542b\u6709\u98ce\u9669\u8bcd\u9762\uff0c\u4f46\u6574\u53e5\u662f meme/\u5f15\u7528\u8bed\u5883\uff1b\u4e0d\u5355\u72ec\u8ba1\u4f5c\u653b\u51fb\u8bc1\u636e\u3002`,
+        confidence: 0.68,
+        deltas: { attack: -8, cooperation: 8 },
+        positive: true,
+      },
+    ];
+  }
   const matched = speechActRules
     .map((rule) => {
       const match = comment.match(rule.pattern);

@@ -254,6 +254,17 @@ test('isMemeOrQuotedNonAttackText distinguishes meme reuse from targeted attacks
   assert.equal(isMemeOrQuotedNonAttackText('\u4f60\u5c31\u662f\u4e2a\u5c0f\u4e11\uff0c\u522b\u62ff\u73a9\u6897\u5f53\u501f\u53e3\u3002'), false);
 });
 
+test('isMemeOrQuotedNonAttackText treats danmaku repetition and internet slang frames as non-attack', () => {
+  assert.equal(
+    isMemeOrQuotedNonAttackText('\u6025\u4e86\u6025\u4e86\u53ea\u662f\u5f39\u5e55\u590d\u8bfb\u7684\u8282\u76ee\u6548\u679c\uff0c\u4e0d\u662f\u5728\u9a82\u4eba\u3002'),
+    true,
+  );
+  assert.equal(
+    isMemeOrQuotedNonAttackText('\u8fd9\u4e2a\u7f51\u7edc\u7528\u8bed\u662f\u6574\u6d3b\u62bd\u8c61\u8bf4\u6cd5\uff0c\u4e0d\u80fd\u53ea\u56e0\u4e3a\u6709\u201c\u5c0f\u4e11\u201d\u5c31\u7b97\u653b\u51fb\u3002'),
+    true,
+  );
+});
+
 test('buildRiskLexiconText removes meme-only keyword hits before score density', () => {
   const text = buildRiskLexiconText([
     '\u539f\u6765\u5c0f\u4e11\u7adf\u662f\u6211\u81ea\u5df1\uff0c\u8fd9\u4e00\u6bb5\u771f\u7684\u7ef7\u4e0d\u4f4f\u4e86\u3002',
