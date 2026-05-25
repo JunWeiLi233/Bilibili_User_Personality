@@ -4652,6 +4652,89 @@ test('harvestKeywordDictionary keeps strict comment coverage in result summaries
   }
 });
 
+test('harvestKeywordDictionary does not record strict comment success from context-only dictionary growth', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-strict-context-growth-miss-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const beforeDictionary = {
+      entries: [
+        {
+          term: 'contextOnly',
+          family: 'attack',
+          evidenceCount: 1,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVold/',
+              uid: 'BVold',
+              sample: 'Bilibili video context: contextOnly old title',
+            },
+          ],
+        },
+      ],
+    };
+    const afterDictionary = {
+      entries: [
+        {
+          term: 'contextOnly',
+          family: 'attack',
+          evidenceCount: 3,
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVold/',
+              uid: 'BVold',
+              sample: 'Bilibili video context: contextOnly old title',
+            },
+            {
+              source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVnew/',
+              uid: 'BVnew',
+              sample: 'Bilibili video context: contextOnly new title',
+            },
+          ],
+        },
+      ],
+    };
+    const result = await harvestKeywordDictionary(
+      {
+        priorityQueries: ['contextOnly \u8bc4\u8bba\u533a'],
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        requireSourceBackedEvidence: true,
+        requireCommentBackedEvidence: true,
+        prioritizeSourceGaps: true,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => beforeDictionary,
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BVnew' }],
+          comments: [],
+          entries: [],
+          dictionary: afterDictionary,
+          collectionDiagnostics: {
+            targetExistingTerms: ['contextOnly'],
+            acceptedTerms: [],
+            commentsCollected: 0,
+            trainingTextChars: 0,
+          },
+        }),
+      },
+    );
+
+    const attempt = Object.values(result.state.termAttempts).find((item) => item.term === 'contextOnly');
+    assert.equal(attempt.attempts, 1);
+    assert.equal(attempt.successfulAttempts, 0);
+    assert.equal(attempt.queries[0].hit, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary targets exact source-gap priority terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-exact-source-gap-target-'));
   const statePath = join(dir, 'state.json');

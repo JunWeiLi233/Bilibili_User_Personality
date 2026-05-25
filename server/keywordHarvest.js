@@ -1308,10 +1308,10 @@ function summarizeCoverageProgress(beforeCoverage, afterCoverage) {
   };
 }
 
-function collectEvidenceTerms(result) {
+function collectEvidenceTerms(result, options = {}) {
   return new Set(
     [...(result?.entries || []), ...(result?.keywordTraining?.dictionaryEvidenceEntries || [])]
-      .filter((entry) => Number(entry?.evidenceCount) > 0)
+      .filter((entry) => coverageEvidenceCount(entry, options) > 0)
       .map((entry) => String(entry.term || '').trim())
       .filter(Boolean),
   );
@@ -1368,16 +1368,16 @@ function summarizeQueryDiagnostics(results = []) {
   });
 }
 
-function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
+function updateTermAttempt(termAttempts, planItem, result, finishedAt, options = {}) {
   if (!planItem?.term) return;
   const term = String(planItem.term).trim();
   const key = termAttemptKey(term);
   const current = getTermAttempt(termAttempts, term) || {};
-  const evidenceTerms = collectEvidenceTerms(result);
+  const evidenceTerms = collectEvidenceTerms(result, options);
   const evidenceEntry = [...(result?.entries || []), ...(result?.keywordTraining?.dictionaryEvidenceEntries || [])].find((entry) => entry?.term === term);
   const dictionaryEntry = findResultDictionaryEntry(result, term);
-  const plannedEvidenceCount = Number(planItem.evidenceCount ?? current.evidenceAtPlanTime ?? 0) || 0;
-  const dictionaryEvidenceCount = Number(dictionaryEntry?.evidenceCount) || 0;
+  const plannedEvidenceCount = Number(planItem.coverageEvidenceCount ?? planItem.evidenceCount ?? current.evidenceAtPlanTime ?? 0) || 0;
+  const dictionaryEvidenceCount = coverageEvidenceCount(dictionaryEntry, options);
   const dictionaryEvidenceGained = Boolean(result?.ok) && dictionaryEvidenceCount > plannedEvidenceCount;
   const hit = evidenceTerms.has(term) || dictionaryEvidenceGained;
   const hitEvidenceCount = Number(evidenceEntry?.evidenceCount) || dictionaryEvidenceCount;
@@ -1408,7 +1408,7 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
   };
 }
 
-function updateRelatedTargetTermAttempts(termAttempts, dictionary, planItem, result, finishedAt) {
+function updateRelatedTargetTermAttempts(termAttempts, dictionary, planItem, result, finishedAt, options = {}) {
   if (!planItem?.term) return;
   const diagnostics = result?.collectionDiagnostics || {};
   const targets = Array.isArray(diagnostics.targetExistingTerms) ? diagnostics.targetExistingTerms : [];
@@ -1429,6 +1429,7 @@ function updateRelatedTargetTermAttempts(termAttempts, dictionary, planItem, res
       },
       result,
       finishedAt,
+      options,
     );
   }
 }
@@ -1605,8 +1606,8 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       if (!result.ok) warnings.push(`${query}: ${result.error}`);
       for (const warning of result.warnings || []) warnings.push(`${query}: ${warning}`);
       searchedQuerySet.add(query);
-      updateTermAttempt(termAttempts, planItem, result, attemptFinishedAt);
-      updateRelatedTargetTermAttempts(termAttempts, before, planItem, result, attemptFinishedAt);
+      updateTermAttempt(termAttempts, planItem, result, attemptFinishedAt, options);
+      updateRelatedTargetTermAttempts(termAttempts, before, planItem, result, attemptFinishedAt, options);
       for (const video of result.videos || []) {
         if (video.bvid) scannedBvidSet.add(video.bvid);
       }
@@ -1615,7 +1616,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       const result = { ok: false, error: error.message };
       results.push({ query, result });
       searchedQuerySet.add(query);
-      updateTermAttempt(termAttempts, planItem, result, attemptFinishedAt);
+      updateTermAttempt(termAttempts, planItem, result, attemptFinishedAt, options);
     }
   }
 
