@@ -21,6 +21,7 @@ const STOP_TERMS = new Set([
   '关键词',
   '分类',
 ]);
+const URL_HOST_FRAGMENT_TERMS = new Set(['http', 'https', 'www', 'com', 'cn', 'net', 'org', 'gov', 'mps']);
 const FAMILY_ALIASES = {
   sarcasm: 'attack',
   meme: 'attack',
@@ -114,6 +115,7 @@ function dictionaryScopedToTerms(dictionary, targetTerms) {
 }
 
 function isNoisyTerm(term) {
+  if (URL_HOST_FRAGMENT_TERMS.has(String(term).toLowerCase())) return true;
   if (!term || STOP_TERMS.has(term) || /^变体\d+$/.test(term)) return true;
   if (/[^\p{Script=Han}A-Za-z0-9]/u.test(term)) return true;
   if (/^(?:BV[0-9A-Za-z]{8,}|av\d{6,})$/i.test(term)) return true;

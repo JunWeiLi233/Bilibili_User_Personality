@@ -94,6 +94,17 @@ test('normalizes away suffix-only Bilibili emote variants', () => {
   assert.deepEqual(entries.map((entry) => entry.term), ['Catconfuse']);
 });
 
+test('normalizes away standalone URL host fragments from keyword terms', () => {
+  const entries = normalizeKeywordEntries([
+    { term: 'mps', family: 'evidence', meaning: 'domain fragment copied from cyberpolice.mps.gov.cn URL' },
+    { term: 'gov', family: 'evidence', meaning: 'domain suffix copied from a government URL' },
+    { term: 'cn', family: 'evidence', meaning: 'country TLD copied from a URL' },
+    { term: 'cyberpolice', family: 'evidence', meaning: 'network police reporting concept from a cited URL' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['cyberpolice']);
+});
+
 test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-noise-'));
   const dictionaryPath = join(dir, 'dictionary.json');
