@@ -110,6 +110,11 @@ const TERM_TOPIC_CONTEXTS = {
   '\u54ea\u513f\u90fd\u6709\u4f60': ['\u70ed\u8bc4', '\u56de\u590d\u533a', '\u8bc4\u8bba\u533a'],
   '\u574f\u7b11': ['\u5f39\u5e55', '\u8868\u60c5', '\u70ed\u8bc4'],
 };
+const TERM_PRECISION_QUERIES = {
+  '\u4e0d\u4f1a\u771f\u6709\u4eba': ['\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc1\u636e \u56de\u590d', '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97 \u8bc1\u636e', '\u8fd9\u4e5f\u53eb\u8bc1\u636e \u8bc4\u8bba'],
+  '\u8f66\u5bb6\u519b': ['\u5c0f\u7c73\u6c7d\u8f66 \u8f66\u5bb6\u519b \u63a7\u8bc4', '\u96f7\u519b \u8f66\u5bb6\u519b \u70ed\u8bc4', '\u7c73\u7c89\u63a7\u8bc4 SU7', '\u5c0f\u7c73\u6c34\u519b \u63a7\u8bc4'],
+  '\u8e6d\u6982\u5ff5': ['\u8e6d\u6982\u5ff5\u662f\u8c01 AI', '\u8c01\u5728\u8e6d\u6982\u5ff5 AI', '\u786c\u8e6dAI\u6982\u5ff5', '\u8e6d\u6982\u5ff5 \u6e38\u620f\u516c\u53f8'],
+};
 
 function asPositiveInt(value, fallback, max = Number.MAX_SAFE_INTEGER) {
   const number = Number(value);
@@ -329,6 +334,10 @@ function recommendationGroupForTerm(term) {
   if (clean.includes('\u8e6d\u6982\u5ff5')) return '\u8e6d\u6982\u5ff5';
   if (clean === '\u7cbe\u795e\u5916\u56fd\u4eba' || clean === '\u7cbe\u5916') return '\u7cbe\u795e\u5916\u56fd\u4eba';
   return clean;
+}
+
+function precisionQueriesForTerm(term) {
+  return TERM_PRECISION_QUERIES[recommendationGroupForTerm(term)] || [];
 }
 
 function diversifyCoverageActions(actions, limit) {
@@ -629,7 +638,12 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const attemptsCount = Number(attempt?.attempts) || 0;
     const triedQueries = attemptedVariantQueries(attempt);
     const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, options);
-    const nextVariant = availableVariants.find((variant) => !triedQueries.has(variant.query)) || null;
+    const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(attempt, options.retryBeforeUnattemptedLimit);
+    const precisionQuery = hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
+    const nextVariant =
+      (precisionQuery ? { query: precisionQuery, variantIndex: null, builtIn: false } : null) ||
+      availableVariants.find((variant) => !triedQueries.has(variant.query)) ||
+      null;
     let status = 'covered';
     let action = 'none';
     if (count >= targetEvidence && options.requireSourceBackedEvidence === true && count > 0 && !hasEvidenceSource(entry)) {

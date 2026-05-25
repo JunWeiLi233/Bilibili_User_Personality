@@ -1069,6 +1069,64 @@ test('buildDictionaryCoverageAudit diversifies recommendations across related we
   assert.equal(audit.recommendedQueries.some((query) => query.includes('\u8e6d\u6982\u5ff5')), true);
 });
 
+test('buildDictionaryCoverageAudit recommends precision queries for hard zero-evidence misses', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: '\u8f66\u5bb6\u519b', family: 'attack', evidenceCount: 0 },
+        { term: '\u8c01\u662f\u8e6d\u6982\u5ff5', family: 'attack', evidenceCount: 0 },
+        { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      termAttempts: {
+        [Buffer.from('\u8f66\u5bb6\u519b', 'utf8').toString('base64url')]: {
+          term: '\u8f66\u5bb6\u519b',
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 6,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: '\u8f66\u5bb6\u519b \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+            { query: '\u96f7\u519b\u7c89\u4e1d \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+            { query: '\u5c0f\u7c73\u6c34\u519b \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+          ],
+        },
+        [Buffer.from('\u8c01\u662f\u8e6d\u6982\u5ff5', 'utf8').toString('base64url')]: {
+          term: '\u8c01\u662f\u8e6d\u6982\u5ff5',
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 6,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: '\u8c01\u662f\u8e6d\u6982\u5ff5 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+            { query: '\u8c01\u5728\u8e6dAI \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+          ],
+        },
+        [Buffer.from('\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', 'utf8').toString('base64url')]: {
+          term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97',
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 6,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+            { query: '\u4e0d\u4f1a\u771f\u6709\u4eba\u4ee5\u4e3a \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' },
+          ],
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 3, retryBeforeUnattemptedLimit: 3 },
+  );
+
+  assert.equal(audit.nextActions.find((item) => item.term === '\u8f66\u5bb6\u519b').nextQuery, '\u5c0f\u7c73\u6c7d\u8f66 \u8f66\u5bb6\u519b \u63a7\u8bc4');
+  assert.equal(audit.nextActions.find((item) => item.term === '\u8c01\u662f\u8e6d\u6982\u5ff5').nextQuery, '\u8e6d\u6982\u5ff5\u662f\u8c01 AI');
+  assert.equal(audit.nextActions.find((item) => item.term === '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97').nextQuery, '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc1\u636e \u56de\u590d');
+});
+
 test('harvestKeywordDictionary runs dictionary-seeded searches and reports growth', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-'));
   const statePath = join(dir, 'state.json');
