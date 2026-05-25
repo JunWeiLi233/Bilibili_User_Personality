@@ -466,6 +466,7 @@ function generatedSearchAliasesForTerm(term) {
   if (/^\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211\u7684?$/.test(clean)) {
     aliases.push('\u7b2c\u4e00\u4e2a\u6295\u5e01', '\u9996\u4e2a\u6295\u5e01', '\u6211\u7b2c\u4e00\u4e2a\u6295\u5e01', '\u6295\u5e01\u80af\u5b9a\u662f\u6211');
   }
+  aliases.push(...generatedUniversalQuantifierSearchAliases(clean));
   if (/^(\u6839\u672c\u6ca1\u6709|\u7edd\u5bf9|\u80af\u5b9a|\u5168\u662f|\u5168\u90fd|\u5168\u90fd\u662f|\u6beb\u65e0|\u6ca1\u6709\u4e00\u4e2a|\u6ca1\u540a|\u6ca1\u5185\u5473)/.test(clean)) {
     aliases.push(...generatedChineseTailSearchAliases(clean));
   }
@@ -488,6 +489,29 @@ function generatedChineseTailSearchAliases(clean) {
   if (clean.endsWith('\u4e86') && clean.length > 3) aliases.push(clean.slice(0, -1));
   if (clean.endsWith('\u4e00\u4e0b') && clean.length > 4) aliases.push(clean.slice(0, -2));
   else if (clean.startsWith('\u7edd\u5bf9\u53ef\u4ee5')) aliases.push(`${clean}\u4e00\u4e0b`);
+  return aliases;
+}
+
+function generatedUniversalQuantifierSearchAliases(clean) {
+  const aliases = [];
+  if (clean.startsWith('\u5168\u662f') && clean.length > 2) {
+    const tail = clean.slice(2);
+    aliases.push(`\u5168\u90fd\u662f${tail}`, `\u5168\u90fd${tail}`, `\u5168\u90e8\u662f${tail}`);
+  }
+  if (clean.startsWith('\u5168\u90fd\u662f') && clean.length > 3) {
+    const tail = clean.slice(3);
+    aliases.push(`\u5168\u662f${tail}`, `\u5168\u90fd${tail}`, `\u5168\u90e8\u662f${tail}`);
+  }
+  if (clean.startsWith('\u5168\u90fd') && !clean.startsWith('\u5168\u90fd\u662f') && clean.length > 2) {
+    const tail = clean.slice(2);
+    aliases.push(`\u5168\u662f${tail}`, `\u5168\u90fd\u662f${tail}`, `\u5168\u90e8\u662f${tail}`);
+  }
+  const allIsMatch = clean.match(/^\u6240\u6709(.+)\u5168\u662f(.+)$/);
+  if (allIsMatch) aliases.push(`\u6240\u6709${allIsMatch[1]}\u5168\u90fd\u662f${allIsMatch[2]}`, `\u5168\u662f${allIsMatch[2]}`, `\u5168\u90fd\u662f${allIsMatch[2]}`);
+  if (clean.startsWith('\u5168\u5458') && clean.length > 2) {
+    const tail = clean.slice(2);
+    aliases.push(`\u6240\u6709\u4eba\u90fd${tail}`, `\u5168\u4f53${tail}`);
+  }
   return aliases;
 }
 
