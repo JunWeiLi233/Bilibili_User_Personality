@@ -15,7 +15,7 @@ import {
   ShieldWarning,
   WarningCircle,
 } from '@phosphor-icons/react';
-import { buildSentenceRadarMarks } from './languageUnderstanding.js';
+import { buildRiskLexiconText, buildSentenceRadarMarks, isMemeOrQuotedNonAttackText } from './languageUnderstanding.js';
 import './styles.css';
 
 const INVERSE_AXES = new Set(['证据敏感', '逻辑一致', '合作讨论', '修正意愿']);
@@ -352,41 +352,6 @@ function classifySpeechAct(comment, index, totalComments) {
       ];
 }
 
-function hasMemeFrame(text) {
-  return /(?:\u6897|\u73a9\u6897|\u540d\u573a\u9762|\u53f0\u8bcd|\u5f15\u7528|\u590d\u8ff0|\u8f6c\u8ff0|\u8868\u60c5\u5305|\u539f\u8bdd|\u6bb5\u5b50|\u8c10\u97f3|meme|quote|quoted|copypasta|catchphrase|inside joke)/i.test(text);
-}
-
-function hasQuoteFrame(text) {
-  return /[\"\u201c\u201d\u300c\u300d\u300e\u300f\u300a\u300b].{1,36}[\"\u201c\u201d\u300c\u300d\u300e\u300f\u300a\u300b]/.test(text)
-    || /(?:\u8fd9\u53e5|\u90a3\u53e5|\u8fd9\u4e2a\u8bcd|\u8fd9\u4e2a\u6897|\u53f0\u8bcd|\u539f\u53e5|line|phrase|quote|catchphrase)/i.test(text);
-}
-
-function stripQuotedSegments(text) {
-  return text
-    .replace(/[\u201c\u300c\u300e\u300a\"].{1,60}[\u201d\u300d\u300f\u300b\"]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function hasExplicitNonAttackFrame(text) {
-  return /(?:\u4e0d\u662f\u9a82|\u4e0d\u662f\u653b\u51fb|\u6ca1\u6709\u9a82|\u6ca1\u6709\u653b\u51fb|\u4e0d\u662f\u4eba\u8eab|\u6ca1\u6709\u4eba\u8eab|\u53ea\u662f|\u4ec5\u4ec5|\u7528\u6765\u8c03\u4f83|\u5f00\u73a9\u7b11|\u8c03\u4f83|\u73a9\u7b11|not attacking|not an attack|not insulting|not ad hominem|just a meme|only a meme|as a joke|joking)/i.test(text);
-}
-
-function hasMemeDiscussionFrame(text) {
-  return /(?:\u8fd9\u4e2a|\u8fd9\u53e5|\u8fd9\u6bb5|\u8fd9\u4e2a\u8bcd).{0,16}(?:\u6897|\u53f0\u8bcd|\u540d\u573a\u9762|\u539f\u53e5)|(?:\u6897|\u53f0\u8bcd|\u540d\u573a\u9762|\u539f\u53e5).{0,20}(?:\u592a\u597d\u7b11|\u597d\u7b11|\u590d\u8bfb|\u51fa\u5904|\u5f39\u5e55|\u5237\u5c4f|meme|quote|catchphrase)/i.test(text);
-}
-
-function hasDirectHostileTarget(text) {
-  return /(?:\u4f60|\u4f60\u4eec|\u4ed6|\u4ed6\u4eec|\u5979|\u5979\u4eec|\u5b83|\u5b83\u4eec|\u8fd9\u4eba|\u8fd9\u7fa4|\u7c89\u4e1d|\u73a9\u5bb6|up\u4e3b|\u4f5c\u8005|\u5bf9\u9762).{0,10}(?:\u50bb|\u8822|\u6eda|\u5c0f\u4e11|\u6025\u4e86|\u7834\u9632|\u6760\u7cbe|\u6b96\u4eba|\u7c89\u7ea2|\u6c34\u519b|\u6d17\u5730|\u8111\u5b50|\u667a\u5546|\u6bd4\u515c|\u53bb\u722c|\u522b\u6765\u6cbe\u8fb9|idiot|stupid|moron|shill|hater)/i.test(text);
-}
-
-function isMemeOrQuotedNonAttackText(text) {
-  if (!hasMemeFrame(text)) return false;
-  if (hasExplicitNonAttackFrame(text)) return true;
-  if (hasMemeDiscussionFrame(text)) return true;
-  return hasQuoteFrame(text) && !hasDirectHostileTarget(stripQuotedSegments(text));
-}
-
 function findLexiconMarks(comment, index, totalComments, runtimeLexicon) {
   const marks = [];
   const memeNonAttack = isMemeOrQuotedNonAttackText(comment);
@@ -499,8 +464,10 @@ function getTrollIndex(user) {
 function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons, analysisMode = 'hybrid' }) {
   const comments = splitComments(text);
   const joined = comments.join('\n');
+  const riskLexiconText = buildRiskLexiconText(comments);
   const total = Math.max(comments.length, 1);
   const density = (terms) => countMatches(joined, terms) / total;
+  const riskDensity = (terms) => countMatches(riskLexiconText, terms) / total;
   const semanticActs = comments.flatMap((comment, index) => classifySpeechAct(comment, index, total));
   const negativeActs = semanticActs.filter((act) => !act.positive && !act.neutral);
   const positiveActs = semanticActs.filter((act) => act.positive);
@@ -524,12 +491,12 @@ function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons,
   });
 
   const lexiconSeed = {
-    attack: clamp(28 + density(runtimeLexicon.attack) * 24 + perThousand(joined, runtimeLexicon.attack) * 2.8),
-    closure: clamp(30 + density(runtimeLexicon.absolutes) * 18 + perThousand(joined, runtimeLexicon.absolutes) * 2.2),
-    evidence: clamp(55 + density(runtimeLexicon.evidence) * 16 - density(runtimeLexicon.evasion) * 22),
+    attack: clamp(28 + riskDensity(runtimeLexicon.attack) * 24 + perThousand(riskLexiconText, runtimeLexicon.attack) * 2.8),
+    closure: clamp(30 + riskDensity(runtimeLexicon.absolutes) * 18 + perThousand(riskLexiconText, runtimeLexicon.absolutes) * 2.2),
+    evidence: clamp(55 + density(runtimeLexicon.evidence) * 16 - riskDensity(runtimeLexicon.evasion) * 22),
     logic: clamp(68 - (riskLexiconMarks.length / total) * 18 + density(runtimeLexicon.evidence) * 5),
-    cooperation: clamp(46 + density(runtimeLexicon.cooperation) * 18 - density(runtimeLexicon.attack) * 16 - density(runtimeLexicon.evasion) * 12),
-    correction: clamp(36 + density(runtimeLexicon.correction) * 28 + density(runtimeLexicon.cooperation) * 8 - density(runtimeLexicon.evasion) * 12),
+    cooperation: clamp(46 + density(runtimeLexicon.cooperation) * 18 - riskDensity(runtimeLexicon.attack) * 16 - riskDensity(runtimeLexicon.evasion) * 12),
+    correction: clamp(36 + density(runtimeLexicon.correction) * 28 + density(runtimeLexicon.cooperation) * 8 - riskDensity(runtimeLexicon.evasion) * 12),
   };
 
   const mix = (key) => {
@@ -543,7 +510,7 @@ function scoreComments({ name, uid, text, source, runtimeLexicon = baseLexicons,
       axis: '对抗性动机',
       value: mix('attack'),
       benchmark: 52,
-      note: `语义裁判检出 ${negativeActs.filter((act) => ['人', '动机'].includes(act.target)).length} 条人/动机攻击；字典 attack 标记 ${lexiconMarks.filter((mark) => mark.family === 'attack').length} 次，密度 ${perThousand(joined, runtimeLexicon.attack).toFixed(1)} / 千字。`,
+      note: `语义裁判检出 ${negativeActs.filter((act) => ['人', '动机'].includes(act.target)).length} 条人/动机攻击；字典 attack 标记 ${lexiconMarks.filter((mark) => mark.family === 'attack').length} 次，密度 ${perThousand(riskLexiconText, runtimeLexicon.attack).toFixed(1)} / 千字。`,
     },
     {
       axis: '认知闭合',

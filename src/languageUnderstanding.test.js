@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildSentenceRadarMarks, normalizeRadarAxis } from './languageUnderstanding.js';
+import { buildRiskLexiconText, buildSentenceRadarMarks, isMemeOrQuotedNonAttackText, normalizeRadarAxis } from './languageUnderstanding.js';
 
 test('buildSentenceRadarMarks maps full sentence impacts onto radar axes', () => {
   const marks = buildSentenceRadarMarks(
@@ -247,4 +247,19 @@ test('buildSentenceRadarMarks keeps hostile targeted meme usage as attack eviden
 
   const attackMark = marks.find((mark) => mark.axis === normalizeRadarAxis('attack'));
   assert.equal(attackMark?.strength, 0.82);
+});
+
+test('isMemeOrQuotedNonAttackText distinguishes meme reuse from targeted attacks', () => {
+  assert.equal(isMemeOrQuotedNonAttackText('\u539f\u6765\u5c0f\u4e11\u7adf\u662f\u6211\u81ea\u5df1\uff0c\u8fd9\u4e00\u6bb5\u771f\u7684\u7ef7\u4e0d\u4f4f\u4e86\u3002'), true);
+  assert.equal(isMemeOrQuotedNonAttackText('\u4f60\u5c31\u662f\u4e2a\u5c0f\u4e11\uff0c\u522b\u62ff\u73a9\u6897\u5f53\u501f\u53e3\u3002'), false);
+});
+
+test('buildRiskLexiconText removes meme-only keyword hits before score density', () => {
+  const text = buildRiskLexiconText([
+    '\u539f\u6765\u5c0f\u4e11\u7adf\u662f\u6211\u81ea\u5df1\uff0c\u8fd9\u4e00\u6bb5\u771f\u7684\u7ef7\u4e0d\u4f4f\u4e86\u3002',
+    '\u4f60\u5c31\u662f\u4e2a\u5c0f\u4e11\uff0c\u522b\u62ff\u73a9\u6897\u5f53\u501f\u53e3\u3002',
+  ]);
+
+  assert.equal(text.includes('\u539f\u6765\u5c0f\u4e11'), false);
+  assert.equal(text.includes('\u4f60\u5c31\u662f\u4e2a\u5c0f\u4e11'), true);
 });

@@ -110,13 +110,25 @@ function hasDirectHostileTarget(text) {
   return /(?:\u4f60|\u4f60\u4eec|\u4ed6|\u4ed6\u4eec|\u5979|\u5979\u4eec|\u5b83|\u5b83\u4eec|\u8fd9\u4eba|\u8fd9\u7fa4|\u7c89\u4e1d|\u73a9\u5bb6|up\u4e3b|\u4f5c\u8005|\u5bf9\u9762).{0,10}(?:\u50bb|\u8822|\u6eda|\u5c0f\u4e11|\u6025\u4e86|\u7834\u9632|\u6760\u7cbe|\u6b96\u4eba|\u7c89\u7ea2|\u6c34\u519b|\u6d17\u5730|\u8111\u5b50|\u667a\u5546|\u6bd4\u515c|\u53bb\u722c|\u522b\u6765\u6cbe\u8fb9|idiot|stupid|moron|shill|hater)/i.test(text);
 }
 
-function isMemeOrQuotedNonAttack(sentence = {}) {
-  const text = sentenceText(sentence);
+export function isMemeOrQuotedNonAttackText(text = '') {
+  text = String(text || '');
   if (hasSelfDirectedMemeCatchphrase(text) && !hasDirectHostileTarget(text)) return true;
   if (!hasMemeFrame(text)) return false;
   if (hasExplicitNonAttackFrame(text)) return true;
   if (hasMemeDiscussionFrame(text)) return true;
   return hasQuoteFrame(text) && !hasDirectHostileTarget(stripQuotedSegments(text));
+}
+
+export function buildRiskLexiconText(comments = []) {
+  return (Array.isArray(comments) ? comments : [comments])
+    .map((comment) => String(comment || '').trim())
+    .filter(Boolean)
+    .filter((comment) => !isMemeOrQuotedNonAttackText(comment))
+    .join('\n');
+}
+
+function isMemeOrQuotedNonAttack(sentence = {}) {
+  return isMemeOrQuotedNonAttackText(sentenceText(sentence));
 }
 
 function addImpact(impacts, impact) {
