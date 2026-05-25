@@ -293,6 +293,25 @@ function isAskBaiduSongVideoContextOnlyTerm(term, evidenceSamples = [], evidence
   });
 }
 
+function isMisleadingCarArmyVideoContextOnlyTerm(term, evidenceSamples = [], evidenceSources = []) {
+  const clean = cleanTerm(term);
+  const carArmyTerms = new Set(['\u8f66\u5bb6\u519b', '\u6ca1\u6709\u8f66\u5bb6\u519b']);
+  if (!carArmyTerms.has(clean)) return false;
+  if (!hasVideoContextOnlyEvidence(evidenceSamples, evidenceSources)) return false;
+  const samples = unique([
+    ...evidenceSamples.map((sample) => String(sample || '').trim()),
+    ...evidenceSources.map((source) => String(source?.sample || '').trim()),
+  ]).filter(Boolean);
+  const acceptableSamples = samples.filter((sample) => {
+    const text = sample.replace(/^Bilibili video context:\s*/u, '');
+    if (/\u822a\u5929\u8f66\u5bb6\u519b/u.test(text)) return false;
+    if (clean === '\u6ca1\u6709\u8f66\u5bb6\u519b' && !/(?:\u6ca1\u6709\u8f66\u5bb6\u519b|\u54ea\u6709\u4ec0\u4e48\u8f66\u5bb6\u519b|\u4e0d\u662f\u8f66\u5bb6\u519b)/u.test(text)) return false;
+    if (clean === '\u8f66\u5bb6\u519b' && !/\u8f66\u5bb6\u519b/u.test(text)) return false;
+    return /(?:\u5c0f\u7c73|\u96f7\u519b|SU7|\u7c73\u7c89|\u5c0f\u7c73\u6c7d\u8f66|\u65b0\u80fd\u6e90\u8f66|\u8f66\u5708|\u8f66\u7c89|\u63a7\u8bc4|\u6c34\u519b)/iu.test(text);
+  });
+  return acceptableSamples.length === 0;
+}
+
 function evidenceSourceSortKey(source = {}) {
   return isVideoContextSource(source) ? 1 : 0;
 }
@@ -513,6 +532,7 @@ export function normalizeKeywordEntries(rawEntries = []) {
       if (isNoisyTerm(term)) continue;
       if (isTitleSplicedVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
       if (isAskBaiduSongVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
+      if (isMisleadingCarArmyVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
       entries.push({
         term,
         family,

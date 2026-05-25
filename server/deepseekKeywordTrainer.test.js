@@ -386,6 +386,46 @@ test('normalizes away ask-baidu song title video-context evidence', () => {
   assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u4f60\u90fd\u4e0d\u4f1a\u81ea\u5df1\u95ee\u767e\u5ea6\u5417']);
 });
 
+test('normalizes away misleading car-army video-context-only evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u8f66\u5bb6\u519b',
+      family: 'attack',
+      meaning: '\u6307\u4ee3\u7279\u5b9a\u7c89\u4e1d\u7fa4\u4f53\uff0c\u7528\u4e8e\u9635\u8425\u653b\u51fb\u6216\u5632\u8bbd',
+      evidenceCount: 2,
+      evidenceSamples: [
+        'Bilibili video context: \u4f59\u627f\u4e1c\u548c\u96f7\u519b\u7c89\u4e1d\u5bf9\u6bd4\uff0c\u96f7\u519b\u7684\u82f9\u679c\u7c89\u4e1d\u6bd4\u8f83\u591a',
+        'Bilibili video context: \u822a\u5929\u8f66\u5bb6\u519b\uff0c\u76ae\u76ae\u867e\u4e8b\u4ef6\u53cd\u8f6c',
+      ],
+      evidenceSources: [
+        {
+          source: 'Bilibili public search-discovered video comment scan plus video context: https://www.bilibili.com/video/BV-context/',
+          uid: 'BV-context',
+          sample: 'Bilibili video context: \u822a\u5929\u8f66\u5bb6\u519b\uff0c\u76ae\u76ae\u867e\u4e8b\u4ef6\u53cd\u8f6c',
+        },
+      ],
+    },
+    {
+      term: '\u6ca1\u6709\u8f66\u5bb6\u519b',
+      family: 'attack',
+      meaning: '\u5426\u8ba4\u7279\u5b9a\u7c89\u4e1d\u9635\u8425\u5b58\u5728\u5e76\u8fdb\u884c\u9635\u8425\u5bf9\u7acb',
+      evidenceCount: 1,
+      evidenceSamples: ['Bilibili video context: \u4f59\u627f\u4e1c\u548c\u96f7\u519b\u7c89\u4e1d\u5bf9\u6bd4'],
+    },
+    {
+      term: '\u8f66\u5bb6\u519b',
+      family: 'attack',
+      meaning: '\u771f\u5b9e\u8bc4\u8bba\u8bc1\u636e',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5c0f\u7c73SU7\u8fd9\u4e8b\u4e00\u51fa\uff0c\u8f66\u5bb6\u519b\u53c8\u6765\u63a7\u8bc4\u4e86'],
+      evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-car-comment', sample: '\u5c0f\u7c73SU7\u8fd9\u4e8b\u4e00\u51fa\uff0c\u8f66\u5bb6\u519b\u53c8\u6765\u63a7\u8bc4\u4e86' }],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u8f66\u5bb6\u519b']);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u5c0f\u7c73SU7\u8fd9\u4e8b\u4e00\u51fa\uff0c\u8f66\u5bb6\u519b\u53c8\u6765\u63a7\u8bc4\u4e86']);
+});
+
 test('mergeEntriesIntoDictionary prunes persisted title-spliced video-context-only terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-title-splice-'));
   const dictionaryPath = join(dir, 'dictionary.json');
