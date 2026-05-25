@@ -1088,6 +1088,40 @@ test('buildKeywordHarvestQueries broadens persistent zero-evidence attack terms'
   assert.equal(queries.includes('\u8c01\u5728\u8e6dAI \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
 });
 
+test('buildKeywordHarvestQueries avoids noisy literal searches for obfuscated and ambiguous weak terms', () => {
+  const cases = [
+    {
+      term: '\u5de5\u91cdhao',
+      family: 'evasion',
+      expectedAliasQuery: '\u5de5\u91cd\u53f7 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      noisyFragment: 'hao',
+    },
+    {
+      term: '\u516c\u5f0f\u5957\u53cd\u4e86',
+      family: 'correction',
+      expectedAliasQuery: '\u516c\u5f0f\u7528\u53cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a',
+      noisyFragment: '\u5b89\u5168\u5957',
+    },
+  ];
+
+  for (const item of cases) {
+    const queries = buildKeywordHarvestQueries(
+      {
+        entries: [{ term: item.term, family: item.family, evidenceCount: 1 }],
+      },
+      {
+        seedQueries: [],
+        coverageMode: 'all-weak',
+        maxQueries: 4,
+        queryVariantsPerTerm: 4,
+      },
+    );
+
+    assert.equal(queries[0], item.expectedAliasQuery, `${item.term} should start with ${item.expectedAliasQuery}`);
+    assert.equal(queries[0].includes(item.noisyFragment), false, `${item.term} first query should avoid ${item.noisyFragment}`);
+  }
+});
+
 test('buildKeywordHarvestQueries all-weak mode targets every weak term before broad seeds', () => {
   const queries = buildKeywordHarvestQueries(
     {

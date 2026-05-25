@@ -1950,6 +1950,28 @@ test('findDictionaryEntriesWithTextEvidence maps loaded dice title wording back 
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-loaded-dice'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps obfuscated and corrected wording back to weak terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u5de5\u91cdhao', family: 'evasion', meaning: 'obfuscated public-account plug' },
+        { term: '\u516c\u5f0f\u5957\u53cd\u4e86', family: 'correction', meaning: 'formula applied backwards correction' },
+      ],
+    },
+    [
+      '\u4ed6\u8fd8\u5728\u8bc4\u8bba\u91cc\u7559\u5de5\u91cd\u53f7\u5f15\u6d41\uff0c\u8fd9\u79cd\u522b\u5f53\u771f',
+      '\u8fd9\u91cc\u516c\u5f0f\u7528\u53cd\u4e86\uff0c\u4e0d\u662f\u8fd9\u4e48\u5957\u7684',
+    ].join('\n'),
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-obfuscated-correction/',
+      uid: 'BV-obfuscated-correction',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u5de5\u91cdhao', '\u516c\u5f0f\u5957\u53cd\u4e86']);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-obfuscated-correction'), true);
+});
+
 test('findDictionaryEntriesWithTextEvidence maps persistent zero-evidence attack aliases back to dictionary terms', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
