@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
+import { withFileLock } from './fileLock.js';
 import { harvestKeywordDictionaryRounds } from './keywordHarvest.js';
 import { buildVideoKeywordDiscoveryOptions, parsePriorityQueryContent } from './runVideoKeywordDiscoveryOptions.js';
 
@@ -155,9 +156,13 @@ const harvestOptions = buildVideoKeywordDiscoveryOptions({
   extraQueryTemplates,
   exhaustedSuggestionTemplates,
 });
-const { statePath, reportPath } = harvestOptions;
+const { statePath, reportPath, lockPath, lockStaleMs } = harvestOptions;
 
-const result = await harvestKeywordDictionaryRounds(harvestOptions);
+const result = await withFileLock(
+  lockPath,
+  () => harvestKeywordDictionaryRounds(harvestOptions),
+  { staleMs: lockStaleMs },
+);
 
 for (let index = 0; index < result.rounds.length; index += 1) {
   reportRound(result.rounds[index], index, result.requestedRounds);

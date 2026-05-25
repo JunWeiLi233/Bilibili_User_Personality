@@ -108,6 +108,8 @@ export function buildVideoKeywordDiscoveryOptions({
     rounds: numberFromEnv(env, 'BILIBILI_HARVEST_ROUNDS', 1),
     statePath: env.BILIBILI_HARVEST_STATE_PATH || DEFAULT_HARVEST_STATE_PATH,
     reportPath: env.BILIBILI_HARVEST_REPORT_PATH || join(process.cwd(), 'server', 'keywordHarvestReport.json'),
+    lockPath: env.BILIBILI_HARVEST_LOCK_PATH || join(process.cwd(), 'server', '.keyword-harvest.lock'),
+    lockStaleMs: numberFromEnv(env, 'BILIBILI_HARVEST_LOCK_STALE_MS', 6 * 60 * 60 * 1000),
     resetState: env.BILIBILI_HARVEST_RESET === '1',
     skipSeen: env.BILIBILI_HARVEST_SKIP_SEEN !== '0',
   };

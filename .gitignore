@@ -11,4 +11,5 @@ server/keywordCoverageAudit.json
 server/keywordCoverageActions.json
 server/keywordCoverageQueries.txt
 server/keywordCoverageLoopReport.json
+server/.keyword-harvest.lock/
 set-deepseek-env.ps1
