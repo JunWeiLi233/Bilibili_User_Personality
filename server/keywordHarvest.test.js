@@ -1274,6 +1274,136 @@ test('buildCoverageActions broadens long contained phrase variants through short
   );
 });
 
+test('buildCoverageActions broadens short contained fragments through longer same-meaning anchors', () => {
+  const actions = buildCoverageActions(
+    {
+      entries: [
+        {
+          term: '\u0030\u4eba',
+          family: 'attack',
+          meaning: '\u7f51\u7edc\u6897\uff0c\u8868\u793a\u65e0\u4eba\u5173\u5fc3\uff0c\u7528\u4e8e\u8bbd\u523a\u5bf9\u65b9\u5b58\u5728\u611f\u4f4e',
+          evidenceCount: 1,
+          evidenceSources: [{ source: 'Bilibili public search-discovered video comment scan', sample: '\u90a3\u4e2a0\u4eba\u5728\u610f\u7684' }],
+        },
+        {
+          term: '\u0030\u4eba\u5728\u610f',
+          family: 'attack',
+          meaning: '\u7f51\u7edc\u6897\uff0c\u8868\u793a\u65e0\u4eba\u5173\u5fc3\uff0c\u7528\u4e8e\u8bbd\u523a\u5bf9\u65b9\u5b58\u5728\u611f\u4f4e',
+          evidenceCount: 1,
+          evidenceSources: [{ source: 'Bilibili public search-discovered video comment scan', sample: '\u90a3\u4e2a0\u4eba\u5728\u610f\u7684' }],
+        },
+      ],
+    },
+    {
+      searchedQueries: ['\u0030\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'],
+      runs: [
+        {
+          queryDiagnostics: [
+            {
+              targetExistingTerms: ['\u0030\u4eba', '\u0030\u4eba\u5728\u610f'],
+              acceptedTerms: [],
+              commentsCollected: 442,
+              trainingTextChars: 2000,
+            },
+          ],
+        },
+      ],
+      termAttempts: {
+        '\u0030\u4eba': {
+          term: '\u0030\u4eba',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: '\u0030\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+            },
+          ],
+        },
+        '\u0030\u4eba\u5728\u610f': {
+          term: '\u0030\u4eba\u5728\u610f',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: '\u0030\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+            },
+          ],
+        },
+      },
+    },
+    { targetEvidence: 3 },
+  );
+
+  const byTerm = Object.fromEntries(actions.map((item) => [item.term, item]));
+  assert.equal(byTerm['\u0030\u4eba'].status, 'weak_missed');
+  assert.equal(byTerm['\u0030\u4eba'].nextQuery, '\u0030\u4eba\u5728\u610f \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
+});
+
+test('buildCoverageActions does not reuse a shorter anchor after irrelevant feedback', () => {
+  const actions = buildCoverageActions(
+    {
+      entries: [
+        {
+          term: '\u0030\u4eba',
+          family: 'attack',
+          meaning: '\u7f51\u7edc\u6897\uff0c\u8868\u793a\u65e0\u4eba\u5173\u5fc3',
+          evidenceCount: 1,
+        },
+        {
+          term: '\u0030\u4eba\u5728\u610f',
+          family: 'attack',
+          meaning: '\u7f51\u7edc\u6897\uff0c\u8868\u793a\u65e0\u4eba\u5173\u5fc3',
+          evidenceCount: 1,
+        },
+      ],
+    },
+    {
+      runs: [
+        {
+          queryDiagnostics: [
+            {
+              targetExistingTerms: ['\u0030\u4eba'],
+              acceptedTerms: [],
+              commentsCollected: 442,
+              trainingTextChars: 2000,
+            },
+          ],
+        },
+      ],
+      termAttempts: {
+        '\u0030\u4eba': {
+          term: '\u0030\u4eba',
+          attempts: 2,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: '\u0030\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+            },
+            {
+              query: '\u0030\u4eba \u8bc4\u8bba\u533a',
+            },
+          ],
+        },
+        '\u0030\u4eba\u5728\u610f': {
+          term: '\u0030\u4eba\u5728\u610f',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: '\u0030\u4eba \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+            },
+          ],
+        },
+      },
+    },
+    { targetEvidence: 3 },
+  );
+
+  const byTerm = Object.fromEntries(actions.map((item) => [item.term, item]));
+  assert.equal(byTerm['\u0030\u4eba\u5728\u610f'].status, 'weak_missed');
+  assert.equal(byTerm['\u0030\u4eba\u5728\u610f'].nextQuery, '\u0030\u4eba\u5728\u610f \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
+});
+
 test('buildCoverageActions does not fall back to over-specific long contained phrases after shorter anchors miss', () => {
   const shortQuery = '\u5927\u8c61\u611f\u5192\u4e86 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4';
   const shortCommentQuery = '\u5927\u8c61\u611f\u5192\u4e86 \u8bc4\u8bba\u533a';

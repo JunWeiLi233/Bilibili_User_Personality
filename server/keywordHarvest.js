@@ -517,16 +517,18 @@ function relatedContainedSearchTerms(entries, entry) {
   const family = String(entry?.family || '').trim();
   const meaning = String(entry?.meaning || '').trim();
   if (!term || !meaning || !/\p{Script=Han}/u.test(term)) return [];
+  const allowLongerAnchor = term.length <= 3;
   return unique(
     entries
       .filter((candidate) => {
         const candidateTerm = String(candidate?.term || '').trim();
+        const isShorterAnchor = candidateTerm.length < term.length && term.includes(candidateTerm);
+        const isLongerAnchor = allowLongerAnchor && candidateTerm.length > term.length && candidateTerm.includes(term);
         return (
           candidateTerm &&
           candidateTerm !== term &&
-          candidateTerm.length < term.length &&
           /\p{Script=Han}/u.test(candidateTerm) &&
-          term.includes(candidateTerm) &&
+          (isShorterAnchor || isLongerAnchor) &&
           String(candidate?.family || '').trim() === family &&
           String(candidate?.meaning || '').trim() === meaning
         );
@@ -1081,7 +1083,15 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       assumeLegacyQueriesCurrent,
     });
     const triedQueries = new Set([...attemptedVariantQueries(attempt), ...searchedQueries]);
-    const relatedSearchTerms = relatedContainedSearchTerms(entries, entry);
+    const relatedSearchTerms = relatedContainedSearchTerms(entries, entry).filter((relatedTerm) => {
+      const cleanRelatedTerm = String(relatedTerm || '').trim();
+      const relatedAttempt = getTermAttempt(attempts, cleanRelatedTerm);
+      const relatedMissed =
+        relatedAttempt &&
+        Math.max(0, Number(relatedAttempt.attempts) || 0) > 0 &&
+        Math.max(0, Number(relatedAttempt.successfulAttempts) || 0) === 0;
+      return !(cleanRelatedTerm.length < term.length && (relatedMissed || hasIrrelevantQueryFeedback(state, cleanRelatedTerm)));
+    });
     const preferRelatedSearchTerms = attemptsCount > 0 && successfulAttempts === 0 && relatedSearchTerms.length > 0;
     const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, {
       ...options,
@@ -1106,6 +1116,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
           )
         : '';
     const precisionQuery = !needsSourceRefresh && hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
+    const relatedRetryVariant = preferRelatedSearchTerms ? availableVariants.find((variant) => !triedQueries.has(variant.query)) : null;
     const sourceRefreshVariant =
       needsSourceRefresh && options.requireCommentBackedEvidence === true
         ? availableVariants.find((variant) => !triedQueries.has(variant.query) && isCommentEvidenceQuery(variant.query))
@@ -1113,6 +1124,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const nextVariant =
       sourceRefreshVariant ||
       (feedbackQuery ? { query: feedbackQuery, variantIndex: null, builtIn: false } : null) ||
+      relatedRetryVariant ||
       (exactFeedbackQuery ? { query: exactFeedbackQuery, variantIndex: null, builtIn: false } : null) ||
       (precisionQuery ? { query: precisionQuery, variantIndex: null, builtIn: false } : null) ||
       (needsSourceRefresh && options.requireCommentBackedEvidence === true
