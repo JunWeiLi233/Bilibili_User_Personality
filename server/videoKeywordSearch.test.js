@@ -290,6 +290,50 @@ test('searchVideoKeywords ranks query-token matches even when the target term sp
   assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BVtarget1']);
 });
 
+test('searchVideoKeywords avoids scanning zero-relevance videos for target coverage', async () => {
+  let fetchCalls = 0;
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u8c01\u662f\u8e6d\u6982\u5ff5',
+      discoveryMode: 'search',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u8e6d\u6982\u5ff5', '\u8c01\u662f\u8e6d\u6982\u5ff5'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVgeneric1',
+          title: '\u94de\u548c\u52a0\u6025\u662f\u4e0d\u540c\u7684\u6982\u5ff5',
+          sourceUrl: 'https://www.bilibili.com/video/BVgeneric1/',
+        },
+        {
+          bvid: 'BVgeneric2',
+          title: '\u8fd9\u4e2a\u6982\u5ff5\u5230\u5e95\u662f\u4ec0\u4e48',
+          sourceUrl: 'https://www.bilibili.com/video/BVgeneric2/',
+        },
+      ],
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan unrelated videos');
+      },
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return { ok: true, entries: [], dictionaryEvidenceEntries: [], dictionary: { entries: [] } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 2);
+  assert.equal(trainedPayloads.length, 1);
+  assert.equal(trainedPayloads[0].text.includes('\u8e6d\u6982\u5ff5'), false);
+});
+
 test('searchVideoKeywords can discover popular videos without a search query', async () => {
   const requestedUrls = [];
   const result = await searchVideoKeywords(

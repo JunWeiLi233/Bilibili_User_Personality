@@ -205,6 +205,21 @@ test('buildKeywordHarvestQueries applies topic contexts to search aliases', () =
   }
 });
 
+test('buildKeywordHarvestQueries removes repeated whitespace query tokens', () => {
+  const queries = buildKeywordHarvestQueries(
+    { entries: [{ term: '\u54ea\u90fd\u6709\u4f60', family: 'attack', evidenceCount: 1 }] },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 40,
+      queryVariantsPerTerm: 40,
+    },
+  );
+
+  assert.equal(queries.includes('\u54ea\u513f\u90fd\u6709\u4f60 \u8bc4\u8bba\u533a \u8bc4\u8bba\u533a'), false);
+  assert.equal(queries.includes('\u54ea\u513f\u90fd\u6709\u4f60 \u8bc4\u8bba\u533a'), true);
+});
+
 test('buildKeywordHarvestQueries broadens hard zero-evidence terms with fresher controversy wording', () => {
   const cases = [
     {
@@ -1243,6 +1258,7 @@ test('buildDictionaryCoverageAudit does not recommend globally searched feedback
       entries: [{ term, family: 'attack', evidenceCount: 0 }],
     },
     {
+      harvestStrategyVersion: 2,
       searchedQueries: [
         '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a',
         '\u6ca1\u6709\u8f66\u5bb6\u519b \u5c0f\u7c73SU7',
@@ -1265,6 +1281,53 @@ test('buildDictionaryCoverageAudit does not recommend globally searched feedback
             [
               {
                 query: '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a',
+                commentsCollected: 20,
+                trainingTextChars: 500,
+                targetExistingTerms: [term],
+                acceptedTerms: [],
+              },
+            ],
+          ],
+        },
+      ],
+    },
+    { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 3 },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, term);
+});
+
+test('buildDictionaryCoverageAudit can retry exact queries from older harvest strategy state', () => {
+  const term = '\u8f66\u5bb6\u519b';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [{ term, family: 'attack', evidenceCount: 0 }],
+    },
+    {
+      harvestStrategyVersion: 0,
+      searchedQueries: [term, '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a'],
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 9,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: term, hit: false },
+            { query: '\u8f66\u5bb6\u519b \u5c0f\u7c73SU7 \u8bc4\u8bba\u533a', hit: false },
+            { query: '\u6ca1\u6709\u8f66\u5bb6\u519b \u5c0f\u7c73SU7', hit: false },
+            { query: '\u8f66\u5bb6\u519b \u96f7\u519b \u539f\u8bdd', hit: false },
+          ],
+        },
+      },
+      runs: [
+        {
+          queryDiagnostics: [
+            [
+              {
+                query: term,
                 commentsCollected: 20,
                 trainingTextChars: 500,
                 targetExistingTerms: [term],

@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { readKeywordDictionary as defaultReadKeywordDictionary } from './deepseekKeywordTrainer.js';
 import { searchVideoKeywords as defaultSearchVideoKeywords } from './videoKeywordSearch.js';
 
+const HARVEST_STRATEGY_VERSION = 2;
 const DEFAULT_SEED_QUERIES = [
   '\u4e2d\u6587\u4e92\u8054\u7f51 \u6897 \u8bc4\u8bba\u533a',
   '\u8bc4\u8bba\u533a \u70ed\u8bc4 \u6897',
@@ -160,8 +161,21 @@ function parseTemplateList(value) {
     .filter(Boolean);
 }
 
+function normalizeQueryText(query) {
+  const seen = new Set();
+  return String(query || '')
+    .trim()
+    .split(/\s+/)
+    .filter((token) => {
+      if (!token || seen.has(token)) return false;
+      seen.add(token);
+      return true;
+    })
+    .join(' ');
+}
+
 function renderQueryTemplate(template, term, family) {
-  return String(template || '').replaceAll('{term}', term).replaceAll('{family}', family).trim();
+  return normalizeQueryText(String(template || '').replaceAll('{term}', term).replaceAll('{family}', family));
 }
 
 function queryTemplatesFromOptions(options = {}) {
@@ -183,7 +197,10 @@ function contextualQueriesForTerm(term) {
   return unique(
     searchTermsForTerm(term).flatMap((searchTerm) => {
       const contexts = TERM_TOPIC_CONTEXTS[searchTerm] || [];
-      return contexts.flatMap((context) => [`${searchTerm} ${context} \u8bc4\u8bba\u533a`, `${context} ${searchTerm} \u70ed\u8bc4`]);
+      return contexts.flatMap((context) => [
+        normalizeQueryText(`${searchTerm} ${context} \u8bc4\u8bba\u533a`),
+        normalizeQueryText(`${context} ${searchTerm} \u70ed\u8bc4`),
+      ]);
     }),
   );
 }
@@ -222,7 +239,7 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
   const searchTerms = searchTermsForTerm(term);
   const pushTemplateVariant = (item, searchTerm) => {
     variants.push({
-      query: item.template(searchTerm, family),
+      query: normalizeQueryText(item.template(searchTerm, family)),
       variantIndex: variants.length,
       builtIn: item.builtIn,
     });
@@ -252,8 +269,21 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
     .slice(0, limit);
 }
 
-function attemptedVariantQueries(attempt) {
-  return new Set((attempt?.queries || []).map((item) => item.query).filter(Boolean));
+function attemptedVariantQueries(attempt, options = {}) {
+  const requireCurrentStrategyVersion = options.requireCurrentStrategyVersion === true;
+  const assumeLegacyQueriesCurrent = options.assumeLegacyQueriesCurrent === true;
+  return new Set(
+    (attempt?.queries || [])
+      .filter(
+        (item) =>
+          !requireCurrentStrategyVersion ||
+          item.hit === true ||
+          Number(item.strategyVersion || 0) >= HARVEST_STRATEGY_VERSION ||
+          (assumeLegacyQueriesCurrent && !Number(item.strategyVersion || 0)),
+      )
+      .map((item) => item.query)
+      .filter(Boolean),
+  );
 }
 
 function isTermAttemptExhausted(term, family, attempt, options = {}) {
@@ -506,6 +536,7 @@ export async function readKeywordHarvestState(statePath = DEFAULT_HARVEST_STATE_
     const state = JSON.parse(await readFile(statePath, 'utf8'));
     return {
       version: state.version || 1,
+      harvestStrategyVersion: Math.max(0, Number(state.harvestStrategyVersion) || 0),
       updatedAt: state.updatedAt || null,
       searchedQueries: Array.isArray(state.searchedQueries) ? state.searchedQueries : [],
       scannedBvids: Array.isArray(state.scannedBvids) ? state.scannedBvids : [],
@@ -513,7 +544,7 @@ export async function readKeywordHarvestState(statePath = DEFAULT_HARVEST_STATE_
       runs: Array.isArray(state.runs) ? state.runs : [],
     };
   } catch {
-    return { version: 1, updatedAt: null, searchedQueries: [], scannedBvids: [], termAttempts: {}, runs: [] };
+    return { version: 1, harvestStrategyVersion: 0, updatedAt: null, searchedQueries: [], scannedBvids: [], termAttempts: {}, runs: [] };
   }
 }
 
@@ -660,6 +691,9 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
   const entries = sortEntriesForCoverage(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
   const attempts = state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
   const searchedQueries = new Set(Array.isArray(state.searchedQueries) ? state.searchedQueries : []);
+  const assumeLegacyQueriesCurrent =
+    !Object.prototype.hasOwnProperty.call(state, 'harvestStrategyVersion') ||
+    Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION;
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
   return entries.map((entry) => {
     const term = String(entry.term || '').trim();
@@ -669,6 +703,10 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const exhausted = isTermAttemptExhausted(term, family, attempt, options);
     const successfulAttempts = Number(attempt?.successfulAttempts) || 0;
     const attemptsCount = Number(attempt?.attempts) || 0;
+    const currentStrategyTriedQueries = attemptedVariantQueries(attempt, {
+      requireCurrentStrategyVersion: true,
+      assumeLegacyQueriesCurrent,
+    });
     const triedQueries = new Set([...attemptedVariantQueries(attempt), ...searchedQueries]);
     const availableVariants = queryVariantsForTerm(term, family, queryTemplatesFromOptions(options).length, options);
     const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(attempt, options.retryBeforeUnattemptedLimit);
@@ -678,7 +716,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
         : '';
     const exactFeedbackQuery =
       hardMissedZeroEvidence && hasIrrelevantQueryFeedback(state, term)
-        ? exactFeedbackQueriesForTerm(term).find((query) => !triedQueries.has(query))
+        ? exactFeedbackQueriesForTerm(term).find((query) => !currentStrategyTriedQueries.has(query))
         : '';
     const precisionQuery = hardMissedZeroEvidence ? precisionQueriesForTerm(term).find((query) => !triedQueries.has(query)) : '';
     const nextVariant =
@@ -866,6 +904,7 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt) {
   const queryRecord = {
     at: finishedAt,
     query: planItem.query,
+    strategyVersion: HARVEST_STRATEGY_VERSION,
     ok: Boolean(result?.ok),
     hit,
     videos: result?.videos?.length || 0,
@@ -907,6 +946,7 @@ function backfillTermAttemptsFromSearchedQueries(termAttempts, dictionary, searc
       const queryRecord = {
         at: current.lastAttemptAt || backfilledAt,
         query: variant.query,
+        strategyVersion: Math.max(0, Number(options.harvestStrategyVersion) || 0),
         ok: true,
         hit: false,
         videos: 0,
@@ -943,15 +983,20 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const searchVideoKeywords = deps.searchVideoKeywords || defaultSearchVideoKeywords;
   const statePath = options.statePath || DEFAULT_HARVEST_STATE_PATH;
   const skipSeen = options.skipSeen !== false;
-  const state = options.resetState ? { version: 1, updatedAt: null, searchedQueries: [], scannedBvids: [], termAttempts: {}, runs: [] } : await readKeywordHarvestState(statePath);
+  const state = options.resetState
+    ? { version: 1, harvestStrategyVersion: 0, updatedAt: null, searchedQueries: [], scannedBvids: [], termAttempts: {}, runs: [] }
+    : await readKeywordHarvestState(statePath);
   const before = await readKeywordDictionary();
   const beforeCoverage = summarizeEvidenceCoverage(before, { targetEvidence: options.targetEvidence });
   const searchedQuerySet = new Set(state.searchedQueries);
+  const skipSearchedQuerySet =
+    Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION ? new Set(state.searchedQueries) : new Set();
   const scannedBvidSet = new Set(state.scannedBvids);
   const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
   const termAttempts = { ...state.termAttempts };
   const backfilledAttempts = backfillTermAttemptsFromSearchedQueries(termAttempts, before, searchedQuerySet, {
     ...options,
+    harvestStrategyVersion: state.harvestStrategyVersion,
     backfilledAt: state.updatedAt || new Date().toISOString(),
   });
   const candidatePlan = buildKeywordHarvestQueryPlan(before, {
@@ -972,7 +1017,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     maxHardMissedQueries: options.maxHardMissedQueries,
     termAttempts,
     retryBeforeUnattemptedLimit: options.retryBeforeUnattemptedLimit,
-    searchedQuerySet,
+    searchedQuerySet: skipSearchedQuerySet,
     skipSeen,
   });
   const candidateQueries = candidatePlan.map((item) => item.query);
@@ -1066,6 +1111,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const finishedAt = new Date().toISOString();
   const nextState = {
     version: 1,
+    harvestStrategyVersion: HARVEST_STRATEGY_VERSION,
     updatedAt: finishedAt,
     searchedQueries: [...searchedQuerySet].sort(),
     scannedBvids: [...scannedBvidSet].sort(),

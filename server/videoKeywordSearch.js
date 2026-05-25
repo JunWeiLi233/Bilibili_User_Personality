@@ -134,6 +134,12 @@ function sortVideosByRelevance(videos = [], searchQueries = [], targetExistingTe
     .map((item) => item.video);
 }
 
+function filterRelevantVideos(videos = [], searchQueries = [], targetExistingTerms = []) {
+  const needles = searchNeedlesForRelevance(searchQueries, targetExistingTerms);
+  if (needles.length === 0) return videos;
+  return videos.filter((video) => relevanceScoreForVideo(video, needles) > 0);
+}
+
 function buildVideoContextText(videos = []) {
   return uniqueByKey(
     videos
@@ -359,8 +365,12 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       existingTermsOnly || targetExistingTerms.length > 0
         ? discoveryGroups.map((group) => sortVideosByRelevance(group, searchQueries, targetExistingTerms))
         : discoveryGroups;
+    const eligibleDiscoveryGroups =
+      targetExistingTerms.length > 0
+        ? rankedDiscoveryGroups.map((group) => filterRelevantVideos(group, searchQueries, targetExistingTerms))
+        : rankedDiscoveryGroups;
     discoveredVideos = roundRobinUnique(
-      rankedDiscoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
+      eligibleDiscoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
       discoveryLimit,
       (video) => video.bvid,
     );
