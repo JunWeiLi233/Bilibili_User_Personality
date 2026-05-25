@@ -312,7 +312,7 @@ function normalizeFamily(family) {
 }
 
 function isVideoContextSample(sample) {
-  return String(sample || '').trim().startsWith('Bilibili video context:');
+  return /^(?:Bilibili video context|Bilibili public video title):/u.test(String(sample || '').trim());
 }
 
 function evidenceSampleSortKey(sample) {

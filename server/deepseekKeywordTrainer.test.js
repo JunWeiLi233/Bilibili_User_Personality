@@ -780,6 +780,70 @@ test('mergeEntriesIntoDictionary keeps fresh comment evidence when context sampl
   }
 });
 
+test('mergeEntriesIntoDictionary lets fresh comments replace capped public video title samples', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-comment-replaces-title-context-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u597d\u81ea\u4e3a\u4e4b',
+            family: 'attack',
+            meaning: 'dismissive warning phrase',
+            evidenceCount: 5,
+            evidenceSamples: [
+              '\u8fd8\u60f3\u7ee7\u7eed\u652f\u6301\u7684\u4f60\u4eec\u597d\u81ea\u4e3a\u4e4b\u5427',
+              'Bilibili public video title: title sample 1 \u597d\u81ea\u4e3a\u4e4b',
+              'Bilibili public video title: title sample 2 \u597d\u81ea\u4e3a\u4e4b',
+              'Bilibili public video title: title sample 3 \u597d\u81ea\u4e3a\u4e4b',
+              'Bilibili public video title: title sample 4 \u597d\u81ea\u4e3a\u4e4b',
+            ],
+            evidenceSources: [
+              { source: 'Bilibili public search-discovered video comment scan', uid: 'BVold', sample: '\u8fd8\u60f3\u7ee7\u7eed\u652f\u6301\u7684\u4f60\u4eec\u597d\u81ea\u4e3a\u4e4b\u5427' },
+              { source: 'Bilibili public search-discovered video comment scan plus video object evidence', uid: 'BVtitle1', sample: 'Bilibili public video title: title sample 1 \u597d\u81ea\u4e3a\u4e4b' },
+              { source: 'Bilibili public search-discovered video comment scan plus video object evidence', uid: 'BVtitle2', sample: 'Bilibili public video title: title sample 2 \u597d\u81ea\u4e3a\u4e4b' },
+              { source: 'Bilibili public search-discovered video comment scan plus video object evidence', uid: 'BVtitle3', sample: 'Bilibili public video title: title sample 3 \u597d\u81ea\u4e3a\u4e4b' },
+              { source: 'Bilibili public search-discovered video comment scan plus video object evidence', uid: 'BVtitle4', sample: 'Bilibili public video title: title sample 4 \u597d\u81ea\u4e3a\u4e4b' },
+            ],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary(
+      [
+        {
+          term: '\u597d\u81ea\u4e3a\u4e4b',
+          family: 'attack',
+          meaning: 'dismissive warning phrase',
+          evidenceCount: 1,
+          evidenceSamples: ['\u8fd9\u6b21\u4ed6\u4eec\u771f\u5f97\u597d\u81ea\u4e3a\u4e4b'],
+          evidenceSources: [
+            {
+              source: 'Bilibili public search-discovered video comment scan: https://www.bilibili.com/video/BVfresh/',
+              uid: 'BVfresh',
+              sample: '\u8fd9\u6b21\u4ed6\u4eec\u771f\u5f97\u597d\u81ea\u4e3a\u4e4b',
+            },
+          ],
+        },
+      ],
+      { dictionaryPath },
+    );
+
+    const entry = dictionary.entries.find((item) => item.term === '\u597d\u81ea\u4e3a\u4e4b');
+    assert.equal(entry.evidenceSamples.includes('\u8fd9\u6b21\u4ed6\u4eec\u771f\u5f97\u597d\u81ea\u4e3a\u4e4b'), true);
+    assert.equal(entry.evidenceSamples.filter((sample) => sample.startsWith('Bilibili public video title:')).length, 3);
+    assert.equal(entry.evidenceSources.some((source) => source.uid === 'BVfresh'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('mergeEntriesIntoDictionary shares existing alias evidence with longer dictionary variants', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-alias-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');
