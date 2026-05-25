@@ -246,6 +246,31 @@ test('buildKeywordHarvestQueries broadens hard zero-evidence terms with fresher 
   }
 });
 
+test('buildKeywordHarvestQueries broadens repeatedly missed conversational hard terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u9ad8\u4f4e\u5f97\u7ed9\u4f60\u9001\u4e0a\u53bb', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u6ca1\u6d3b\u8fc7\u4e24\u4e2a\u6708', family: 'attack', evidenceCount: 1 },
+        { term: '\u54ea\u90fd\u6709\u4f60', family: 'attack', evidenceCount: 1 },
+        { term: 'tv\u574f\u7b11', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 3,
+      targetEvidence: 3,
+    },
+  );
+
+  assert.equal(queries.includes('\u9ad8\u4f4e\u7ed9\u4f60\u9001\u4e0a\u53bb \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u6d3b\u4e0d\u8fc7\u4e24\u4e2a\u6708 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u54ea\u513f\u90fd\u6709\u4f60 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u574f\u7b11 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4'), true);
+});
+
 test('buildKeywordHarvestQueries all-weak mode targets every weak term before broad seeds', () => {
   const queries = buildKeywordHarvestQueries(
     {
