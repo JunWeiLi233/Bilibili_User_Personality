@@ -1441,6 +1441,52 @@ test('findDictionaryEntriesWithTextEvidence maps current weak miss comment forms
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-current-miss-alias'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps latest weak miss variants back to targets', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u5f39\u6027\u56de\u5e94', family: 'attack', meaning: 'selective response criticism' },
+        { term: '\u7c89\u4e1d\u7206\u7834', family: 'attack', meaning: 'fan mobbing threat' },
+        { term: '\u5c01100\u5e74', family: 'absolutes', meaning: 'hundred year ban hyperbole' },
+        { term: '\u5c01\u53f7100\u5e74', family: 'absolutes', meaning: 'account hundred year ban hyperbole' },
+        { term: '\u7c89\u5a07\u4f60\u51e0', family: 'attack', meaning: 'pink aesthetic meme jab' },
+        { term: '\u4e0d\u662f\u6760', family: 'cooperation', meaning: 'soften disagreement' },
+        { term: '\u7eaf\u594b\u5173', family: 'attack', meaning: 'bad game level joke' },
+        { term: '\u5927\u8dcc\u763e', family: 'attack', meaning: 'bossy lecturing urge' },
+        { term: '\u8d1f\u5206\u6eda\u7c97', family: 'attack', meaning: 'low quality dismissal' },
+      ],
+    },
+    [
+      '\u8fd9\u4eba\u53ea\u56de\u5e94\u8fd9\u4e2a\uff0c\u4e0d\u56de\u5e94\u90a3\u4e2a\uff0c\u771f\u662f\u9009\u62e9\u6027\u56de\u5e94',
+      '\u5c0f\u5fc3\u88ab\u7c89\u4e1d\u7206\u7834\uff0c\u4e0a\u6b21\u8fd8\u6709\u4eba\u88ab\u7c89\u4e1d\u6252\u5b66\u6821',
+      '\u8fd9\u53f7\u76f4\u63a5\u5c01\u53f7100\u5e74\uff0c\u76f8\u5f53\u4e8e\u5c01\u5230100\u5e74',
+      '\u8d26\u53f7\u5c01100\u5e74\u4e5f\u592a\u5938\u5f20\u4e86',
+      '\u7c89\u8272\u5a07\u5ae9\u4f60\u51e0\u5c81\uff0c\u8fd9\u4e0d\u5c31\u662f\u7c89\u5a07\u4f60\u51e0',
+      '\u4e0d\u662f\u6211\u6760\uff0c\u6211\u53ea\u662f\u89c9\u5f97\u8fd9\u4e2a\u8bc1\u636e\u4e0d\u591f',
+      '\u8fd9\u5173\u771f\u7caa\uff0c\u7eaf\u7caa\u5173\u4e86',
+      '\u4ed6\u53c8\u51fa\u6765\u8bad\u7c89\uff0c\u7239\u5473\u763e\u72af\u4e86',
+      '\u8fd9\u4e2a\u89c6\u9891\u96f6\u5206\u6eda\u7c97\uff0c\u8d1f\u5206\u6eda',
+    ].join('\n'),
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-latest-weak-alias/',
+      uid: 'BV-latest-weak-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u5f39\u6027\u56de\u5e94',
+    '\u7c89\u4e1d\u7206\u7834',
+    '\u5c01100\u5e74',
+    '\u5c01\u53f7100\u5e74',
+    '\u7c89\u5a07\u4f60\u51e0',
+    '\u4e0d\u662f\u6760',
+    '\u7eaf\u594b\u5173',
+    '\u5927\u8dcc\u763e',
+    '\u8d1f\u5206\u6eda\u7c97',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-latest-weak-alias'), true);
+});
+
 test('findDictionaryEntriesWithTextEvidence maps long missed phrase anchors back to weak terms', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

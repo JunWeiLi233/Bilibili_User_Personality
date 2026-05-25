@@ -340,6 +340,47 @@ test('buildKeywordHarvestQueries uses controversy-context aliases for weak searc
   }
 });
 
+test('buildKeywordHarvestQueries uses latest weak miss aliases before exact stale queries', () => {
+  const cases = [
+    {
+      term: '\u7c89\u4e1d\u7206\u7834',
+      family: 'attack',
+      expectedAliasQuery: '\u7206\u7834\u4f60 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u5c01100\u5e74',
+      family: 'absolutes',
+      expectedAliasQuery: '\u5c01\u53f7100\u5e74 \u7edd\u5bf9\u5316 \u8bc4\u8bba \u70ed\u8bc4',
+    },
+    {
+      term: '\u4e0d\u662f\u6760',
+      family: 'cooperation',
+      expectedAliasQuery: '\u4e0d\u662f\u6211\u6760 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u8d1f\u5206\u6eda\u7c97',
+      family: 'attack',
+      expectedAliasQuery: '\u6eda\u7c97 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+  ];
+
+  for (const item of cases) {
+    const queries = buildKeywordHarvestQueries(
+      {
+        entries: [{ term: item.term, family: item.family, evidenceCount: 1 }],
+      },
+      {
+        seedQueries: [],
+        coverageMode: 'all-weak',
+        maxQueries: 4,
+        queryVariantsPerTerm: 4,
+      },
+    );
+
+    assert.equal(queries[0], item.expectedAliasQuery, `${item.term} should start with ${item.expectedAliasQuery}`);
+  }
+});
+
 test('buildKeywordHarvestQueries starts with higher-signal aliases for ambiguous weak terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
