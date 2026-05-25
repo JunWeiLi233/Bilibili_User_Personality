@@ -144,6 +144,8 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     targetEvidence,
     coverageMode,
     requireSourceBackedEvidence,
+    requireCommentBackedEvidence,
+    prioritizeSourceGaps: requireCommentBackedEvidence,
     existingTermsOnly,
     discoveryMode,
     discoveryLimit,

@@ -2703,6 +2703,122 @@ test('harvestKeywordDictionary keeps target terms for feedback priority queries'
   }
 });
 
+test('harvestKeywordDictionary targets context-only source gaps during existing-only refresh', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-context-source-gap-target-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        priorityQueries: ['\u5178\u4e2d\u5178 \u8bc4\u8bba\u533a'],
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        requireSourceBackedEvidence: true,
+        requireCommentBackedEvidence: true,
+        prioritizeSourceGaps: true,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            {
+              term: '\u5178\u4e2d\u5178',
+              family: 'attack',
+              evidenceCount: 3,
+              evidenceSources: [
+                {
+                  source: 'Bilibili public search-discovered video context: https://www.bilibili.com/video/BVcontext/',
+                  uid: 'BVcontext',
+                  sample: 'Bilibili video context: \u5178\u4e2d\u5178\u4e4b\u7eb8\u624e\u798f',
+                },
+              ],
+            },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BV1111111111' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(payloads[0].targetExistingTerms, ['\u5178\u4e2d\u5178']);
+    assert.equal(payloads[0].includeVideoContext, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary targets exact source-gap priority terms', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-exact-source-gap-target-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        priorityQueries: ['\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427'],
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        requireSourceBackedEvidence: true,
+        requireCommentBackedEvidence: true,
+        prioritizeSourceGaps: true,
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            {
+              term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97',
+              family: 'attack',
+              evidenceCount: 3,
+              evidenceSources: [{ source: 'Bilibili public search-discovered video context', uid: 'BV1', sample: 'Bilibili video context: \u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97' }],
+            },
+            {
+              term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427',
+              family: 'attack',
+              evidenceCount: 3,
+              evidenceSources: [{ source: 'Bilibili public search-discovered video context', uid: 'BV1', sample: 'Bilibili video context: \u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427' }],
+            },
+            {
+              term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427',
+              family: 'attack',
+              evidenceCount: 3,
+              evidenceSources: [{ source: 'Bilibili public search-discovered video context', uid: 'BV1', sample: 'Bilibili video context: \u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427' }],
+            },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return { ok: true, warnings: [], videos: [{ bvid: 'BV1111111111' }], comments: [], entries: [] };
+        },
+      },
+    );
+
+    assert.deepEqual(new Set(payloads[0].targetExistingTerms), new Set([
+      '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97',
+      '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427',
+      '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427',
+    ]));
+    assert.equal(payloads[0].includeVideoContext, false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary runs hard zero-evidence priority queries even when globally searched', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-hard-zero-priority-'));
   const statePath = join(dir, 'state.json');

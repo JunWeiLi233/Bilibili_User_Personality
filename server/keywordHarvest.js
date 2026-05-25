@@ -269,7 +269,12 @@ function relatedTargetExistingTerms(dictionary, planItem, options = {}) {
         const entryTerm = String(entry?.term || '').trim();
         if (!entryTerm) return false;
         if (family && String(entry?.family || '').trim() !== family) return false;
-        if (evidenceCount(entry) >= targetEvidence) return false;
+        if (
+          evidenceCount(entry) >= targetEvidence &&
+          !(options.requireSourceBackedEvidence === true && evidenceCount(entry) > 0 && !hasCoverageEvidenceSource(entry, options))
+        ) {
+          return false;
+        }
         return entryTerm === term || hasSharedSearchAlias(term, entryTerm) || isRelatedContainedPhrase(entry, term, family, meaning);
       })
       .map((entry) => entry.term),
@@ -508,6 +513,7 @@ function priorityPlanFromCoverageActions(priorityQueries, actionMap) {
       (action) =>
         action.nextQuery === cleanQuery ||
         (Array.isArray(action.suggestedQueries) && action.suggestedQueries.includes(cleanQuery)) ||
+        queryVariantsForTerm(action.term, action.family, queryVariantCountForTerm(action.term), {}).some((variant) => variant.query === cleanQuery) ||
         exactFeedbackQueriesForTerm(action.term).includes(cleanQuery) ||
         precisionQueriesForTerm(action.term).includes(cleanQuery) ||
         negativeFeedbackQueriesForTerm(action.term).includes(cleanQuery),
@@ -1105,6 +1111,8 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     targetEvidence: options.targetEvidence,
     coverageMode: options.coverageMode,
     requireSourceBackedEvidence: options.requireSourceBackedEvidence,
+    requireCommentBackedEvidence: options.requireCommentBackedEvidence,
+    prioritizeSourceGaps: options.prioritizeSourceGaps,
     termAttempts,
     extraQueryTemplates: options.extraQueryTemplates,
   });
@@ -1160,6 +1168,9 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       }
       if (options.existingTermsOnly === true && planItem.term) {
         searchPayload.targetExistingTerms = relatedTargetExistingTerms(before, planItem, options);
+      }
+      if (options.requireCommentBackedEvidence === true) {
+        searchPayload.includeVideoContext = false;
       }
       if (options.controversialPopularQueryLimit !== undefined) {
         searchPayload.controversialPopularQueryLimit = options.controversialPopularQueryLimit;

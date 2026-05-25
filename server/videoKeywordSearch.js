@@ -302,10 +302,12 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
         )
       : discoveryLimit;
   const includeVideoContext =
-    payload.includeVideoContext === true ||
-    deps.includeVideoContext === true ||
-    process.env.BILIBILI_HARVEST_INCLUDE_VIDEO_CONTEXT === '1' ||
-    existingTermsOnly;
+    payload.includeVideoContext === false
+      ? false
+      : payload.includeVideoContext === true ||
+        deps.includeVideoContext === true ||
+        process.env.BILIBILI_HARVEST_INCLUDE_VIDEO_CONTEXT === '1' ||
+        existingTermsOnly;
   const prioritizeSearchQueries =
     payload.prioritizeSearchQueries === true ||
     deps.prioritizeSearchQueries === true ||
