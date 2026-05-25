@@ -697,9 +697,15 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
     pushManualVariant(`${searchTerm} \u70ed\u8bc4`);
     pushManualVariant(`${searchTerm} \u8bc4\u8bba\u533a`);
   }
-  const [primaryTemplate, ...remainingTemplates] = templateItems;
+  const [primaryTemplate, commentTemplate, ...laterTemplates] = templateItems;
+  const shouldInterleaveCommentTemplate = Boolean(
+    primaryTemplate && commentTemplate && options.interleaveAliasCommentVariants === true && ALIAS_FIRST_SEARCH_TERMS.has(String(term || '').trim()),
+  );
   if (primaryTemplate) {
-    for (const searchTerm of searchTerms) pushTemplateVariant(primaryTemplate, searchTerm);
+    for (const searchTerm of searchTerms) {
+      pushTemplateVariant(primaryTemplate, searchTerm);
+      if (shouldInterleaveCommentTemplate) pushTemplateVariant(commentTemplate, searchTerm);
+    }
   }
   for (const query of contextualQueriesForTerm(term)) {
     variants.push({
@@ -708,6 +714,7 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
       builtIn: true,
     });
   }
+  const remainingTemplates = shouldInterleaveCommentTemplate ? laterTemplates : [commentTemplate, ...laterTemplates].filter(Boolean);
   for (const item of remainingTemplates) {
     for (const searchTerm of searchTerms) {
       variants.push({
@@ -1344,7 +1351,10 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     });
     const triedQueries = new Set([...attemptedVariantQueries(attempt), ...searchedQueries]);
     const templateLimit = queryTemplatesFromOptions(options).length;
-    const ownVariants = queryVariantsForTerm(term, family, templateLimit, options);
+    const ownVariants = queryVariantsForTerm(term, family, templateLimit, {
+      ...options,
+      interleaveAliasCommentVariants: attemptsCount > 0 && successfulAttempts === 0,
+    });
     const relatedSearchTerms = relatedContainedSearchTerms(entries, entry).filter((relatedTerm) => {
       const cleanRelatedTerm = String(relatedTerm || '').trim();
       const relatedAttempt = getTermAttempt(attempts, cleanRelatedTerm);
@@ -1363,6 +1373,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
       attemptsCount > 0 && successfulAttempts === 0 && relatedSearchTerms.length > 0 && !(hasUntriedOwnVariant && relatedAnchorAlreadyTried);
     const availableVariants = preferRelatedSearchTerms ? queryVariantsForTerm(term, family, templateLimit, {
       ...options,
+      interleaveAliasCommentVariants: attemptsCount > 0 && successfulAttempts === 0,
       searchTerms: relatedSearchTerms,
       preferSearchTerms: preferRelatedSearchTerms,
       onlySearchTerms: preferRelatedSearchTerms,

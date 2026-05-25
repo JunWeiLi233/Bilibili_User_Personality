@@ -1971,6 +1971,30 @@ test('buildCoverageActions tries own variants before related contained terms aft
   assert.equal(action.nextQuery, '\u6bd4\u515c \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
 });
 
+test('buildCoverageActions retries alias comment queries earlier after scaffold misses', () => {
+  const actions = buildCoverageActions(
+    {
+      entries: [{ term: '\u4fdd\u62a4\u6211\u65b9', family: 'cooperation', evidenceCount: 2, evidenceSources: [{ source: 'Bilibili public comment', sample: '\u4fdd\u62a4\u6211\u65b9' }] }],
+    },
+    {
+      harvestStrategyVersion: 4,
+      termAttempts: {
+        [Buffer.from('\u4fdd\u62a4\u6211\u65b9', 'utf8').toString('base64url')]: {
+          term: '\u4fdd\u62a4\u6211\u65b9',
+          family: 'cooperation',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: '\u4fdd\u62a4\u6211\u65b9up \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4', hit: false }],
+        },
+      },
+    },
+    { targetEvidence: 3, queryVariantsPerTerm: 6, requireCommentBackedEvidence: true },
+  );
+
+  const action = actions.find((item) => item.term === '\u4fdd\u62a4\u6211\u65b9');
+  assert.equal(action.nextQuery, '\u4fdd\u62a4\u6211\u65b9up \u8bc4\u8bba\u533a');
+});
+
 
 test('buildDictionaryCoverageAudit reports gate status and next harvest actions', () => {
   const audit = buildDictionaryCoverageAudit(
