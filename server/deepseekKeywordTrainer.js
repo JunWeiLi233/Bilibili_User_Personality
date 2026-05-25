@@ -162,6 +162,27 @@ function mergeKeywordEntry(existing, incoming, now) {
   };
 }
 
+function aliasEvidenceEntriesForEntry(entryMap, entry) {
+  const aliases = TERM_EVIDENCE_ALIASES[cleanTerm(entry?.term).toLowerCase()] || [];
+  return aliases
+    .map((alias) => entryMap.get(cleanTerm(alias)))
+    .filter((aliasEntry) => aliasEntry && Number(aliasEntry.evidenceCount || 0) > 0)
+    .map((aliasEntry) => ({
+      ...entry,
+      evidenceCount: Math.max(0, Number(aliasEntry.evidenceCount) || 0),
+      evidenceSamples: aliasEntry.evidenceSamples || [],
+      evidenceSources: aliasEntry.evidenceSources || [],
+    }));
+}
+
+function propagateAliasEvidence(entryMap, now) {
+  for (const entry of [...entryMap.values()]) {
+    for (const aliasEvidenceEntry of aliasEvidenceEntriesForEntry(entryMap, entry)) {
+      entryMap.set(entry.term, mergeKeywordEntry(entryMap.get(entry.term), aliasEvidenceEntry, now));
+    }
+  }
+}
+
 function normalizeEvidenceSources(rawSources = []) {
   if (!Array.isArray(rawSources)) return [];
   return uniqueBy(
@@ -334,6 +355,7 @@ export async function mergeEntriesIntoDictionary(entries, options = {}) {
   for (const entry of normalizedEntries) {
     entryMap.set(entry.term, mergeKeywordEntry(entryMap.get(entry.term), entry, now));
   }
+  propagateAliasEvidence(entryMap, now);
 
   const allEntries = [...entryMap.values()].sort((a, b) => a.family.localeCompare(b.family) || a.term.localeCompare(b.term));
   const families = Object.fromEntries(SUPPORTED_FAMILIES.map((family) => [family, []]));

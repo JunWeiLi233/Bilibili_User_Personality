@@ -106,6 +106,48 @@ test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise ter
   }
 });
 
+test('mergeEntriesIntoDictionary shares existing alias evidence with longer dictionary variants', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-alias-evidence-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u8e6d\u6982\u5ff5',
+            family: 'attack',
+            meaning: 'base concept accusation',
+            evidenceCount: 1,
+            evidenceSamples: ['这就是蹭概念'],
+            evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BV-alias', sample: '这就是蹭概念' }],
+          },
+          {
+            term: '\u8c01\u662f\u8e6d\u6982\u5ff5',
+            family: 'attack',
+            meaning: 'question form variant',
+            evidenceCount: 0,
+            evidenceSamples: [],
+            evidenceSources: [],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+    const variant = dictionary.entries.find((entry) => entry.term === '\u8c01\u662f\u8e6d\u6982\u5ff5');
+
+    assert.equal(variant.evidenceCount, 1);
+    assert.deepEqual(variant.evidenceSamples, ['这就是蹭概念']);
+    assert.equal(variant.evidenceSources[0].uid, 'BV-alias');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('normalizes away promotional commerce artifacts from keyword terms', () => {
   const entries = normalizeKeywordEntries([
     { term: '最高领26618元', family: 'absolutes', meaning: 'promotional ad copy copied from comments' },
