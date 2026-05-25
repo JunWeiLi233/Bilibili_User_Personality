@@ -78,11 +78,35 @@ function sentenceText(sentence = {}) {
     .join(' ');
 }
 
+function hasMemeFrame(text) {
+  return /(?:\u6897|\u73a9\u6897|\u540d\u573a\u9762|\u53f0\u8bcd|\u5f15\u7528|\u590d\u8ff0|\u8f6c\u8ff0|\u8868\u60c5\u5305|\u539f\u8bdd|\u6bb5\u5b50|\u8c10\u97f3|meme|quote|quoted|copypasta|catchphrase|inside joke)/i.test(text);
+}
+
+function hasQuoteFrame(text) {
+  return /[\"\u201c\u201d\u300c\u300d\u300e\u300f\u300a\u300b].{1,36}[\"\u201c\u201d\u300c\u300d\u300e\u300f\u300a\u300b]/.test(text)
+    || /(?:\u8fd9\u53e5|\u90a3\u53e5|\u8fd9\u4e2a\u8bcd|\u8fd9\u4e2a\u6897|\u53f0\u8bcd|\u539f\u53e5|line|phrase|quote|catchphrase)/i.test(text);
+}
+
+function stripQuotedSegments(text) {
+  return text
+    .replace(/[\u201c\u300c\u300e\u300a\"].{1,60}[\u201d\u300d\u300f\u300b\"]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function hasExplicitNonAttackFrame(text) {
+  return /(?:\u4e0d\u662f\u9a82|\u4e0d\u662f\u653b\u51fb|\u6ca1\u6709\u9a82|\u6ca1\u6709\u653b\u51fb|\u4e0d\u662f\u4eba\u8eab|\u6ca1\u6709\u4eba\u8eab|\u53ea\u662f|\u4ec5\u4ec5|\u7528\u6765\u8c03\u4f83|\u5f00\u73a9\u7b11|\u8c03\u4f83|\u73a9\u7b11|not attacking|not an attack|not insulting|not ad hominem|just a meme|only a meme|as a joke|joking)/i.test(text);
+}
+
+function hasDirectHostileTarget(text) {
+  return /(?:\u4f60|\u4f60\u4eec|\u4ed6|\u4ed6\u4eec|\u5979|\u5979\u4eec|\u5b83|\u5b83\u4eec|\u8fd9\u4eba|\u8fd9\u7fa4|\u7c89\u4e1d|\u73a9\u5bb6|up\u4e3b|\u4f5c\u8005|\u5bf9\u9762).{0,10}(?:\u50bb|\u8822|\u6eda|\u5c0f\u4e11|\u6025\u4e86|\u7834\u9632|\u6760\u7cbe|\u6b96\u4eba|\u7c89\u7ea2|\u6c34\u519b|\u6d17\u5730|\u8111\u5b50|\u667a\u5546|\u6bd4\u515c|\u53bb\u722c|\u522b\u6765\u6cbe\u8fb9|idiot|stupid|moron|shill|hater)/i.test(text);
+}
+
 function isMemeOrQuotedNonAttack(sentence = {}) {
   const text = sentenceText(sentence);
-  const hasMemeFrame = /(?:\u6897|\u73a9\u6897|\u540d\u573a\u9762|\u53f0\u8bcd|\u5f15\u7528|\u590d\u8ff0|\u8f6c\u8ff0|\u8868\u60c5\u5305|\u539f\u8bdd|\u6bb5\u5b50|\u8c10\u97f3|meme|quote|quoted|copypasta|catchphrase|inside joke)/i.test(text);
-  if (!hasMemeFrame) return false;
-  return /(?:\u4e0d\u662f\u9a82|\u4e0d\u662f\u653b\u51fb|\u6ca1\u6709\u9a82|\u6ca1\u6709\u653b\u51fb|\u53ea\u662f|\u4ec5\u4ec5|\u7528\u6765\u8c03\u4f83|\u5f00\u73a9\u7b11|\u8c03\u4f83|\u73a9\u7b11|not attacking|not an attack|not insulting|just a meme|only a meme|as a joke|joking)/i.test(text);
+  if (!hasMemeFrame(text)) return false;
+  if (hasExplicitNonAttackFrame(text)) return true;
+  return hasQuoteFrame(text) && !hasDirectHostileTarget(stripQuotedSegments(text));
 }
 
 function addImpact(impacts, impact) {

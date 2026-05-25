@@ -296,6 +296,21 @@ function buildVideoContextText(videos = []) {
     .join('\n');
 }
 
+function buildTargetVideoObjectEvidenceText(videos = [], searchQueries = [], targetExistingTerms = []) {
+  if (targetExistingTerms.length === 0) return '';
+  const needles = searchNeedlesForRelevance(searchQueries, targetExistingTerms);
+  if (needles.length === 0) return '';
+  return uniqueByKey(
+    videos
+      .flatMap((video) => [video.title, video.desc, video.description])
+      .map((item) => String(item || '').replace(/\s+/g, ' ').trim())
+      .filter((item) => item && needles.some((needle) => item.includes(needle))),
+    (item) => item,
+  )
+    .map((item) => `Bilibili public video title: ${item}`)
+    .join('\n');
+}
+
 function videoContextSources(videos = [], discoveredVideos = []) {
   return uniqueByKey(
     [...videos, ...discoveredVideos].filter(Boolean),
@@ -542,14 +557,16 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     }
     if (discoveredVideos.length === 0) {
       const videoContextText = includeVideoContext ? buildVideoContextText(discoveryContextVideos) : '';
-      const trainingText = videoContextText.trim();
+      const videoObjectEvidenceText =
+        includeVideoContext || !existingTermsOnly ? '' : buildTargetVideoObjectEvidenceText(discoveryContextVideos, searchQueries, targetExistingTerms);
+      const trainingText = [videoObjectEvidenceText, videoContextText].filter((item) => item.trim()).join('\n');
       if (trainingText) {
         const trainKeywordDictionary = deps.trainKeywordDictionary || defaultTrainKeywordDictionary;
         const contextSourceUrls = videoContextSourceUrls(discoveryContextVideos);
         const keywordTraining = await trainKeywordDictionary({
           uid: discoveryContextVideos.map((video) => video.bvid).filter(Boolean).join(','),
           text: trainingText,
-          source: `Bilibili public search-discovered video context: ${contextSourceUrls.join(', ')}`,
+          source: `Bilibili public search-discovered video${videoObjectEvidenceText ? ' object evidence' : ' context'}: ${contextSourceUrls.join(', ')}`,
           existingTermsOnly,
           ...(targetExistingTerms.length ? { targetExistingTerms } : {}),
         });
@@ -567,6 +584,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
           comments: [],
           commentText: '',
           videoContextText,
+          videoObjectEvidenceText,
           source: 'Bilibili public search-discovered video context',
           confidenceHint: 'search result video context only',
           warnings: discoveryWarnings,
@@ -672,7 +690,9 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const commentText = comments.map((comment) => comment.message).filter(Boolean).join('\n');
   const contextVideos = videoContextSources(videos, discoveryContextVideos.length ? discoveryContextVideos : discoveredVideos);
   const videoContextText = includeVideoContext ? buildVideoContextText(contextVideos) : '';
-  const trainingText = [commentText, videoContextText].filter((item) => item.trim()).join('\n');
+  const videoObjectEvidenceText =
+    includeVideoContext || !existingTermsOnly ? '' : buildTargetVideoObjectEvidenceText(contextVideos, searchQueries, targetExistingTerms);
+  const trainingText = [commentText, videoObjectEvidenceText, videoContextText].filter((item) => item.trim()).join('\n');
   const primaryVideo = videos[0];
   const mergedScan = {
     ok: true,
@@ -691,6 +711,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     discoveryMode: videoLinks.length === 0 ? discoveryMode : 'explicit',
     comments,
     commentText,
+    videoObjectEvidenceText,
     videoContextText,
     source:
       videoLinks.length === 0
@@ -725,7 +746,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const keywordTraining = await trainKeywordDictionary({
     uid: videos.map((video) => video.bvid).join(','),
     text: trainingText,
-    source: `${mergedScan.source}${videoContextText ? ' plus video context' : ''}: ${contextSourceUrls.join(', ')}`,
+    source: `${mergedScan.source}${videoObjectEvidenceText ? ' plus video object evidence' : ''}${videoContextText ? ' plus video context' : ''}: ${contextSourceUrls.join(', ')}`,
     existingTermsOnly,
     ...(targetExistingTerms.length ? { targetExistingTerms } : {}),
   });
