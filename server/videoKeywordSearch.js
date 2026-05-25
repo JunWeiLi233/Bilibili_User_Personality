@@ -513,7 +513,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       discoveryGroups.flatMap((group) => group),
       (video) => video.bvid || video.sourceUrl || video.title,
     );
-    if (targetsAskBaiduTerm(targetExistingTerms)) {
+    if (targetExistingTerms.length > 0) {
       discoveryContextVideos = filterRelevantVideos(discoveryContextVideos, searchQueries, targetExistingTerms);
     }
     const rankedDiscoveryGroups =

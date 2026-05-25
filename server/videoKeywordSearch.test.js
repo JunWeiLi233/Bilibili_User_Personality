@@ -644,12 +644,11 @@ test('searchVideoKeywords avoids scanning zero-relevance videos for target cover
     },
   );
 
-  assert.equal(result.ok, true);
+  assert.equal(result.ok, false);
   assert.equal(fetchCalls, 0);
   assert.deepEqual(result.discoveredVideos, []);
-  assert.equal(result.discoveryContextVideos.length, 2);
-  assert.equal(trainedPayloads.length, 1);
-  assert.equal(trainedPayloads[0].text.includes('\u8e6d\u6982\u5ff5'), false);
+  assert.equal(result.discoveryContextVideos.length, 0);
+  assert.equal(trainedPayloads.length, 0);
 });
 
 test('searchVideoKeywords probes direct search results when comment-backed target coverage has only filtered context', async () => {
