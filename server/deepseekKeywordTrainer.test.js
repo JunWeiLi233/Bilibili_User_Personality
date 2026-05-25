@@ -711,6 +711,27 @@ test('findDictionaryEntriesWithTextEvidence matches bidirectional short-form ali
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-short-alias'), true);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps missed comment wording variants back to target terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u5835\u4f4f\u4eba\u6c11\u5634', family: 'attack', meaning: 'accuse someone of blocking public speech' },
+        { term: '\u9ad8\u5b8c\u4e86', family: 'attack', meaning: 'sarcastic phrase for showing off too much' },
+        { term: '\u61c2\u7684', family: 'evasion', meaning: 'implicit insider shorthand' },
+      ],
+    },
+    '\u4f60\u662f\u8bf4\u6342\u4f4f\u4eba\u6c11\u7684\u5634\u5417\uff1f\n\u90fd\u8ba9\u4f60\u9ad8\u5b8c\u4e86\n\u61c2\u7684\u90fd\u61c2\uff0c\u522b\u95ee',
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-missed-variants/',
+      uid: 'BV-missed-variants',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u5835\u4f4f\u4eba\u6c11\u5634', '\u9ad8\u5b8c\u4e86', '\u61c2\u7684']);
+  assert.equal(entries.every((entry) => entry.evidenceCount === 1), true);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-missed-variants'), true);
+});
+
 test('findDictionaryEntriesWithTextEvidence maps short sarcasm stems to long variants', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

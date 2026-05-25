@@ -3464,6 +3464,52 @@ test('harvestKeywordDictionary forwards controversy queries to video search', as
   }
 });
 
+test('harvestKeywordDictionary prefixes planned terms into controversial discovery queries', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-term-controversy-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        controversyQueries: ['politics debate', 'game drama'],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        discoveryMode: 'controversial',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term: '\u76ee\u6807\u5f31\u8bcd', family: 'attack', evidenceCount: 0 }],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BV1111111111' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(payloads[0].controversyQueries.slice(0, 4), [
+      '\u76ee\u6807\u5f31\u8bcd \u4e89\u8bae \u70ed\u8bc4',
+      '\u76ee\u6807\u5f31\u8bcd \u8282\u594f \u8bc4\u8bba\u533a',
+      '\u76ee\u6807\u5f31\u8bcd \u6e38\u620f \u8282\u594f \u70ed\u8bc4',
+      '\u76ee\u6807\u5f31\u8bcd \u65f6\u653f \u4e89\u8bae \u8bc4\u8bba\u533a',
+    ]);
+    assert.equal(payloads[0].controversyQueries.includes('politics debate'), true);
+    assert.equal(payloads[0].controversyQueries.includes('game drama'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary forwards controversial popular discovery options when configured', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-controversial-popular-'));
   const statePath = join(dir, 'state.json');

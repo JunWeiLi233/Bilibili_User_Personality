@@ -356,11 +356,14 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
         deps.includeDanmaku === true ||
         (process.env.BILIBILI_HARVEST_INCLUDE_DANMAKU === '1' &&
           (Boolean(deps.fetchText) || payload.allowNetworkDanmaku === true || deps.allowNetworkDanmaku === true));
+  const discoveryMode = String(payload.discoveryMode || deps.discoveryMode || process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial')
+    .trim()
+    .toLowerCase();
   const prioritizeSearchQueries =
     payload.prioritizeSearchQueries === true ||
     deps.prioritizeSearchQueries === true ||
     process.env.BILIBILI_HARVEST_PRIORITIZE_SEARCH_QUERIES === '1' ||
-    existingTermsOnly;
+    (existingTermsOnly && discoveryMode !== 'controversial');
   const includeGenericPopular =
     payload.includeGenericPopular === true ||
     deps.includeGenericPopular === true ||
@@ -369,10 +372,6 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   let discoveredVideos = [];
   let discoveryContextVideos = [];
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
-  const discoveryMode = String(payload.discoveryMode || deps.discoveryMode || process.env.BILIBILI_VIDEO_DISCOVERY_MODE || 'controversial')
-    .trim()
-    .toLowerCase();
-
   if (videoLinks.length === 0) {
     const discoveryGroups = [];
     if (discoveryMode === 'search' || discoveryMode === 'mixed') {
@@ -453,7 +452,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       discoveryLimit,
       (video) => video.bvid,
     );
-    if (existingTermsOnly || targetExistingTerms.length > 0) {
+    if ((existingTermsOnly || targetExistingTerms.length > 0) && (discoveryMode !== 'controversial' || prioritizeSearchQueries)) {
       discoveredVideos = sortVideosByRelevance(discoveredVideos, searchQueries, targetExistingTerms);
     }
     if (discoveredVideos.length === 0) {

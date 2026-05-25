@@ -55,6 +55,12 @@ const DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES = [
   '{term} \u76f4\u64ad\u5207\u7247',
   '{term} B\u7ad9\u8bc4\u8bba',
 ];
+const TERM_CONTROVERSY_QUERY_TEMPLATES = [
+  '{term} \u4e89\u8bae \u70ed\u8bc4',
+  '{term} \u8282\u594f \u8bc4\u8bba\u533a',
+  '{term} \u6e38\u620f \u8282\u594f \u70ed\u8bc4',
+  '{term} \u65f6\u653f \u4e89\u8bae \u8bc4\u8bba\u533a',
+];
 const TERM_SEARCH_ALIASES = {
   '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97': ['\u4e0d\u4f1a\u771f\u6709\u4eba', '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97', '\u4e0d\u4f1a\u771f\u6709\u4eba\u4ee5\u4e3a'],
   '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427': ['\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', '\u4e0d\u4f1a\u771f\u6709\u4eba', '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97'],
@@ -351,6 +357,15 @@ function queryTemplatesFromOptions(options = {}) {
     ...extraTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
     ...exhaustedTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
   ];
+}
+
+function controversyQueriesForPlanItem(planItem = {}, options = {}) {
+  const term = String(planItem?.term || '').trim();
+  if (!term || String(options.discoveryMode || '').trim().toLowerCase() !== 'controversial') return options.controversyQueries;
+  const baseQueries = parseTemplateList(options.controversyQueries);
+  const family = String(planItem?.family || '').trim();
+  const termQueries = TERM_CONTROVERSY_QUERY_TEMPLATES.map((template) => renderQueryTemplate(template, term, family));
+  return unique([...termQueries, ...baseQueries]);
 }
 
 function searchTermsForTerm(term) {
@@ -1470,7 +1485,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     try {
       const searchPayload = {
         searchQueries: [query],
-        controversyQueries: options.controversyQueries,
+        controversyQueries: controversyQueriesForPlanItem(planItem, options),
         discoveryMode: options.discoveryMode,
         discoveryLimit: effectiveDiscoveryLimit,
         pages: effectivePages,

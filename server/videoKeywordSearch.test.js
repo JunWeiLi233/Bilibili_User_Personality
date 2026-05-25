@@ -733,7 +733,7 @@ test('searchVideoKeywords can explicitly include generic popular videos in contr
   assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1hotPolitics', 'BV1politics1', 'BV1dictionary', 'BV1popular01']);
 });
 
-test('searchVideoKeywords prioritizes dictionary search videos during existing-only coverage', async () => {
+test('searchVideoKeywords keeps controversial popular videos first during existing-only coverage', async () => {
   const result = await searchVideoKeywords(
     {
       searchQuery: 'dictionary term comments',
@@ -773,7 +773,7 @@ test('searchVideoKeywords prioritizes dictionary search videos during existing-o
     },
   );
 
-  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1dictionary', 'BV1hotPolitics', 'BV1politics1']);
+  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1hotPolitics', 'BV1politics1', 'BV1dictionary']);
 });
 
 test('default controversy seed list includes debate-heavy Bilibili topics', () => {
