@@ -242,6 +242,15 @@ test('normalizes away promotional commerce artifacts from keyword terms', () => 
   assert.deepEqual(entries.map((entry) => entry.term), ['梭哈']);
 });
 
+test('normalizes redundant numeric percent prefixes into percent discourse terms', () => {
+  const entries = normalizeKeywordEntries([
+    { term: '100百分百', family: 'absolutes', meaning: 'absolute certainty phrasing' },
+    { term: '百分百', family: 'absolutes', meaning: 'absolute certainty phrasing' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['百分百']);
+});
+
 test('normalizes away Bilibili object IDs from keyword terms', () => {
   const entries = normalizeKeywordEntries([
     { term: 'BV11W3nz2Ed2', family: 'evidence', meaning: 'Bilibili video ID copied from source URL' },

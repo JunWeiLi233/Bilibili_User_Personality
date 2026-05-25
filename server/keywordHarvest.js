@@ -392,6 +392,7 @@ function coverageActionRank(action) {
 
 function actionSortRank(action, options = {}) {
   const baseRank = coverageActionRank(action?.action);
+  const priorityPenalty = coveragePriorityPenalty(action);
   const retryLimit = Math.max(0, Number(options.retryBeforeUnattemptedLimit ?? 3) || 0);
   const attempts = Math.max(0, Number(action?.attempts) || 0);
   const successfulAttempts = Math.max(0, Number(action?.successfulAttempts) || 0);
@@ -404,12 +405,12 @@ function actionSortRank(action, options = {}) {
     successfulAttempts === 0 &&
     evidence === 0
   ) {
-    return coverageActionRank('harvest') - 0.5;
+    return coverageActionRank('harvest') - 0.5 + priorityPenalty;
   }
   if (action?.action === 'retry_with_new_variant' && retryLimit > 0 && attempts >= retryLimit) {
-    return coverageActionRank('harvest') + 0.5;
+    return coverageActionRank('harvest') + 0.5 + priorityPenalty;
   }
-  return baseRank;
+  return baseRank + priorityPenalty;
 }
 
 function recommendationGroupForTerm(term) {
@@ -517,7 +518,6 @@ export function buildKeywordHarvestQueryPlan(dictionary, options = {}) {
             const actionB = actionMap.get(String(b.term || '').trim());
             return (
               actionSortRank(actionA, options) - actionSortRank(actionB, options) ||
-              coveragePriorityPenalty(a) - coveragePriorityPenalty(b) ||
               evidenceCount(a) - evidenceCount(b) ||
               String(a.term || '').localeCompare(String(b.term || ''))
             );
@@ -836,7 +836,6 @@ export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, option
     .sort(
       (a, b) =>
         actionSortRank(a, { ...options, prioritizeHardZeroEvidence: true }) - actionSortRank(b, { ...options, prioritizeHardZeroEvidence: true }) ||
-        coveragePriorityPenalty(a) - coveragePriorityPenalty(b) ||
         a.evidenceCount - b.evidenceCount ||
         String(a.term || '').localeCompare(String(b.term || '')),
     );

@@ -1103,6 +1103,43 @@ test('buildDictionaryCoverageAudit defers compact metric fragments behind discou
   assert.equal(audit.recommendedQueries[0], '\u6760\u7cbe \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
 });
 
+test('buildDictionaryCoverageAudit keeps missed compact metrics behind fresh discourse terms', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: '10r', family: 'evidence', evidenceCount: 1 },
+        { term: '500w', family: 'evidence', evidenceCount: 1 },
+        { term: '\u88ab\u9ed1', family: 'attack', evidenceCount: 1 },
+        { term: '\u88ab\u9a82', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      termAttempts: {
+        '10r': {
+          term: '10r',
+          family: 'evidence',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: '10r' }],
+          lastQuery: '10r',
+        },
+        '500w': {
+          term: '500w',
+          family: 'evidence',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: '500w' }],
+          lastQuery: '500w',
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2 },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['\u88ab\u9ed1', '\u88ab\u9a82']);
+  assert.deepEqual(audit.recommendedQueries, ['\u88ab\u9ed1 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4', '\u88ab\u9a82 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4']);
+});
+
 test('buildDictionaryCoverageAudit keeps hard zero-evidence misses visible among weak sourced terms', () => {
   const audit = buildDictionaryCoverageAudit(
     {

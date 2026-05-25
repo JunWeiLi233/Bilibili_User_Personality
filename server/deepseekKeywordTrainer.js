@@ -88,6 +88,7 @@ function cleanTerm(term) {
   return String(term || '')
     .normalize('NFKC')
     .replace(/[^\p{Script=Han}\p{Letter}\p{Number}]+/gu, '')
+    .replace(/^\d+(?=百分百$)/u, '')
     .replace(/(?<=\p{Script=Han})[A-Za-z]$/u, '')
     .trim();
 }
