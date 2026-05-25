@@ -381,6 +381,67 @@ test('buildKeywordHarvestQueries uses latest weak miss aliases before exact stal
   }
 });
 
+test('buildKeywordHarvestQueries uses follow-up weak aliases before exact stale queries', () => {
+  const cases = [
+    {
+      term: '\u5ddd\u5efa\u56fd',
+      family: 'attack',
+      expectedAliasQuery: '\u5ddd\u666e \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u5ddd\u666e',
+      family: 'attack',
+      expectedAliasQuery: '\u7279\u6717\u666e \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u540a\u6253',
+      family: 'attack',
+      expectedAliasQuery: '\u5b8c\u7206 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u798f\u745e\u63a7',
+      family: 'cooperation',
+      expectedAliasQuery: 'furry\u63a7 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u9644\u8bae',
+      family: 'cooperation',
+      expectedAliasQuery: '\u81e3\u9644\u8bae \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u590d\u6d3b\u8d5b',
+      family: 'attack',
+      expectedAliasQuery: '\u6253\u590d\u6d3b\u8d5b \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u5c2c\u5230\u62a0\u811a',
+      family: 'attack',
+      expectedAliasQuery: '\u5c34\u5c2c\u5230\u62a0\u811a \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    },
+    {
+      term: '\u8be5\u9a82\u5c31\u9a82',
+      family: 'evasion',
+      expectedAliasQuery: '\u8be5\u9a82\u9a82 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+  ];
+
+  for (const item of cases) {
+    const queries = buildKeywordHarvestQueries(
+      {
+        entries: [{ term: item.term, family: item.family, evidenceCount: 1 }],
+      },
+      {
+        seedQueries: [],
+        coverageMode: 'all-weak',
+        maxQueries: 4,
+        queryVariantsPerTerm: 4,
+      },
+    );
+
+    assert.equal(queries[0], item.expectedAliasQuery, `${item.term} should start with ${item.expectedAliasQuery}`);
+  }
+});
+
 test('buildKeywordHarvestQueries starts with higher-signal aliases for ambiguous weak terms', () => {
   const queries = buildKeywordHarvestQueries(
     {

@@ -247,6 +247,27 @@ test('normalizes noisy punctuation and rejects low-quality keyword terms', () =>
   ]);
 });
 
+test('normalizes away truncated sentence fragments from keyword terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u4f46\u6211\u7edd\u5bf9\u4e0d\u4f1a\u53bb\u7978\u5bb3\u522b',
+      family: 'cooperation',
+      meaning: 'truncated sentence fragment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4f46\u6211\u7edd\u5bf9\u4e0d\u4f1a\u53bb\u7978\u5bb3\u522b\u4eba'],
+    },
+    {
+      term: '\u4e0d\u662f\u6760',
+      family: 'cooperation',
+      meaning: 'stable discourse marker',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4e0d\u662f\u6760\uff0c\u8fd9\u53e5\u8bdd\u6709\u70b9\u95ee\u9898'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u4e0d\u662f\u6760']);
+});
+
 test('normalizes away suffix-only Bilibili emote variants', () => {
   const entries = normalizeKeywordEntries([
     {
@@ -1485,6 +1506,49 @@ test('findDictionaryEntriesWithTextEvidence maps latest weak miss variants back 
     '\u8d1f\u5206\u6eda\u7c97',
   ]);
   assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-latest-weak-alias'), true);
+});
+
+test('findDictionaryEntriesWithTextEvidence maps follow-up weak variants back to targets', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u5ddd\u5efa\u56fd', family: 'attack', meaning: 'Trump nickname' },
+        { term: '\u5ddd\u666e', family: 'attack', meaning: 'Trump shorthand' },
+        { term: '\u540a\u6253', family: 'attack', meaning: 'dominates comparison' },
+        { term: '\u798f\u745e\u63a7', family: 'cooperation', meaning: 'furry fan shorthand' },
+        { term: '\u9644\u8bae', family: 'cooperation', meaning: 'agreement marker' },
+        { term: '\u590d\u6d3b\u8d5b', family: 'attack', meaning: 'comeback sarcasm' },
+        { term: '\u5c2c\u5230\u62a0\u811a', family: 'attack', meaning: 'extreme awkwardness' },
+        { term: '\u8be5\u9a82\u5c31\u9a82', family: 'evasion', meaning: 'vague criticism permission' },
+      ],
+    },
+    [
+      '\u5efa\u56fd\u540c\u5fd7\u53c8\u6765\u4e86\uff0c\u7279\u6717\u666e\u8fd9\u53d1\u8a00\u592a\u7ecf\u5178',
+      '\u5ddd\u5efa\u56fd\u8fd9\u6ce2\u771f\u662f\u5ddd\u666e\u672c\u666e',
+      '\u8fd9\u6f14\u6280\u5b8c\u7206\u5bf9\u9762\uff0c\u53ef\u4ee5\u8bf4\u662f\u78be\u538b',
+      '\u8fd9\u89d2\u8272\u4e00\u770b\u5c31\u662ffurry\u63a7\u4f1a\u559c\u6b22\u7684\u798f\u745e',
+      '\u81e3\u9644\u8bae\uff0c\u6211\u4e5f\u8868\u793a\u9644\u8bae',
+      '\u4e92\u8054\u7f51\u590d\u6d3b\u8d5b\u53c8\u5f00\u6253\u4e86',
+      '\u8fd9\u6bb5\u5c34\u5c2c\u5230\u62a0\u811a\uff0c\u90fd\u80fd\u62a0\u51fa\u4e09\u5ba4\u4e00\u5385',
+      '\u8be5\u9a82\u9a82\uff0c\u8be5\u55b7\u5c31\u55b7\uff0c\u4f46\u4f60\u5f97\u8bf4\u6e05\u695a\u4e3a\u4ec0\u4e48',
+    ].join('\n'),
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-follow-up-alias/',
+      uid: 'BV-follow-up-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u5ddd\u5efa\u56fd',
+    '\u5ddd\u666e',
+    '\u540a\u6253',
+    '\u798f\u745e\u63a7',
+    '\u9644\u8bae',
+    '\u590d\u6d3b\u8d5b',
+    '\u5c2c\u5230\u62a0\u811a',
+    '\u8be5\u9a82\u5c31\u9a82',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-follow-up-alias'), true);
 });
 
 test('findDictionaryEntriesWithTextEvidence maps long missed phrase anchors back to weak terms', () => {
