@@ -2008,6 +2008,26 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested meta and standalon
   assert.deepEqual(entries[2].evidenceSamples, ['\u4f60\u4eec\u8fd8\u5728\u8b66\u60d5\u901f\u80dc\u8bba\uff0c\u5b9e\u9645\u8fde\u57fa\u672c\u6750\u6599\u90fd\u6ca1\u770b\u5b8c']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects nickname-only correction-label evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u7ea0\u6b63\u54e5', family: 'attack', meaning: '\u5632\u8bbd\u7231\u7ea0\u6b63\u522b\u4eba\u7684\u4eba\u7684\u6807\u7b7e', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u7ea0\u6b63\u54e5\u73b0\u5728\u5728\u6296\u97f3',
+      '\u770b\u6a21\u6837\u4e5f\u6ca1\u6709\u56db\u5341\u54c8\u54c8\u5565\u95ee\u9898\u554a\uff0c\u53eb\u54e5\u5c31\u884c\u4e86\u7ea0\u6b63\u54e5\u6709\u70b9\u4e0d\u548b\u597d\u542c',
+      '\u4f60\u8fd9\u79cd\u9022\u5b57\u5c31\u6539\u7684\u7ea0\u6b63\u54e5\uff0c\u6839\u672c\u4e0d\u662f\u8ba8\u8bba\u95ee\u9898',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-correction-label/', uid: 'BV-correction-label' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u7ea0\u6b63\u54e5']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u79cd\u9022\u5b57\u5c31\u6539\u7684\u7ea0\u6b63\u54e5\uff0c\u6839\u672c\u4e0d\u662f\u8ba8\u8bba\u95ee\u9898']);
+});
+
 test('findDictionaryEntriesWithTextEvidence rejects source-meme insults and literal complaint evidence', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
