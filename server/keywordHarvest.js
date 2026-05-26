@@ -578,6 +578,10 @@ function generatedSearchAliasesForTerm(term, options = {}) {
     aliases.push('\u7b2c\u4e00\u4e2a\u6295\u5e01', '\u9996\u4e2a\u6295\u5e01', '\u6211\u7b2c\u4e00\u4e2a\u6295\u5e01', '\u6295\u5e01\u80af\u5b9a\u662f\u6211');
   }
   aliases.push(...generatedUniversalQuantifierSearchAliases(clean));
+  if (/^\u7edd\u5bf9(?!\u53ef\u4ee5)/u.test(clean)) {
+    const tail = clean.replace(/^\u7edd\u5bf9(?:\u7684)?/u, '');
+    if (tail && tail.length >= 2) aliases.push(tail);
+  }
   if (/^(\u6839\u672c\u6ca1\u6709|\u7edd\u5bf9|\u80af\u5b9a|\u5168\u662f|\u5168\u90fd|\u5168\u90fd\u662f|\u6beb\u65e0|\u6ca1\u6709\u4e00\u4e2a|\u6ca1\u540a|\u6ca1\u5185\u5473)/.test(clean)) {
     aliases.push(...generatedChineseTailSearchAliases(clean));
   }
