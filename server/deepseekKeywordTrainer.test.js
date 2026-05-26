@@ -2938,6 +2938,56 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested numeric, name-only
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects harvested overbroad alias and platform evidence', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427', family: 'attack', meaning: 'mocking weak evidence' },
+      { term: '\u4e0d\u5c2c', family: 'cooperation', meaning: 'not awkward agreement' },
+      { term: '\u5e72\u8d27up', family: 'cooperation', meaning: 'creator with useful substance' },
+      { term: '\u9ad8\u4f4e\u5f97\u7ed9\u4f60\u9001\u4e0a\u53bb', family: 'cooperation', meaning: 'boost this comment upward' },
+      { term: '\u53ef\u4ee5\u8d34', family: 'cooperation', meaning: 'ask another user to post evidence or context' },
+      { term: '\u5c4f\u853d', family: 'cooperation', meaning: 'constructive block/mute suggestion' },
+      { term: '\u6700\u540e\u4e00\u821e', family: 'evasion', meaning: 'last gamble evasion phrase' },
+    ],
+  };
+  const text = [
+    '\u8bf4\u5b9e\u8bdd\u5f39\u5e55\u4e00\u76f4\u8bf4\u4e0d\u591f\u51c6\u8fd9\u70b9\u6709\u70b9 \u5927\u4f17\u5360\u535c\u4e0d\u4f1a\u771f\u6709\u4eba\u8981\u4ec0\u4e48\u90fd\u5f80\u4e0a\u9760\u5427 \u60f3\u51c6\u53bb\u79c1\u5360\u5427',
+    '\u4e00\u70b9\u90fd\u4e0d\u5c2c\u9ed1 \u8bf4\u771f\u7684\u6709\u70b9\u5931\u671b',
+    '\u8fd9\u4e2a\u4e50\u8bc4\u6ca1\u5565\u5e72\u8d27',
+    '\u4ed6\u5c31\u662f\u5e74\u8f7b\u65f6\u6ca1\u53bb\u5b66\u7cfb\u7edf\u53d1\u58f0\uff0c\u7eaf\u9760\u673a\u80fd\u9876\u4e0a\u53bb\uff0c\u5531\u592a\u591a\uff0c\u5012\u55d3\u4e86',
+    '\u4e0d\u662f\u7684\uff0c\u662f\u6b4c\u8ff7\u8ba9\u4ed6\u5148\u628a\u505a\u597d\u7684\u6b4c\u53d1\u51fa\u6765\uff0c\u4e0d\u8981\u7b49\u5230\u4e13\u8f91\u3002\u600e\u4e48\u53c8\u6210\u4e86\u65e7\u6b4c\u5462',
+    '\u56de\u590d @Nof1sh :\u6ca1\u4e86 \u4e4b\u524d\u7684\u8bed\u97f3\u8bc4\u8bba\u90fd\u88ab\u5c4f\u853d\u6389\u4e86\u597d\u50cf \u4f46\u662f\u8fd8\u53ef\u4ee5\u53d1\u89c6\u9891',
+    '\u9ad8\u97f3\u7684\u6700\u540e\u4e00\u821e',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427\uff0c\u8bc1\u636e\u5728\u54ea',
+      '\u8fd9\u6bb5\u56de\u5e94\u4e0d\u5c2c\uff0c\u8bb2\u5f97\u5f88\u6e05\u695a',
+      '\u5e72\u8d27up\uff0c\u8d44\u6599\u548c\u94fe\u63a5\u90fd\u8d34\u5168\u4e86',
+      '\u8fd9\u6761\u8bc1\u636e\u9ad8\u4f4e\u5f97\u7ed9\u4f60\u9001\u4e0a\u53bb',
+      '\u4f60\u628a\u8bc1\u636e\u94fe\u63a5\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
+      '\u5148\u5c4f\u853d\u4eba\u8eab\u653b\u51fb\u518d\u597d\u597d\u8ba8\u8bba',
+      '\u522b\u6212\uff0c\u8bf4\u4e0d\u5b9a\u6700\u540e\u4e00\u821e\u5c31\u7ffb\u8eab\u4e86',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427',
+    '\u4e0d\u5c2c',
+    '\u5e72\u8d27up',
+    '\u9ad8\u4f4e\u5f97\u7ed9\u4f60\u9001\u4e0a\u53bb',
+    '\u53ef\u4ee5\u8d34',
+    '\u5c4f\u853d',
+    '\u6700\u540e\u4e00\u821e',
+  ]);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
