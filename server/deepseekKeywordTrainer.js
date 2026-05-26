@@ -850,6 +850,21 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const attackContext = /(?:\u8fd9\u7fa4\u795e\u795e|\u795e\u795e\u53c8|\u795e\u795e\u4eec|\u80a5\u795e\u795e|\u8df3|\u6025|\u7834\u9632|\u5c0f\u9b3c|\u62bd\u8c61)/u.test(cleanSample);
     return splitNameContext && !attackContext;
   }
+  if (term === '\u624b\u6b8b' && family === 'attack') {
+    const usernameOnlyContext = /(?:^|\s|[:：]|\u56de\u590d)@?\u624b\u6b8b[\u4e00-\u9fa5a-z0-9_]*(?:[:：]|\u4f60\u591f\u4e86|$)/iu.test(cleanSample);
+    const abilityContext = /(?:\u624b\u6b8b\u73a9\u5bb6|\u52a0\u624b\u6b8b|\u6211\u771f\u8fc7\u4e0d\u53bb\u554a\u624b\u6b8b|\u64cd\u4f5c|\u8fc7\u4e0d\u53bb|\u4e0d\u9002\u5408\u624b\u6b8b|\u624b\u7b28)/u.test(cleanSample);
+    return usernameOnlyContext && !abilityContext;
+  }
+  if (term === '\u5c4e\u5c71\u4ee3\u7801' && family === 'attack') {
+    const sourceDiscussionContext = /(?:\u5c4e\u5c71\u4ee3\u7801\u7684\u6765\u6e90|\u6765\u6e90|\u8fd9\u4e2a\u8bcd|\u4ec0\u4e48\u610f\u601d|\u600e\u4e48\u6765\u7684)/u.test(cleanSample);
+    const codeComplaintContext = /(?:bug|\u4fee|\u7ef4\u62a4|\u8dd1\u4ee3\u7801|\u66f4\u65b0|\u98ce\u9669|\u8d23\u4efb|\u8001\u677f|\u641e\u4e0d\u5b9a|\u8fd0\u884c)/iu.test(cleanSample);
+    return sourceDiscussionContext && !codeComplaintContext;
+  }
+  if (term === '\u68ad\u54c8' && family === 'absolutes') {
+    const standaloneContext = cleanSample === '\u68ad\u54c8';
+    const commitmentContext = /(?:\u53c8\u68ad\u54c8|\u91cc\u68ad\u54c8|\u5168\u662f.*\u68ad\u54c8|\u5168\u90e8\u68ad\u54c8|\u5168\u4ed3|\u538b\u4e0a|\u62bc\u4e0a|\u8d4c|\u6295\u5165)/u.test(cleanSample);
+    return standaloneContext && !commitmentContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }

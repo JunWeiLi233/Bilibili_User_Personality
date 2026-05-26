@@ -1659,6 +1659,35 @@ test('findDictionaryEntriesWithTextEvidence rejects literal tree, missing-person
   assert.deepEqual(entries[2].evidenceSamples, ['\u8fd9\u7fa4\u795e\u795e\u53c8\u5f00\u59cb\u8df3\u4e86']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects username, source-discussion, and standalone all-in evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u624b\u6b8b', family: 'attack', meaning: '\u5f62\u5bb9\u64cd\u4f5c\u5dee\u6216\u624b\u7b28', evidenceCount: 0 },
+        { term: '\u5c4e\u5c71\u4ee3\u7801', family: 'attack', meaning: '\u5f62\u5bb9\u96be\u4ee5\u7ef4\u62a4\u7684\u6df7\u4e71\u4ee3\u7801', evidenceCount: 0 },
+        { term: '\u68ad\u54c8', family: 'absolutes', meaning: '\u5168\u90e8\u62bc\u4e0a\u6216\u5f7b\u5e95\u6295\u5165', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u56de\u590d @\u624b\u6b8b\u5f88\u817b\u5bb3\u7684\u76ae\u5361\u4e18:\u4f60\u591f\u4e86\u554a',
+      '\u8fd9\u91cc\u8fc7\u4e86\u597d\u591a\u53d8\u8fc7\u4e0d\u53bb[\u5927\u54ed]\u521d\u59cb\u5f13\u7bad\u52a0\u624b\u6b8b\u52a0\u79fb\u52a8\u7aef',
+      '\u5c4e\u5c71\u4ee3\u7801\u7684\u6765\u6e90[\u85cf\u72d0]',
+      '\u5c4e\u5c71\u4ee3\u7801\u770b\u5230bug\u5728\u54ea\uff0c\u4f46\u662f\u6211\u4e0d\u662f\u795e\u6211\u4e00\u4e2a\u4eba\u4e5f\u641e\u4e0d\u5b9a',
+      '\u68ad\u54c8',
+      '\u4f60\u770b\uff0c\u53c8\u68ad\u54c8[\u7b11\u54ed]',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-noisy-current-batch/', uid: 'BV-noisy-current-batch' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u624b\u6b8b', '\u5c4e\u5c71\u4ee3\u7801', '\u68ad\u54c8']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u91cc\u8fc7\u4e86\u597d\u591a\u53d8\u8fc7\u4e0d\u53bb[\u5927\u54ed]\u521d\u59cb\u5f13\u7bad\u52a0\u624b\u6b8b\u52a0\u79fb\u52a8\u7aef']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u5c4e\u5c71\u4ee3\u7801\u770b\u5230bug\u5728\u54ea\uff0c\u4f46\u662f\u6211\u4e0d\u662f\u795e\u6211\u4e00\u4e2a\u4eba\u4e5f\u641e\u4e0d\u5b9a']);
+  assert.equal(entries[2].evidenceCount, 1);
+  assert.deepEqual(entries[2].evidenceSamples, ['\u4f60\u770b\uff0c\u53c8\u68ad\u54c8[\u7b11\u54ed]']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
