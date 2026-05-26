@@ -5495,6 +5495,94 @@ test('harvestKeywordDictionary forwards existing-only training mode to video sea
   }
 });
 
+test('harvestKeywordDictionary enables filtered discovery fallback for strict comment-backed refreshes', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-comment-pool-fallback-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        requireCommentBackedEvidence: true,
+        discoveryMode: 'controversial',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term: '\u76ee\u6807\u5f31\u8bcd', family: 'attack', evidenceCount: 1 }],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BVpool111111' }],
+            comments: [{ message: '\u76ee\u6807\u5f31\u8bcd \u8bc4\u8bba\u8bc1\u636e', rpid: '1' }],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.equal(payloads[0].includeVideoContext, false);
+    assert.equal(payloads[0].includeVideoObjectEvidence, false);
+    assert.equal(payloads[0].allowFilteredDiscoveryFallback, true);
+    assert.deepEqual(payloads[0].targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary sends a weak-term batch to strict comment-pool refreshes', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-comment-pool-targets-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        requireCommentBackedEvidence: true,
+        discoveryMode: 'controversial',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: '\u4e00\u53f7\u5f31\u8bcd', family: 'attack', evidenceCount: 1 },
+            { term: '\u4e8c\u53f7\u5f31\u8bcd', family: 'attack', evidenceCount: 1 },
+            { term: '\u4e09\u53f7\u5f31\u8bcd', family: 'cooperation', evidenceCount: 1 },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BVpool222222' }],
+            comments: [{ message: '\u4e8c\u53f7\u5f31\u8bcd \u8bc4\u8bba\u8bc1\u636e', rpid: '1' }],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.equal(new Set(payloads[0].targetExistingTerms).size, 3);
+    assert.equal(payloads[0].targetExistingTerms.includes('\u4e00\u53f7\u5f31\u8bcd'), true);
+    assert.equal(payloads[0].targetExistingTerms.includes('\u4e8c\u53f7\u5f31\u8bcd'), true);
+    assert.equal(payloads[0].targetExistingTerms.includes('\u4e09\u53f7\u5f31\u8bcd'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary ignores new dictionary terms during existing-only runs', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-existing-only-no-growth-'));
   const statePath = join(dir, 'state.json');

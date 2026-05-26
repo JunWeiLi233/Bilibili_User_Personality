@@ -1949,6 +1949,10 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   });
   const candidateQueries = candidatePlan.map((item) => item.query);
   const queries = plan.map((item) => item.query);
+  const commentPoolTargetTerms =
+    options.requireCommentBackedEvidence === true && options.existingTermsOnly === true
+      ? unique(candidatePlan.map((item) => item.term).filter(Boolean)).slice(0, asPositiveInt(options.commentPoolTargetTermsLimit, 24, 200))
+      : [];
   const results = [];
   const warnings = [];
 
@@ -2000,12 +2004,14 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
           ...(Array.isArray(planItem.targetExistingTerms) ? planItem.targetExistingTerms : []),
           planItem.term,
           ...relatedTargetExistingTerms(before, planItem, options),
+          ...commentPoolTargetTerms,
         ]);
       }
       if (options.requireCommentBackedEvidence === true) {
         searchPayload.includeVideoContext = false;
         searchPayload.includeVideoObjectEvidence = false;
         searchPayload.evidenceSourceVideoFallback = options.existingTermsOnly === true;
+        searchPayload.allowFilteredDiscoveryFallback = options.allowFilteredDiscoveryFallback !== false;
       }
       if (options.controversialPopularQueryLimit !== undefined) {
         searchPayload.controversialPopularQueryLimit = options.controversialPopularQueryLimit;
