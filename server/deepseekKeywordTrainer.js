@@ -1051,9 +1051,22 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     return audienceCountContext && !gameValueContext;
   }
   if (term === '\u8349\u751f' && family === 'cooperation') {
+    const literalGrassContext = /(?:\u62cd|\u5272|\u79cd|\u957f|\u8e29|\u770b|\u90a3\u4e2a).{0,6}\u8349(?:\u554a|\u5730|\u576a|\u4e1b|\u539f)?/u.test(cleanSample);
     const hostileComplaintContext = /(?:\u4e0d\u770bVAR|\u5fc5\u987b\u5f97\u770b|\u771f\u8349\u4e86|\u6211\u8349\u4e86|\u7ed9\u6211\u5c01\u4e86|\u4e0d\u957f\u8111\u5b50)/iu.test(cleanSample);
     const playfulLaughContext = /(?:\u8349\u751f|\u592a\u8349\u751f|\u8f6c\u573a|\u70ed\u8bcd|\u54c8\u54c8|\u7b11)/u.test(cleanSample);
-    return hostileComplaintContext && !playfulLaughContext;
+    return (literalGrassContext || hostileComplaintContext) && !playfulLaughContext;
+  }
+  if (term === '\u6ca1\u6d3b\u8fc7\u4e24\u4e2a\u6708' && family === 'attack') {
+    const videoTitleContext = isVideoContextSample(sample);
+    const titleOnlyContext = /^(?:\u300a)?(?:\u6ca1\u6d3b\u8fc7|\u6d3b\u4e0d\u8fc7|\u6491\u4e0d\u8fc7)(?:\u4e24\u4e2a\u6708|\u4fe9\u6708)(?:\u300b)?$/u.test(cleanSample);
+    const lifespanMockContext = /(?:\u70ed\u5ea6|\u8d26\u53f7|\u8fd9\u6d3b|\u957f\u7ea2|\u9879\u76ee|\u724c\u5b50).*(?:\u6ca1\u6d3b\u8fc7|\u6d3b\u4e0d\u8fc7)(?:\u4e24\u4e2a\u6708|\u4fe9\u6708)|(?:\u6ca1\u6d3b\u8fc7|\u6d3b\u4e0d\u8fc7)(?:\u4e24\u4e2a\u6708|\u4fe9\u6708).*(?:\u8fd8\u88c5|\u51c9\u4e86|\u70ed\u5ea6|\u957f\u7ea2)/u.test(cleanSample);
+    return (videoTitleContext || titleOnlyContext) && !lifespanMockContext;
+  }
+  if (term === '\u6807\u51c6\u7ed3\u5c40' && family === 'cooperation') {
+    const standaloneContext = cleanSample === '\u6807\u51c6\u7ed3\u5c40';
+    const sourceExplanationContext = /\u6807\u51c6\u7ed3\u5c40.*(?:\u662f.*\u6897|\u4e0d\u77e5\u9053|\u51fa\u81ea|\u6765\u6e90|JOJO)/iu.test(cleanSample);
+    const summaryContext = /(?:\u8fd9(?:\u624d|\u5c31)\u662f|\u7b97\u662f|\u6700\u540e|\u5148.*\u518d).*\u6807\u51c6\u7ed3\u5c40|\u6807\u51c6\u7ed3\u5c40.*(?:\u6ca1\u6bdb\u75c5|\u603b\u7ed3|\u8def\u7ebf)/u.test(cleanSample);
+    return (standaloneContext || sourceExplanationContext) && !summaryContext;
   }
   if (term === '\u5c4f\u853d' && family === 'cooperation') {
     const literalTechnicalContext = /(?:\u96f7\u8fbe|\u6742\u6ce2|\u53cd\u5c04\u9762|\u4fe1\u53f7|\u566a\u58f0|\u7535\u78c1).*\u5c4f\u853d|\u5c4f\u853d.*(?:\u96f7\u8fbe|\u6742\u6ce2|\u4fe1\u53f7|\u566a\u58f0)/u.test(cleanSample);
@@ -1214,8 +1227,9 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   }
   if (term === '\u540a\u6253' && family === 'attack') {
     const gameKillContext = /(?:\u4ea1\u8bed|\u79d2\u6740|\u6253\u6b7b|\u89e6\u624b|\u5267\u60c5\u6740|\u4f24\u5bb3|\u8840|\u4ed9\u5e1d|\u7ec3\u6c14|\u4e07\u4eba\u961f|\u4e00\u56de\u5408).*(?:\u79d2\u6740|\u6253\u6b7b|\u540a\u6253)|(?:\u79d2\u6740|\u6253\u6b7b).*(?:\u73a9\u610f\u513f|\u6e38\u620f|\u4f24\u5bb3|\u8840|\u4ed9\u5e1d|\u7ec3\u6c14|\u4e07\u4eba\u961f|\u4e00\u56de\u5408)/u.test(cleanSample);
+    const lifestyleMetricContext = /(?:\u751f\u6d3b|\u5de5\u8d44|\u8eab\u9ad8|\u901f\u5ea6|\u6570\u636e).*(?:\u79d2\u6740|\u5b8c\u7206|\u78be\u538b).*(?:\u5168\u56fd|\u4e5d\u6210|9\u6210|\d+%|\u4eba\u6c11)|(?:\u79d2\u6740|\u5b8c\u7206|\u78be\u538b).*(?:\u5168\u56fd|\u4e5d\u6210|9\u6210|\d+%|\u4eba\u6c11)/u.test(cleanSample);
     const comparisonAttackContext = /(?:\u540a\u6253).*(?:\u6d41\u91cf|\u5bf9\u624b|\u6f14\u6280|\u540c\u884c|\u8fd9\u7fa4)|(?:\u6f14\u6280|\u5b9e\u529b|\u53e3\u7891).*\u540a\u6253/u.test(cleanSample);
-    return gameKillContext && !comparisonAttackContext;
+    return (gameKillContext || lifestyleMetricContext) && !comparisonAttackContext;
   }
   if (term === '\u5730\u72f1\u7b11\u8bdd' && family === 'attack') {
     const genrePreferenceContext = /^(?:\u5730\u72f1\u7b11\u8bdd[\u554a\uff01!。]*)$|(?:\u5730\u72f1\u7b11\u8bdd).*(?:\u597d\u7b11|\u559c\u6b22|\u5427\u91cc|\u672c\u6765\u5c31\u662f|\u70b9\u8bc4)|(?:\u597d\u7b11|\u559c\u6b22|\u5427\u91cc|\u672c\u6765\u5c31\u662f|\u70b9\u8bc4).*\u5730\u72f1\u7b11\u8bdd/u.test(cleanSample);

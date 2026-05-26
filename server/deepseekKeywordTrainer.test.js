@@ -3129,6 +3129,47 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested loose reaction and
   assert.deepEqual(realEntries.map((entry) => entry.term), ['\u7ef7\u4e0d\u4f4f\u4e86', '800\u4e07']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects harvested title, standalone, and literal-grass evidence', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u6ca1\u6d3b\u8fc7\u4e24\u4e2a\u6708', family: 'attack', meaning: 'mock that something will not survive two months' },
+      { term: '\u6807\u51c6\u7ed3\u5c40', family: 'cooperation', meaning: 'summarize an expected standard ending' },
+      { term: '\u8349\u751f', family: 'cooperation', meaning: 'playful meme laughter' },
+      { term: '\u540a\u6253', family: 'attack', meaning: 'comparison that humiliates the other side' },
+    ],
+  };
+  const text = [
+    '\u300a\u6d3b\u4e0d\u8fc7\u4e24\u4e2a\u6708\u300b',
+    'Bilibili video context: \u4f0a\u6717\u73b0\u653f\u6743\u6491\u4e0d\u8fc7\u4e24\u4e2a\u6708',
+    '\u6807\u51c6\u7ed3\u5c40',
+    '\u6807\u51c6\u7ed3\u5c40\uff08\u8fd9\u4e2a\u771f\u7684\u5b8c\u5168\u4e0d\u77e5\u9053\u4e86\uff09',
+    '\u6807\u51c6\u7ed3\u5c40\u662fJOJO\u7684\u5947\u5999\u5192\u9669\u91cc\u7684\u6897',
+    '\u62cd\u90a3\u4e2a\u8349\u554a',
+    '\u751f\u6d3b\u79d2\u6740\u5168\u56fd9\u6210\u4eba\u6c11',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u8fd9\u79cd\u70ed\u5ea6\u6d3b\u4e0d\u8fc7\u4e24\u4e2a\u6708\uff0c\u8fd8\u88c5\u4ec0\u4e48\u957f\u7ea2',
+      '\u4ed6\u5148\u9053\u6b49\u518d\u6539\u53e3\uff0c\u8fd9\u624d\u662f\u6807\u51c6\u7ed3\u5c40',
+      '\u8fd9\u4e2a\u8f6c\u573a\u592a\u8349\u751f\u4e86',
+      '\u8fd9\u6bb5\u6f14\u6280\u540a\u6253\u6d41\u91cf',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u6ca1\u6d3b\u8fc7\u4e24\u4e2a\u6708',
+    '\u6807\u51c6\u7ed3\u5c40',
+    '\u8349\u751f',
+    '\u540a\u6253',
+  ]);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
