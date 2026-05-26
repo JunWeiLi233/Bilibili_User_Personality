@@ -1501,6 +1501,23 @@ test('findDictionaryEntriesWithTextEvidence rejects literal eel food and biology
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects quoted evil-laugh source discussion for attack terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [{ term: '\u6840\u6840\u6840', family: 'attack', meaning: '\u90aa\u6076\u7b11\u58f0\u6216\u9634\u9633\u602a\u6c14\u7684\u653b\u51fb\u8bed\u6c14', evidenceCount: 0 }],
+    },
+    [
+      '\u6211\u6700\u65e9\u5728\u767d\u9a6c\u5578\u897f\u98ce\u4e2d\u89c1\u8fc7\u8fd9\u4e2a\u6840\u6840\u6840',
+      '\u6840\u6840\u6840\uff0c\u4f60\u4eec\u8fd9\u7fa4\u4eba\u5c31\u7ee7\u7eed\u6025\u5427',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-evil-laugh/', uid: 'BV-evil-laugh' },
+  );
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u6840\u6840\u6840\uff0c\u4f60\u4eec\u8fd9\u7fa4\u4eba\u5c31\u7ee7\u7eed\u6025\u5427']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
