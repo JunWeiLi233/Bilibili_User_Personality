@@ -1801,6 +1801,29 @@ test('findDictionaryEntriesWithTextEvidence rejects literal yang-qi health evide
   assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u6837\u9a82\u4eba\u662f\u9633\u6c14\u4e0d\u8db3\u5427\uff0c\u522b\u592a\u865a\u4e86']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects meme-source discussion for evasion phrase evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u9038\u4e00\u65f6\u8bef\u4e00\u4e16', family: 'evasion', meaning: 'homo\u6897\uff0c\u7528\u8c10\u97f3\u548c\u5708\u5185\u6897\u9003\u907f\u8ba8\u8bba\u6216\u6076\u641e', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u9038\u4e00\u65f6\u8bef\u4e00\u4e16\uff0c114514\uff0c\u61c2\u4e86\u5427\uff1f',
+      '\u5f53\u521d\u770b\u5230\u201c114514\u201d\u53d8\u6210\u201c\u9038\u4e00\u65f6\uff0c\u8bef\u4e00\u4e16\u201d\u7684\u65f6\u5019\uff0c\u7b2c\u4e00\u611f\u89c9\u662f\u8fd9\u6897\u672c\u571f\u5316\u7684\u597d\u725b\u6279[\u7b11\u54ed]',
+      '\u9038\u4e00\u65f6\uff0c\u8bef\u4e00\u4e16\uff0c\u9038\u4e45\u5fc6\u65e7\u7f62\u4e00\u9f84\u3002',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-yishi-meme-source/', uid: 'BV-yishi-meme-source' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u9038\u4e00\u65f6\u8bef\u4e00\u4e16']);
+  assert.equal(entries[0].evidenceCount, 2);
+  assert.deepEqual(entries[0].evidenceSamples, [
+    '\u9038\u4e00\u65f6\u8bef\u4e00\u4e16\uff0c114514\uff0c\u61c2\u4e86\u5427\uff1f',
+    '\u9038\u4e00\u65f6\uff0c\u8bef\u4e00\u4e16\uff0c\u9038\u4e45\u5fc6\u65e7\u7f62\u4e00\u9f84\u3002',
+  ]);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

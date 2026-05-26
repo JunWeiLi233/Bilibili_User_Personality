@@ -920,6 +920,11 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const insultContext = /(?:\u4f60|\u4f60\u4eec|\u4ed6|\u9a82\u4eba|\u522b\u592a\u865a|\u592a\u865a|\u865a\u4e86|\u5632\u8bbd|\u9634\u9633|\u6025|\u7834\u9632|\u5634\u786c|\u4e0d\u884c)/u.test(cleanSample);
     return literalHealthContext && !insultContext;
   }
+  if (term === '\u9038\u4e00\u65f6\u8bef\u4e00\u4e16' && family === 'evasion') {
+    const sourceDiscussionContext = /(?:\u5f53\u521d\u770b\u5230|\u53d8\u6210|\u8fd9\u6897|\u6897\u672c\u571f\u5316|\u6897\u77e5\u8bc6|\u662f\u4ec0\u4e48\u6897|\u4ec0\u4e48\u610f\u601d|\u51fa\u81ea|\u6765\u6e90|\u8c10\u97f3)/u.test(cleanSample);
+    const directMemeUseContext = /(?:\u61c2\u4e86\u5427|\u7f62\u4e00\u9f84|\u7f62\u5df2\u96f6|\u9038\u4e45\u5fc6\u65e7|114514.*\u61c2|\u96f7\u666e)/u.test(cleanSample);
+    return sourceDiscussionContext && !directMemeUseContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }
