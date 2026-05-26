@@ -2274,6 +2274,53 @@ test('findDictionaryEntriesWithTextEvidence rejects violent coercion for coopera
   assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u4ef6\u4e8b\u5efa\u8bae\u5148\u628a\u65f6\u95f4\u7ebf\u4ea4\u4ee3\u6e05\u695a\uff0c\u5927\u5bb6\u518d\u8ba8\u8bba']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects passive publish context for request-to-post evidence terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [{ term: '\u53ef\u4ee5\u8d34', family: 'cooperation', meaning: 'ask another user to post evidence or context' }],
+    },
+    [
+      '\u56e0\u4e3a\u9700\u8981\u5e7f\u544a\u5546\u5ba1\u6838\u624d\u80fd\u53d1\u51fa\u6765\u7684\u8bc4\u8bba\uff0c\u80fd\u6709\u597d\u8d27\u624d\u5947\u602a\u4e86',
+      '\u4f60\u4e3a\u4ec0\u4e48\u53ef\u4ee5\u53d1\u8bed\u97f3',
+      '\u4ed6\u5b8c\u5168\u53ef\u4ee5\u53d1\u4e2a\u5fae\u535a\u8bf4\u81ea\u5df1\u4e0d\u662f\u7b2c\u4e00adc',
+      '\u8fd9\u4e2a\u563f\u563f\u563f\u7684\u52a8\u9759\u662f\u9e1f\u53d1\u51fa\u6765\u7684\uff1f',
+      '\u4f60\u89c9\u5f97\u4e0d\u5bf9\uff0c\u53ef\u4ee5\u53d1\u5f39\u5e55\u53d1\u8bc4\u8bba\u8bf4A\u5176\u5b9e\u662f\u5927\u5199i',
+      '\u53ef\u4ee5\u53d1\u660e\u5386\u53f2\u7ed9\u660e\u667a\u5149\u79c0\u52a0\u4e2a\u5207\u652f\u4e39\u5927\u540d\u7684\u6807\u7b7e',
+      '\u4f60\u6562\u53d1\u51fa\u6765\u4ed6\u8c03\u4f83\u4e86\u5417',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-post-evidence/', uid: 'BV-post-evidence' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u53ef\u4ee5\u8d34']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u6562\u53d1\u51fa\u6765\u4ed6\u8c03\u4f83\u4e86\u5417']);
+});
+
+test('normalizeKeywordEntries drops passive publish source evidence for request-to-post terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u53ef\u4ee5\u8d34',
+      family: 'cooperation',
+      meaning: 'ask another user to post evidence or context',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u4e00\u53d1\u51fa\u6765\u518d\u70b9\u51fb\u5c31\u8be5\u8bc4\u8bba\u5df2\u5220\u9664',
+        '\u53d1\u6b63\u7ecf\u86c7\u7c7b\u79d1\u666e\u9650\u6d41\u9650\u7684\u6b7b\u6b7b\u7684',
+        '\u4e0d\u8981\u603b\u628a\u4e2d\u56fd\u7684\u4e1c\u897f\u76f4\u63a5\u8d34\u51fa\u6765\u5ba3\u4f20',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-1', sample: '\u4e00\u53d1\u51fa\u6765\u518d\u70b9\u51fb\u5c31\u8be5\u8bc4\u8bba\u5df2\u5220\u9664' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-2', sample: '\u53d1\u6b63\u7ecf\u86c7\u7c7b\u79d1\u666e\u9650\u6d41\u9650\u7684\u6b7b\u6b7b\u7684' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-3', sample: '\u4e0d\u8981\u603b\u628a\u4e2d\u56fd\u7684\u4e1c\u897f\u76f4\u63a5\u8d34\u51fa\u6765\u5ba3\u4f20' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => ({ term: entry.term, evidenceCount: entry.evidenceCount, evidenceSamples: entry.evidenceSamples, evidenceSources: entry.evidenceSources })), [
+    { term: '\u53ef\u4ee5\u8d34', evidenceCount: 0, evidenceSamples: [], evidenceSources: [] },
+  ]);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
