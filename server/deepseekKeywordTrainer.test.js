@@ -4625,6 +4625,97 @@ test('normalizeKeywordEntries prunes platform complaint evidence for youtube sou
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested literal belief, course, and weak cooperation evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u4fe1\u4ef0',
+      family: 'attack',
+      meaning: 'mocking ideological belief',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5de5\u5320\u590f\u5c14\u592b\u81ea\u6b64\u540e\u6094\u81ea\u5df1\u4fe1\u4ef0\u4e86\u539f\u59cb\u6708\u4eae',
+        '\u4ed6\u62ff\u4fe1\u4ef0\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u5c31\u662f\u4e0d\u56de\u5e94\u95ee\u9898',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u65b0\u95fb\u5b66\u554a',
+      family: 'attack',
+      meaning: 'sarcastic attack on media framing',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u65b0\u95fb\u5b66\u6982\u8bba80+++',
+        '\u8fd9\u79cd\u6807\u9898\u515a\u771f\u662f\u65b0\u95fb\u5b66\u554a\uff0c\u53ea\u8bb2\u7acb\u573a\u4e0d\u8bb2\u8bc1\u636e',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u7cef\u4e86',
+      family: 'correction',
+      meaning: 'softens or backs down from a prior claim',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u611f\u89c9\u9ed1\u55d3\u4ece\u8fd9\u91cc\u5f00\u59cb\u5c31\u5f7b\u5e95\u7cef\u4e86\u4e0d\u6562\u627epp\u4e86\u6709\u611f\u89c9\u5417',
+        '\u524d\u9762\u8bf4\u91cd\u4e86\uff0c\u6211\u7cef\u4e86\uff0c\u6536\u56de\u90a3\u53e5',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u5b66\u4e60\u4e86',
+      family: 'cooperation',
+      meaning: 'acknowledges learning from another comment',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u6211\u8981\u5b66\u4e60\u4e86',
+        '\u8981\u5f00\u59cb\u5b66\u4e60\u4e86',
+        '\u8fd9\u4e2a\u65f6\u95f4\u7ebf\u8bb2\u6e05\u695a\u4e86\uff0c\u5b66\u4e60\u4e86',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u798f\u745e\u63a7',
+      family: 'cooperation',
+      meaning: 'furry fan identity',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8981\u6c42\u4e0d\u8ba9\u8bf4\u798f\u745e\uff0c\u90a3\u5fc5\u987b\u8bf4\u798f\u745e',
+        '\u798f\u3002\u3002\u3002\u798f\u745e\u63a7\uff1f',
+        '\u798f\u745e\u63a7\u770b\u5f97\u5f88\u723d\uff0c\u5236\u4f5c\u4e5f\u4e0d\u9519',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u4fe1\u4ef0', ['\u4ed6\u62ff\u4fe1\u4ef0\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u5c31\u662f\u4e0d\u56de\u5e94\u95ee\u9898']],
+    ['\u65b0\u95fb\u5b66\u554a', ['\u8fd9\u79cd\u6807\u9898\u515a\u771f\u662f\u65b0\u95fb\u5b66\u554a\uff0c\u53ea\u8bb2\u7acb\u573a\u4e0d\u8bb2\u8bc1\u636e']],
+    ['\u7cef\u4e86', ['\u524d\u9762\u8bf4\u91cd\u4e86\uff0c\u6211\u7cef\u4e86\uff0c\u6536\u56de\u90a3\u53e5']],
+    ['\u5b66\u4e60\u4e86', ['\u8fd9\u4e2a\u65f6\u95f4\u7ebf\u8bb2\u6e05\u695a\u4e86\uff0c\u5b66\u4e60\u4e86']],
+    ['\u798f\u745e\u63a7', ['\u798f\u745e\u63a7\u770b\u5f97\u5f88\u723d\uff0c\u5236\u4f5c\u4e5f\u4e0d\u9519']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes weak literal ear-misheard notes without request context', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7a7a\u8033',
+      family: 'cooperation',
+      meaning: 'asks for clarification around misheard audio',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u55e8 \u55e8 \u55e8 \u55e8 \u5c0f\u8001\u5f1f\uff5e\uff08\u6307\u7a7a\u8033',
+        '\u9ed1\u5361\u8482\uff08\u7a7a\u8033\uff09',
+        '\u914d\u4e2a\u5b57\u5e55\u5427\u3002\u672c\u6765\u5c31\u53e3\u9f7f\u4e0d\u6e05\u3002\u8fd8\u8ba9\u6211\u4eec\u7a7a\u8033',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u7a7a\u8033', ['\u914d\u4e2a\u5b57\u5e55\u5427\u3002\u672c\u6765\u5c31\u53e3\u9f7f\u4e0d\u6e05\u3002\u8fd8\u8ba9\u6211\u4eec\u7a7a\u8033']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes trump username mention evidence for chuan-jianguo attack term', () => {
   const entries = normalizeKeywordEntries([
     {
