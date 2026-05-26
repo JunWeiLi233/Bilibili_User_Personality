@@ -741,6 +741,30 @@ test('normalizes away misleading car-army video-context-only evidence', () => {
   assert.deepEqual(entries[0].evidenceSamples, ['\u5c0f\u7c73SU7\u8fd9\u4e8b\u4e00\u51fa\uff0c\u8f66\u5bb6\u519b\u53c8\u6765\u63a7\u8bc4\u4e86']);
 });
 
+test('normalizes persisted ambiguous attack evidence by removing benign food samples', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u8150\u4e73',
+      family: 'attack',
+      meaning: '\u7f51\u7edc\u653b\u51fb\u8bed\u5883\u4e2d\u7684\u8c10\u97f3\u6216\u8d2c\u635f\u7528\u6cd5',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8bb0\u5f97\u4e00\u6b21\u8ddf\u670b\u53cb\u53bb\u6f6e\u6c55\u5927\u6392\u6863\uff0c\u70b9\u4e86\u4e2a\u8c46\u9171\u8fd8\u662f\u8150\u4e73\u7092\u901a\u83dc\uff0c\u771f\u7684\u5f88\u7f8e\u5473',
+        '\u8638\u996d\uff01\u8150\u4e73\uff01\u53db\u5f92\uff01\u51fa\u5217',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', uid: 'BV-food', sample: '\u8bb0\u5f97\u4e00\u6b21\u8ddf\u670b\u53cb\u53bb\u6f6e\u6c55\u5927\u6392\u6863\uff0c\u70b9\u4e86\u4e2a\u8c46\u9171\u8fd8\u662f\u8150\u4e73\u7092\u901a\u83dc\uff0c\u771f\u7684\u5f88\u7f8e\u5473' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-attack', sample: '\u8638\u996d\uff01\u8150\u4e73\uff01\u53db\u5f92\uff01\u51fa\u5217' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8638\u996d\uff01\u8150\u4e73\uff01\u53db\u5f92\uff01\u51fa\u5217']);
+  assert.equal(entries[0].evidenceSources[0].uid, 'BV-attack');
+});
+
 test('mergeEntriesIntoDictionary prunes persisted title-spliced video-context-only terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-title-splice-'));
   const dictionaryPath = join(dir, 'dictionary.json');
@@ -1415,6 +1439,23 @@ test('findDictionaryEntriesWithTextEvidence refreshes existing dictionary term e
   assert.deepEqual(entries.map((entry) => entry.term), ['doge']);
   assert.equal(entries[0].evidenceCount, 2);
   assert.deepEqual(entries[0].evidenceSamples, ['first [doge] comment', 'second doge sample']);
+});
+
+test('findDictionaryEntriesWithTextEvidence rejects ambiguous food-context evidence for attack terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [{ term: '\u8150\u4e73', family: 'attack', meaning: '\u7f51\u7edc\u653b\u51fb\u8bed\u5883\u4e2d\u7684\u8c10\u97f3\u6216\u8d2c\u635f\u7528\u6cd5', evidenceCount: 0 }],
+    },
+    [
+      '\u8bb0\u5f97\u4e00\u6b21\u8ddf\u670b\u53cb\u53bb\u6f6e\u6c55\u5927\u6392\u6863\uff0c\u70b9\u4e86\u4e2a\u8c46\u9171\u8fd8\u662f\u8150\u4e73\u7092\u901a\u83dc\uff0c\u771f\u7684\u5f88\u7f8e\u5473',
+      '\u8638\u996d\uff01\u8150\u4e73\uff01\u53db\u5f92\uff01\u51fa\u5217',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-food-context/', uid: 'BV-food-context' },
+  );
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8638\u996d\uff01\u8150\u4e73\uff01\u53db\u5f92\uff01\u51fa\u5217']);
 });
 
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {

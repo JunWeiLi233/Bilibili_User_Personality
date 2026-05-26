@@ -591,18 +591,24 @@ export function normalizeKeywordEntries(rawEntries = []) {
     if (rawEvidenceCount > 0 && rawEvidenceSamples.length > 0 && evidenceSamples.length === 0) continue;
     for (const term of terms) {
       if (isNoisyTerm(term)) continue;
-      if (isTitleSplicedVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
-      if (isAskBaiduSongVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
-      if (isMisleadingCarArmyVideoContextOnlyTerm(term, evidenceSamples, evidenceSources)) continue;
+      const termEvidenceSamples = evidenceSamples.filter((sample) => !isAmbiguousBenignEvidenceSample(term, family, sample));
+      const termEvidenceSources = evidenceSources.filter((source) => !isAmbiguousBenignEvidenceSample(term, family, source.sample));
+      if (isTitleSplicedVideoContextOnlyTerm(term, termEvidenceSamples, termEvidenceSources)) continue;
+      if (isAskBaiduSongVideoContextOnlyTerm(term, termEvidenceSamples, termEvidenceSources)) continue;
+      if (isMisleadingCarArmyVideoContextOnlyTerm(term, termEvidenceSamples, termEvidenceSources)) continue;
+      const evidenceCount =
+        rawEvidenceCount > 0 && (termEvidenceSamples.length !== evidenceSamples.length || termEvidenceSources.length !== evidenceSources.length)
+          ? Math.max(termEvidenceSamples.length, termEvidenceSources.length)
+          : rawEvidenceCount;
       entries.push({
         term,
         family,
         meaning,
         risk: String(item.risk || '').trim() || (family === 'cooperation' || family === 'correction' ? 'positive' : 'medium'),
         confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.68,
-        evidenceCount: rawEvidenceCount,
-        evidenceSamples,
-        evidenceSources,
+        evidenceCount,
+        evidenceSamples: termEvidenceSamples,
+        evidenceSources: termEvidenceSources,
       });
     }
   }
@@ -767,29 +773,35 @@ function countNonOverlappingNeedleOccurrences(haystack, needles = []) {
   return count;
 }
 
+function isAmbiguousBenignEvidenceSample(term, family, sample) {
+  const cleanSample = cleanEvidenceText(sample);
+  if (term === '腐乳' && family === 'attack') {
+    return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
+  }
+  return false;
+}
+
 function evidenceForTerm(term, text, options = {}) {
   const needles = evidenceNeedlesForTerm(term);
-  const evidenceText = cleanEvidenceText(text);
-  const evidenceCount =
-    needles.length === 1
-      ? countOccurrences(evidenceText, needles[0])
-      : countNonOverlappingNeedleOccurrences(evidenceText, needles);
+  const family = String(options.family || '').trim();
+  let evidenceCount = 0;
   const evidenceSamples = [];
   const evidenceSources = [];
   const source = String(options.source || '').trim();
   const uid = String(options.uid || '').trim();
-  if (evidenceCount > 0) {
-    for (const line of String(text || '').split(/\r?\n/)) {
-      const cleanLine = cleanEvidenceText(line);
-      if (needles.some((needle) => cleanLine.includes(needle))) {
-        const sample = line.replace(/\s+/g, ' ').trim();
-        if (sample) {
-          const clippedSample = sample.length > 120 ? `${sample.slice(0, 120)}...` : sample;
-          evidenceSamples.push(clippedSample);
-          if (source || uid) evidenceSources.push({ source, uid, sample: clippedSample });
-        }
+
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const cleanLine = cleanEvidenceText(line);
+    if (!needles.some((needle) => cleanLine.includes(needle))) continue;
+    const sample = line.replace(/\s+/g, ' ').trim();
+    if (!sample || isAmbiguousBenignEvidenceSample(term, family, sample)) continue;
+    evidenceCount += needles.length === 1 ? countOccurrences(cleanLine, needles[0]) : countNonOverlappingNeedleOccurrences(cleanLine, needles);
+    if (evidenceSamples.length < 3) {
+      const clippedSample = sample.length > 120 ? `${sample.slice(0, 120)}...` : sample;
+      evidenceSamples.push(clippedSample);
+      if (source || uid) {
+        evidenceSources.push({ source, uid, sample: clippedSample });
       }
-      if (evidenceSamples.length >= 3) break;
     }
   }
   return {
@@ -803,7 +815,7 @@ export function filterKeywordEntriesByEvidence(entries = [], text = '', options 
   const evidenceText = cleanEvidenceText(text);
   if (!evidenceText) return [];
   return normalizeKeywordEntries(entries)
-    .map((entry) => ({ ...entry, ...evidenceForTerm(entry.term, text, options) }))
+    .map((entry) => ({ ...entry, ...evidenceForTerm(entry.term, text, { ...options, family: entry.family }) }))
     .filter((entry) => entry.evidenceCount > 0);
 }
 
@@ -813,7 +825,7 @@ export function findDictionaryEntriesWithTextEvidence(dictionary, text = '', opt
   const excludeTerms = new Set(Array.from(options.excludeTerms || []).map(cleanTerm).filter(Boolean));
   return normalizeKeywordEntries(Array.isArray(dictionary?.entries) ? dictionary.entries : [])
     .filter((entry) => !excludeTerms.has(entry.term))
-    .map((entry) => ({ ...entry, ...evidenceForTerm(entry.term, text, options) }))
+    .map((entry) => ({ ...entry, ...evidenceForTerm(entry.term, text, { ...options, family: entry.family }) }))
     .filter((entry) => entry.evidenceCount > 0);
 }
 
