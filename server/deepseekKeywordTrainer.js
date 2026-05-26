@@ -927,6 +927,26 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const evasionContext = /(?:\u522b\u53ea\u8bf4\u8c01\u61c2|\u8c01\u61c2.*(?:\u4e0d\u89e3\u91ca|\u61c2\u7684\u90fd\u61c2|\u8bc1\u636e\u8d34\u51fa\u6765|\u81ea\u5df1\u641c))/u.test(cleanSample);
     return fandomEmpathyContext && !evasionContext;
   }
+  if (['\u6211\u547d\u7531\u6211', '\u6211\u547d\u7531\u6211\u4e0d\u7531\u5929'].includes(term) && family === 'attack') {
+    const standaloneSloganContext = /^\u6211\u547d\u7531\u6211(?:\u4e0d\u7531\u5929)?(?:doge)?$/iu.test(cleanSample);
+    const hostileSloganContext = /(?:\u4f60|\u4f60\u4eec|\u8fd9\u79cd|\u9634\u8c0b\u8bba|\u786c\u72b6|\u5634\u786c|\u63a5\u76d8).*\u6211\u547d\u7531\u6211|\u6211\u547d\u7531\u6211.*(?:\u5f0f|\u786c\u72b6|\u5634\u786c|\u9634\u8c0b\u8bba|\u63a5\u76d8|\u72c2\u5984)/u.test(cleanSample);
+    return standaloneSloganContext && !hostileSloganContext;
+  }
+  if (['\u751f\u8349', '\u592a\u751f\u8349\u4e86'].includes(term) && family === 'attack') {
+    const standaloneLaughContext = /^(?:\u592a)?\u751f\u8349\u4e86?(?:[!！。~\s]|(?:\[doge\]))*$/u.test(cleanSample);
+    const hostileLaughContext = /(?:\u4f60|\u4f60\u4eec|\u903b\u8f91|\u89c2\u70b9|\u8bf4\u6cd5|\u8fd9\u4e2a|\u8fd9\u79cd).*\u751f\u8349|\u751f\u8349.*(?:\u4e0d\u770b\u8bc1\u636e|\u79bb\u8c31|\u903b\u8f91|\u8bc1\u636e)/u.test(cleanSample);
+    return standaloneLaughContext && !hostileLaughContext;
+  }
+  if (term === '\u65e0\u63a9\u4f53\u5e72\u62c9' && family === 'attack') {
+    const literalGameContext = /^(?:\u65e0\u63a9\u4f53\u5e72\u62c9|.*(?:\u73a9\u6e38\u620f|\u4ec0\u4e48\u64cd\u4f5c|\u63a9\u4f53|\u5f00\u706b|\u67aa|fps).*\u65e0\u63a9\u4f53\u5e72\u62c9|.*\u65e0\u63a9\u4f53\u5e72\u62c9.*(?:\u73a9\u6e38\u620f|\u4ec0\u4e48\u64cd\u4f5c|\u63a9\u4f53|\u5f00\u706b|\u67aa|fps))/iu.test(cleanSample);
+    const recklessMockContext = /(?:\u4f60|\u800c\u4f60|\u53ea\u77e5\u9053|\u6839\u672c\u4e0d\u770b|\u9c81\u83bd|\u65e0\u8111|\u5bf9\u9762\u8bf4).*\u65e0\u63a9\u4f53\u5e72\u62c9|\u65e0\u63a9\u4f53\u5e72\u62c9.*(?:\u6839\u672c\u4e0d\u770b|\u9c81\u83bd|\u65e0\u8111|\u5bf9\u9762\u8bf4)/u.test(cleanSample);
+    return literalGameContext && !recklessMockContext;
+  }
+  if (term === '\u96c6\u7f8e' && family === 'cooperation') {
+    const homophonePetMemeContext = /\u54c8\u96c6\u7f8e/u.test(cleanSample);
+    const friendlyAddressContext = /\u96c6\u7f8e(?:\u4eec)?(?:\u522b\u5435|\u5148|\u4e00\u8d77|\u5e2e|[\uff0c,])/u.test(cleanSample);
+    return homophonePetMemeContext && !friendlyAddressContext;
+  }
   if (term === '\u56e2\u706d\u590d\u4ec7\u8005\u8054\u76df' && family === 'cooperation') {
     const plotSummaryContext = /(?:\u590d\u4ec7\u8005|\u7f8e\u961f|\u5b9d\u77f3|\u6b63\u7247|\u5267\u60c5|\u4e3b\u8981\u539f\u56e0|\u8d2a\u4e8e\u4eab\u4e50|\u77e5\u9053\u81ea\u5df1\u8fd9\u8fb9\u7684\u60c5\u51b5)/u.test(cleanSample);
     return plotSummaryContext;
