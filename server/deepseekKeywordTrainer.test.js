@@ -1851,6 +1851,33 @@ test('findDictionaryEntriesWithTextEvidence rejects literal sexual-fantasy and b
   assert.deepEqual(entries[1].evidenceSamples, ['\u4f60\u4eec\u770b\u89c1\u7c73\u54c8\u6e38\u5c31\u5e94\u6fc0\uff0c\u522b\u592a\u6025']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal career-change and negated-mouthpiece evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u8f6c\u884c', family: 'attack', meaning: '\u5728\u7279\u5b9a\u8bed\u5883\u4e0b\u8bbd\u523a\u535a\u4e3b\u66f4\u6362\u8d5b\u9053\uff0c\u6697\u542b\u8c03\u4f83', evidenceCount: 0 },
+        { term: '\u5634\u66ff', family: 'cooperation', meaning: '\u6307\u66ff\u522b\u4eba\u8bf4\u51fa\u4e86\u5fc3\u91cc\u8bdd\uff0c\u8868\u8fbe\u8ba4\u540c', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u8f6c\u884c\u5356\u753b\uff1f\u6211\u8bb0\u5f97\u4ed6\u4e00\u76f4\u90fd\u662f\u753b\u753b\u7684',
+      '\u5bf9\u4e8e\u540e\u671f\u8f6c\u884c\u7684\u5efa\u8bae',
+      '\u4ec0\u4e4830+40+ 0\u57fa\u7840\u8f6c\u884c\u7684\uff0c\u5c31\u95ee\u4f60\u4eec\u4e00\u53e5\uff0c\u4eba\u5bb6\u4e13\u4e1a\u79d1\u73ed\u7684\u90fd\u6ca1\u8981\u5168\uff0c\u8981\u4f60\u4e2a\u517c\u804c\u534a\u8def\u51fa\u5bb6\u7684\u5e72\u561b\uff1f',
+      '\u8fd9up\u518d\u8fd9\u6837\u62cd\u4e0b\u53bb\u4e0d\u5982\u8f6c\u884c\u5356\u8bfe\u7b97\u4e86',
+      '\u539f\u8457\u515a\u5fc3\u91cc\u7684\u8bdd\u5168\u7ed9up\u5634\u66ff\u51fa\u6765\u4e86\uff01\uff01',
+      '\u8fd9\u4e0d\u662f\u6253\u5de5\u4eba\u5634\u66ff\uff0c\u8fd9\u662f\u65e0\u80fd\u72c2\u6012',
+      '\u5634\u66ff\u6709\u5c41\u7528',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-career-mouthpiece/', uid: 'BV-career-mouthpiece' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u8f6c\u884c', '\u5634\u66ff']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9up\u518d\u8fd9\u6837\u62cd\u4e0b\u53bb\u4e0d\u5982\u8f6c\u884c\u5356\u8bfe\u7b97\u4e86']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u539f\u8457\u515a\u5fc3\u91cc\u7684\u8bdd\u5168\u7ed9up\u5634\u66ff\u51fa\u6765\u4e86\uff01\uff01']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

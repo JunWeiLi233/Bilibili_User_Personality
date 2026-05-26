@@ -935,6 +935,18 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const overreactionContext = /(?:\u4f60|\u4f60\u4eec|\u4ed6\u4eec|\u770b\u89c1|\u7c73\u54c8\u6e38|\u522b\u592a\u6025|\u592a\u6025|\u7834\u9632|\u6025\u4e86|\u62bd\u5361|\u8282\u594f|\u9ed1|\u7c89\u4e1d|\u5c31\u5e94\u6fc0)/u.test(cleanSample);
     return literalBiologicalStressContext && !overreactionContext;
   }
+  if (term === '\u8f6c\u884c' && family === 'attack') {
+    const literalCareerContext = /(?:\u540e\u671f\u8f6c\u884c|\u8f6c\u884c\u7684\u5efa\u8bae|0\u57fa\u7840\u8f6c\u884c|30\\+40\\+.*\u8f6c\u884c|\u8f6c\u884c\u5356\u753b.*\u4e00\u76f4\u90fd\u662f\u753b\u753b|\u6211\u8bb0\u5f97\u4ed6\u4e00\u76f4\u90fd\u662f\u753b\u753b|\u6570\u636e\u5206\u6790|\u5c97\u4f4d|\u5b66\u4f4d|\u4e13\u4e1a\u79d1\u73ed|\u534a\u8def\u51fa\u5bb6|\u804c\u573a|\u5e02\u573a\u9500\u552e|\u627e\u5176\u4ed6\u5de5\u4f5c)/u.test(cleanSample);
+    const mockCareerContext = /(?:\u4e0d\u5982\u8f6c\u884c|\u8f6c\u884c\u5356\u8bfe|\u8f6c\u884c\u5f53\u5c0f\u4e11|\u522b\u5e72\u4e86|\u8fd8\u662f\u8f6c\u884c|\u8d5b\u9053|\u535a\u4e3b|\u8fd9up|\u7b97\u4e86|\u5632\u8bbd|\u9634\u9633)/u.test(cleanSample);
+    return literalCareerContext && !mockCareerContext;
+  }
+  if (term === '\u5634\u66ff' && family === 'cooperation') {
+    const negatedContext = /(?:\u4e0d\u662f.*\u5634\u66ff|\u522b\u5634\u66ff|\u7b97\u4ec0\u4e48\u5634\u66ff)/u.test(cleanSample);
+    if (negatedContext) return true;
+    const dismissiveContext = /(?:\u5634\u66ff\u6709\u5c41\u7528|\u5634\u66ff\u6ca1\u7528|\u65e0\u80fd\u72c2\u6012)/u.test(cleanSample);
+    const agreementContext = /(?:\u5fc3\u91cc\u7684\u8bdd|\u5634\u66ff\u51fa\u6765|\u6700\u5f3a\u5634\u66ff|\u6211\u7684\u5634\u66ff|\u8bf4\u51fa\u4e86|\u66ff\u6211\u8bf4|\u89c2\u4f17\u5634\u66ff|\u6253\u5de5\u4eba\u5634\u66ff)/u.test(cleanSample);
+    return dismissiveContext && !agreementContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }
