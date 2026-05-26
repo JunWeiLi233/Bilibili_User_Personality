@@ -2028,6 +2028,34 @@ test('findDictionaryEntriesWithTextEvidence rejects nickname-only correction-lab
   assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u79cd\u9022\u5b57\u5c31\u6539\u7684\u7ea0\u6b63\u54e5\uff0c\u6839\u672c\u4e0d\u662f\u8ba8\u8bba\u95ee\u9898']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects standalone and neutral woke-pun evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u6485\u9192', family: 'attack', meaning: '\u8c10\u97f3\u201c\u89c9\u9192\u201d\uff0c\u8bbd\u523a\u81ea\u8ba4\u4e3a\u89c9\u9192\u7684\u5de6\u6d3e\u4eba\u58eb', evidenceCount: 0 },
+        { term: '\u6485\u9192\u4eba', family: 'attack', meaning: '\u8c10\u97f3\u201c\u89c9\u9192\u201d\uff0c\u8bbd\u523a\u81ea\u8ba4\u4e3a\u89c9\u9192\u7684\u5de6\u6d3e\u4eba\u58eb', evidenceCount: 0 },
+        { term: '\u6485\u9192\u8005', family: 'attack', meaning: '\u8c10\u97f3\u201c\u89c9\u9192\u201d\uff0c\u8bbd\u523a\u81ea\u8ba4\u4e3a\u89c9\u9192\u7684\u5de6\u6d3e\u4eba\u58eb', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u6485\uff01\u9192\uff01',
+      '\u5b9e\u9645\u4e0a\u6485\u9192\u8005\u548c\u89c9\u9192\u8005\u5f88\u5bb9\u6613\u533a\u5206',
+      '\u4f60\u8fd9\u5957\u628a\u522b\u4eba\u90fd\u6253\u6210\u53cd\u52a8\u7684\u6485\u9192\u4eba\u8bdd\u672f\uff0c\u6839\u672c\u4e0d\u662f\u8ba8\u8bba\u95ee\u9898',
+      '\u8fd9\u7fa4\u6485\u9192\u8005\u53c8\u5f00\u59cb\u628a\u6b63\u5e38\u8d28\u7591\u6253\u6210\u7acb\u573a\u95ee\u9898',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-woke-pun/', uid: 'BV-woke-pun' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u6485\u9192', '\u6485\u9192\u4eba', '\u6485\u9192\u8005']);
+  assert.equal(entries.every((entry) => entry.evidenceCount === 2), true);
+  assert.deepEqual(entries[0].evidenceSamples, [
+    '\u4f60\u8fd9\u5957\u628a\u522b\u4eba\u90fd\u6253\u6210\u53cd\u52a8\u7684\u6485\u9192\u4eba\u8bdd\u672f\uff0c\u6839\u672c\u4e0d\u662f\u8ba8\u8bba\u95ee\u9898',
+    '\u8fd9\u7fa4\u6485\u9192\u8005\u53c8\u5f00\u59cb\u628a\u6b63\u5e38\u8d28\u7591\u6253\u6210\u7acb\u573a\u95ee\u9898',
+  ]);
+  assert.deepEqual(entries[1].evidenceSamples, entries[0].evidenceSamples);
+  assert.deepEqual(entries[2].evidenceSamples, entries[0].evidenceSamples);
+});
+
 test('findDictionaryEntriesWithTextEvidence rejects source-meme insults and literal complaint evidence', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

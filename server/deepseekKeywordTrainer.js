@@ -1010,6 +1010,12 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const correctionAttackContext = /(?:\u4f60|\u4f60\u4eec|\u8fd9\u79cd|\u9022\u5b57\u5c31\u6539|\u4e0d\u662f\u8ba8\u8bba|\u6760|\u6311\u9519|\u54ac\u6587\u56bc\u5b57|\u627e\u832c)/u.test(cleanSample);
     return nicknameOrNameQualityContext && !correctionAttackContext;
   }
+  if (['\u6485\u9192', '\u6485\u9192\u4eba', '\u6485\u9192\u8005'].includes(term) && family === 'attack') {
+    const standaloneChantContext = cleanSample === '\u6485\u9192' || cleanSample === '\u6485\u9192\u4eba' || cleanSample === '\u6485\u9192\u8005';
+    const neutralDistinctionContext = /(?:\u6485\u9192\u8005\u548c\u89c9\u9192\u8005|\u6485\u9192\u4eba\u548c\u89c9\u9192\u4eba|\u5f88\u5bb9\u6613\u533a\u5206|\u600e\u4e48\u533a\u5206|\u533a\u522b\u5728\u54ea)/u.test(cleanSample);
+    const directedLabelContext = /(?:\u4f60|\u4f60\u4eec|\u8fd9\u7fa4|\u8fd9\u5957|\u8bdd\u672f|\u6253\u6210|\u53cd\u52a8|\u7acb\u573a\u95ee\u9898|\u53c8\u5f00\u59cb|\u6263\u5e3d\u5b50|\u4e0d\u662f\u8ba8\u8bba)/u.test(cleanSample);
+    return (standaloneChantContext || neutralDistinctionContext) && !directedLabelContext;
+  }
   if (term === 'wdnmd' && family === 'attack') {
     const sourceOrStandaloneMemeContext = /(?:wdnmd\u8fd9\u4e2a\u90fd\u4e0d\u706b|\u70ed\u8bcd\u7cfb\u5217|\u4ec0\u4e48\u6897|\u6897\u6307\u5357|\u662f\u4ec0\u4e48\u6897|^wdnmd$)/iu.test(cleanSample);
     const directedInsultContext = /(?:\u4f60|\u4f60\u4eec|\u8fd9\u64cd\u4f5c|\u522b\u9a82|\u9a82\u4eba|\u771f\u83dc|\u5f00\u53e3|wdnmd.*\u4f60)/iu.test(cleanSample);
