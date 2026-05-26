@@ -5135,6 +5135,80 @@ test('mergeEntriesIntoDictionary prunes latest harvested generic cooperation sam
   }
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects latest harvested literal metallurgy and negated freshness false positives', () => {
+  const dictionary = {
+    entries: [
+      { term: '炼铜', family: 'attack', meaning: 'homophone attack for child sexualization' },
+      { term: '厉不厉害', family: 'attack', meaning: 'sarcastic challenge phrase' },
+      { term: '热乎', family: 'cooperation', meaning: 'fresh or recently available context' },
+      { term: '热乎的', family: 'cooperation', meaning: 'fresh or recently available context' },
+    ],
+  };
+  const falsePositiveText = [
+    '新系统的转炉炼铜你会了吗',
+    '回复 @厉不厉害你鸡哥jj :小黑子，露出鸡脚了吧',
+    '并非热乎',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '别说到处x暗示了，礼的直接把炼铜刻脸上了，有人管吗',
+      '大波波这轻描淡写的就把这么多事儿办了，你们说厉不厉害',
+      '热乎的资料刚发出来，可以参考',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '炼铜',
+    '厉不厉害',
+    '热乎',
+    '热乎的',
+  ]);
+});
+
+test('mergeEntriesIntoDictionary prunes persisted literal metallurgy and negated freshness evidence', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-literal-metallurgy-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '炼铜',
+            family: 'attack',
+            meaning: 'homophone attack for child sexualization',
+            evidenceCount: 1,
+            evidenceSamples: ['新系统的转炉炼铜你会了吗'],
+          },
+          {
+            term: '热乎',
+            family: 'cooperation',
+            meaning: 'fresh or recently available context',
+            evidenceCount: 1,
+            evidenceSamples: ['并非热乎'],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    assert.equal(dictionary.entries.find((item) => item.term === '炼铜').evidenceCount, 0);
+    assert.equal(dictionary.entries.find((item) => item.term === '热乎').evidenceCount, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('normalizeKeywordEntries prunes persisted literal traditional-character samples for video-language attack terms', () => {
   const entries = normalizeKeywordEntries([
     {
