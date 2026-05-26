@@ -2392,6 +2392,41 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested platform-action ev
   assert.deepEqual(realCorrection.map((entry) => entry.term), ['\u6211\u9519\u4e86']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects harvested literal food and drama proper-name evidence', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u624b\u6495', family: 'attack', meaning: 'tear someone apart rhetorically' },
+      { term: '\u597d\u6b7b', family: 'attack', meaning: 'celebrate someone being punished or dying' },
+      { term: '\u4e09\u963f\u54e5', family: 'attack', meaning: 'mocking label from palace drama discourse' },
+      { term: '\u7687\u4e0a', family: 'attack', meaning: 'sarcastic authority label' },
+      { term: '\u8001\u56db', family: 'attack', meaning: 'sarcastic label for a faction or person' },
+      { term: '\u53ef\u4ee5\u8d34', family: 'cooperation', meaning: 'ask another user to post evidence or context' },
+    ],
+  };
+  const text = [
+    '\u4f60\u8981\u5b66\u4f1a\u4e0d\u9700\u8981\u5207\u83dc\u7684\u83dc\uff0c\u6bd4\u5982\u624b\u6495\u5305\u83dc\uff0c\u6392\u9aa8\u4e4b\u7c7b\u7684[\u85cf\u72d0]',
+    '\u5c31\u662f\u51b2\u7740\u88ab\u5e9f\u53bb\u7684\u5427\uff01\u597d\u6b7b\u4e0d\u5982\u8d56\u6d3b\u7740\uff01\u5c31\u662f\u6ca1\u90a3\u4e2a\u547d',
+    '\u4fa7\u9762\u53cd\u5e94\u96cd\u6b63\u89c9\u5f97\u4e09\u963f\u54e5\u793c\u6559\u4e0d\u884c',
+    '\u7687\u4e0a\uff0c\u4e09\u963f\u54e5\u53c8\u957f\u9ad8\u4e86\uff08doge\uff09',
+    '\u8001\u56db\uff1a\u6211\u4ee5\u524d\u5e26\u7684\u662f\u4ec0\u4e48\u963f\u54e5\uff0c\u662f\u80e4\u7965\u554a\uff01\u4ed6\u5f18\u65f6\u600e\u4e48\u6bd4\uff1f',
+    '\u8fd9\u4e48\u6002\u7684\u5c0f\u70ae\u597d\u610f\u601d\u53d1\u51fa\u6765\uff1f',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u8fd9\u4e2a\u4eba\u88ab\u5f53\u573a\u624b\u6495\uff0c\u4e4b\u524d\u7684\u8bdd\u672f\u5168\u7ffb\u8f66\u4e86',
+      '\u4f60\u8bf4\u6709\u8bc1\u636e\uff0c\u90a3\u5c31\u53ef\u4ee5\u8d34\u51fa\u6765\u770b\u770b',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u624b\u6495', '\u53ef\u4ee5\u8d34']);
+});
+
 test('normalizeKeywordEntries drops passive publish source evidence for request-to-post terms', () => {
   const entries = normalizeKeywordEntries([
     {
