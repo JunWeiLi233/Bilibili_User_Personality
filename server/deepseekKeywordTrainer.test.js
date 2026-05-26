@@ -4126,6 +4126,58 @@ test('normalizeKeywordEntries prunes game-reaction evidence for lived-to-the-end
   assert.deepEqual(entries[0].evidenceSamples, ['\u6211\u6d3b\u5230\u5934\u4e86\uff0c\u8c22\u8c22\u4f60\u628a\u6765\u9f99\u53bb\u8109\u8bb2\u6e05\u695a']);
 });
 
+test('normalizeKeywordEntries prunes empathy-only who-understands evidence for evasion term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u8c01\u61c2',
+      family: 'evasion',
+      meaning: 'appeal to shared understanding instead of explaining',
+      evidenceCount: 4,
+      evidenceSamples: [
+        'up\u4e3b\u957f\u7684\u8fd9\u4e48\u597d\u5374\u6765\u73a9\u62bd\u8c61\u8c01\u61c2',
+        '\u5bb6\u4eba\u4eec\uff0c\u8c01\u61c2\u554a\u2197\uff1f\ud83c\udf49',
+        '\u8c01\u61c2\u90a3\u79cd\u89c4\u5219\u79e9\u5e8f\u611f\u5f3a\u7684\u4eba\u5c31\u771f\u4f1a\u975e\u5e38\u9075\u5b88\u5e76\u5e0c\u671b\u5f97\u5230\u786e\u5207\u7b54\u590d',
+        '\u522b\u95ee\u8bc1\u636e\u4e86\uff0c\u8c01\u61c2\u7684\u90fd\u61c2',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: 'up\u4e3b\u957f\u7684\u8fd9\u4e48\u597d\u5374\u6765\u73a9\u62bd\u8c61\u8c01\u61c2' },
+        { source: 'Bilibili public video comment scan', sample: '\u5bb6\u4eba\u4eec\uff0c\u8c01\u61c2\u554a\u2197\uff1f\ud83c\udf49' },
+        { source: 'Bilibili public video comment scan', sample: '\u8c01\u61c2\u90a3\u79cd\u89c4\u5219\u79e9\u5e8f\u611f\u5f3a\u7684\u4eba\u5c31\u771f\u4f1a\u975e\u5e38\u9075\u5b88\u5e76\u5e0c\u671b\u5f97\u5230\u786e\u5207\u7b54\u590d' },
+        { source: 'Bilibili public video comment scan', sample: '\u522b\u95ee\u8bc1\u636e\u4e86\uff0c\u8c01\u61c2\u7684\u90fd\u61c2' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u522b\u95ee\u8bc1\u636e\u4e86\uff0c\u8c01\u61c2\u7684\u90fd\u61c2']);
+});
+
+test('normalizeKeywordEntries prunes broad understands-substring evidence for dong-de-dou-dong', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u61c2\u7684\u90fd\u61c2',
+      family: 'evasion',
+      meaning: 'implies evidence is unnecessary because insiders know',
+      evidenceCount: 4,
+      evidenceSamples: [
+        'up\u4e3b\u58f0\u97f3\u66f4\u50cfAI\u6709\u6ca1\u6709\u61c2\u7684\uff08\uff09',
+        '\u522b\u50bb\u4e86\u65e5\u8bed\u4f60\u770b\u4e0d\u61c2\u7684\uff1a\u201c\u5e1d\u738b\u5207\u5f00\u201d',
+        '\u6211\u5c0f\u65f6\u5019\u771f\u7684\u4e00\u770b\u5c31\u61c2\u7684',
+        '\u8bc1\u636e\u4e0d\u653e\u4e86\uff0c\u61c2\u7684\u90fd\u61c2',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: 'up\u4e3b\u58f0\u97f3\u66f4\u50cfAI\u6709\u6ca1\u6709\u61c2\u7684\uff08\uff09' },
+        { source: 'Bilibili public video comment scan', sample: '\u522b\u50bb\u4e86\u65e5\u8bed\u4f60\u770b\u4e0d\u61c2\u7684\uff1a\u201c\u5e1d\u738b\u5207\u5f00\u201d' },
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u5c0f\u65f6\u5019\u771f\u7684\u4e00\u770b\u5c31\u61c2\u7684' },
+        { source: 'Bilibili public video comment scan', sample: '\u8bc1\u636e\u4e0d\u653e\u4e86\uff0c\u61c2\u7684\u90fd\u61c2' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8bc1\u636e\u4e0d\u653e\u4e86\uff0c\u61c2\u7684\u90fd\u61c2']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {

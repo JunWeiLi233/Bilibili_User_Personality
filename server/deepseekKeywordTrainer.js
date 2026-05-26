@@ -1151,6 +1151,20 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const cooperativeContext = /\u6211\u6d3b\u5230\u5934\u4e86.{0,24}(?:\u8c22\u8c22|\u8bb2\u6e05\u695a|\u660e\u767d|\u7ec8\u4e8e\u61c2)|(?:\u8c22\u8c22|\u8bb2\u6e05\u695a|\u660e\u767d).{0,24}\u6211\u6d3b\u5230\u5934\u4e86/u.test(cleanSample);
     if (gameReactionContext && !cooperativeContext) return true;
   }
+  if (term === '\u8c01\u61c2' && family === 'evasion') {
+    const evidenceAvoidanceContext = /(?:\u522b\u95ee|\u8bc1\u636e|\u4e0d\u89e3\u91ca|\u4e0d\u591a\u8bf4|\u81ea\u5df1\u60f3).{0,16}\u8c01\u61c2|\u8c01\u61c2.{0,16}(?:\u90fd\u61c2|\u522b\u95ee|\u8bc1\u636e|\u4e0d\u89e3\u91ca|\u4e0d\u591a\u8bf4|\u81ea\u5df1\u60f3)/u.test(cleanSample);
+    const empathyContext = /(?:\u5bb6\u4eba\u4eec|\u8c01\u61c2\u554a|up\u4e3b|\u957f\u7684|\u597d\u5374|\u8c01\u61c2\u90a3\u79cd|\u89c4\u5219\u79e9\u5e8f\u611f|\u5e0c\u671b\u5f97\u5230|\u786e\u5207\u7b54\u590d|\u611f\u89c9|\u771f\u4f1a)/u.test(cleanSample);
+    if (empathyContext && !evidenceAvoidanceContext) return true;
+    return !evidenceAvoidanceContext;
+  }
+  if (term === '\u61c2\u7684\u90fd\u61c2' && family === 'evasion') {
+    const exactOrShortFormContext = /\u61c2\u7684\u90fd\u61c2/u.test(cleanSample) || /\bdddd\b/iu.test(cleanSample);
+    const exactEvasionContext = exactOrShortFormContext
+      && /(?:\u522b\u95ee|\u8bc1\u636e|\u4e0d\u653e|\u4e0d\u89e3\u91ca|\u61d2\u5f97\u89e3\u91ca|\u4e0d\u591a\u8bf4|\u81ea\u5df1\u60f3|\u53ea\u80fd\u8bf4|\u53cd\u6b63|\u4e0d\u597d\u8bf4)/u.test(cleanSample);
+    const broadUnderstandSubstringContext = /(?:\u6709\u6ca1\u6709\u61c2\u7684|\u770b\u4e0d\u61c2\u7684|\u4e00\u770b\u5c31\u61c2\u7684|\u770b\u61c2\u7684|\u94fe\u63a5.*\u61c2\u7684|\u61c2\u7684\uff08|\u61c2\u7684\(\))/u.test(cleanSample);
+    if (broadUnderstandSubstringContext && !exactEvasionContext) return true;
+    return !exactEvasionContext;
+  }
   if (term === '\u55d1\u74dc\u5b50' && family === 'evasion') {
     const rawSample = String(sample || '').trim();
     const emoteSuffixContext = /\[\u55d1\u74dc\u5b50\]/u.test(rawSample) && !rawSample.replace(/\[[^\]]+\]/g, '').includes('\u55d1\u74dc\u5b50');
