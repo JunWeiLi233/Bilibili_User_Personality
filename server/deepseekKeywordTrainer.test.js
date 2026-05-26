@@ -5381,6 +5381,87 @@ test('mergeEntriesIntoDictionary prunes persisted Taffy emote-only evidence', as
   }
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects latest harvested explanation and reaction false positives', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u4e0d\u5c2c', family: 'cooperation', meaning: 'not awkward, constructive reassurance' },
+      { term: '\u5982\u679c\u6709', family: 'cooperation', meaning: 'conditional openness to evidence' },
+      { term: '\u6211\u9519\u4e86', family: 'correction', meaning: 'admit fault or correction' },
+      { term: '\u8c01\u61c2', family: 'evasion', meaning: 'appeal to shared feeling instead of explaining' },
+      { term: '\u5c0f\u7c89\u7ea2', family: 'attack', meaning: 'hostile pink label' },
+      { term: 'pink', family: 'attack', meaning: 'alias for hostile pink label' },
+      { term: '\u5c0f\u5b69\u5c04', family: 'attack', meaning: 'ambiguous hostile slang item' },
+    ],
+  };
+  const falsePositiveText = [
+    '\u5b98\u65b9\u4e0d\u5c2c\u6211\u90fd\u89c9\u5f97\u5c2c[doge]',
+    '\u770b\u6765\u8fd9\u7247\u5b50\u6ca1\u7ed9\u5218\u5201\u6bdb\u9001\u94b1\u554a\uff0c\u90fd\u4e0d\u5c2c\u5439\u4e86',
+    '\u5982\u679c\u6709\u4eba\u5728\u5c0f\u4fe9\u5343\u5e74\u524d\u7ed9\u4f60\u5728\u5168\u83cc\u73af\u5883\u4e0b\u505a\u4e00\u573a\u5168\u98ce\u9669\u96f6\u6536\u76ca\u7684\u5f00\u9885\u624b\u672f',
+    '\u6211\u9519\u4e86\u53c8\u80fd\u600e\u4e48\u6837\uff1f\u6211\u4e0d\u53ef\u80fd\u7ed9\u4f60\u9053\u6b49\u6211\u4e5f\u4e0d\u627f\u8ba4\u6211\u6709\u9519',
+    '\u8c01\u61c2\u554a\u4e00\u70b9\u8fdb\u6765\u90fd\u51c6\u5907\u5f00\u59cb\u9009\u724c\u4e86wwww',
+    '\u8fd9\u662f\u4e3b\u89d2\u56e2\u6b7b\u4eba\u6700\u591a\u7684\u4e00\u90e8\u5427\uff0c\u524d\u4efb\u7c89\u7ea2\u84dd\uff0c\u5927\u5e08\u5144',
+    '\u4e0d\u61c2\u5c31\u95ee\uff0c\u4f60\u4eec\u8bf4\u7684\u7684\u5c11\u4eba\u3001\u591a\u4eba\u3001\u4eba\u5c71\u4eba\u6d77\u3001\u660e\u7740\u6765\u3001\u5c0f\u5b69\u5c04\u3001\u7d27\u3001KDA\u662f\u4ec0\u4e48\u610f\u601d\u554a',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u8fd9\u6bb5\u89e3\u91ca\u4e0d\u5c2c\uff0c\u53ef\u4ee5\u7ee7\u7eed\u8865\u5145',
+      '\u5982\u679c\u6709\u539f\u59cb\u8bc1\u636e\u6211\u613f\u610f\u6539\u7ed3\u8bba',
+      '\u6211\u9519\u4e86\uff0c\u521a\u624d\u90a3\u53e5\u6536\u56de',
+      '\u522b\u53ea\u8bf4\u8c01\u61c2\uff0c\u8bc1\u636e\u8d34\u51fa\u6765',
+      '\u522b\u518d\u7528\u5c0f\u7c89\u7ea2\u8bdd\u672f\u6263\u5e3d\u5b50\u4e86',
+      'pink\u90fd\u662f\u5728\u6821\u5b66\u751f\u8fd9\u8bdd\u7ffb\u6765\u8986\u53bb',
+      '\u5c0f\u5b69\u5c04\u8fd9\u79cd\u8bf4\u6cd5\u662f\u5728\u9a82\u4eba\u5427',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u4e0d\u5c2c',
+    '\u5982\u679c\u6709',
+    '\u6211\u9519\u4e86',
+    '\u8c01\u61c2',
+    '\u5c0f\u7c89\u7ea2',
+    'pink',
+    '\u5c0f\u5b69\u5c04',
+  ]);
+});
+
+test('mergeEntriesIntoDictionary prunes latest harvested explanation and reaction false positives', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-explanation-reaction-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          { term: '\u4e0d\u5c2c', family: 'cooperation', meaning: 'not awkward, constructive reassurance', evidenceCount: 2, evidenceSamples: ['\u5b98\u65b9\u4e0d\u5c2c\u6211\u90fd\u89c9\u5f97\u5c2c[doge]', '\u770b\u6765\u8fd9\u7247\u5b50\u6ca1\u7ed9\u5218\u5201\u6bdb\u9001\u94b1\u554a\uff0c\u90fd\u4e0d\u5c2c\u5439\u4e86'] },
+          { term: '\u5982\u679c\u6709', family: 'cooperation', meaning: 'conditional openness to evidence', evidenceCount: 1, evidenceSamples: ['\u5982\u679c\u6709\u4eba\u5728\u5c0f\u4fe9\u5343\u5e74\u524d\u7ed9\u4f60\u505a\u4e00\u573a\u5f00\u9885\u624b\u672f'] },
+          { term: '\u6211\u9519\u4e86', family: 'correction', meaning: 'admit fault or correction', evidenceCount: 1, evidenceSamples: ['\u6211\u9519\u4e86\u53c8\u80fd\u600e\u4e48\u6837\uff1f\u6211\u4e0d\u53ef\u80fd\u7ed9\u4f60\u9053\u6b49\u6211\u4e5f\u4e0d\u627f\u8ba4\u6211\u6709\u9519'] },
+          { term: '\u8c01\u61c2', family: 'evasion', meaning: 'appeal to shared feeling instead of explaining', evidenceCount: 1, evidenceSamples: ['\u8c01\u61c2\u554a\u4e00\u70b9\u8fdb\u6765\u90fd\u51c6\u5907\u5f00\u59cb\u9009\u724c\u4e86wwww'] },
+          { term: '\u5c0f\u7c89\u7ea2', family: 'attack', meaning: 'hostile pink label', evidenceCount: 1, evidenceSamples: ['\u8fd9\u662f\u4e3b\u89d2\u56e2\u6b7b\u4eba\u6700\u591a\u7684\u4e00\u90e8\u5427\uff0c\u524d\u4efb\u7c89\u7ea2\u84dd\uff0c\u5927\u5e08\u5144'] },
+          { term: '\u5c0f\u5b69\u5c04', family: 'attack', meaning: 'ambiguous hostile slang item', evidenceCount: 1, evidenceSamples: ['\u4e0d\u61c2\u5c31\u95ee\uff0c\u5c0f\u5b69\u5c04\u662f\u4ec0\u4e48\u610f\u601d\u554a'] },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    for (const term of ['\u4e0d\u5c2c', '\u5982\u679c\u6709', '\u6211\u9519\u4e86', '\u8c01\u61c2', '\u5c0f\u7c89\u7ea2', '\u5c0f\u5b69\u5c04']) {
+      assert.equal(dictionary.entries.find((item) => item.term === term).evidenceCount, 0);
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('normalizeKeywordEntries prunes persisted literal traditional-character samples for video-language attack terms', () => {
   const entries = normalizeKeywordEntries([
     {
