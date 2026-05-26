@@ -5051,6 +5051,90 @@ test('mergeEntriesIntoDictionary prunes persisted truncated emote reaction evide
   }
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects latest harvested substring and generic cooperation false positives', () => {
+  const dictionary = {
+    entries: [
+      { term: '皮套', family: 'cooperation', meaning: 'cooperative discussion about avatar or asset setup' },
+      { term: '模组', family: 'cooperation', meaning: 'cooperative game mod discussion' },
+      { term: '小受', family: 'attack', meaning: 'derogatory label' },
+      { term: '如果有', family: 'cooperation', meaning: 'conditional openness to evidence' },
+      { term: '可以贴', family: 'cooperation', meaning: 'ask another user to post evidence or context' },
+    ],
+  };
+  const falsePositiveText = [
+    '这集除了艾斯，其他奥特兄弟的皮套好新，有这钱为什么不给雷欧整套好一点的皮套？好好打磨剧情不好吗？非要整烂活[尴尬]，还把奥兄的人设给毁了',
+    '你说的视频里面完全没有说明任务，破坏，惊变100天的内容，就用的烦村和击杀计分模组重了，怎么就认为是搬运呢[喜极而泣]',
+    '我们从小受到的教育让我们看待事情很简单粗暴，非黑即白。',
+    '如果有可能，我倒是宁愿傻呵呵的过一生，不要这么多体验和顿悟',
+    '但如果有一天她遇到了线下的情绪，她表现出来的是和线上其实差不多，旁人只能发现她难受痛苦，然而这一次是真正吃到苦头了。',
+    '在这个基础，就可以发现，野核并不等于刺客，蓝领并不等于坦克。',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '这个皮套素材可以贴出来给大家参考一下吗',
+      '这个模组链接可以分享一下，方便大家复现',
+      '别拿小受这种词骂人，先说事实',
+      '如果有原始数据我愿意改结论',
+      '你把证据截图可以贴一下吗',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '皮套',
+    '模组',
+    '小受',
+    '如果有',
+    '可以贴',
+  ]);
+});
+
+test('mergeEntriesIntoDictionary prunes latest harvested generic cooperation samples', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-generic-cooperation-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '如果有',
+            family: 'cooperation',
+            meaning: 'conditional openness to evidence',
+            evidenceCount: 2,
+            evidenceSamples: [
+              '如果有可能，我倒是宁愿傻呵呵的过一生，不要这么多体验和顿悟',
+              '但如果有一天她遇到了线下的情绪，她表现出来的是和线上其实差不多，旁人只能发现她难受痛苦，然而这一次是真正吃到苦头了。',
+            ],
+          },
+          {
+            term: '可以贴',
+            family: 'cooperation',
+            meaning: 'ask another user to post evidence or context',
+            evidenceCount: 1,
+            evidenceSamples: ['在这个基础，就可以发现，野核并不等于刺客，蓝领并不等于坦克。'],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    assert.equal(dictionary.entries.find((item) => item.term === '如果有').evidenceCount, 0);
+    assert.equal(dictionary.entries.find((item) => item.term === '可以贴').evidenceCount, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('normalizeKeywordEntries prunes persisted literal traditional-character samples for video-language attack terms', () => {
   const entries = normalizeKeywordEntries([
     {
