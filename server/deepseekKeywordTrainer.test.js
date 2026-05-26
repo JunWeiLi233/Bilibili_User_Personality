@@ -3906,6 +3906,72 @@ test('normalizeKeywordEntries prunes public-title evidence for haojiahuo reactio
   assert.deepEqual(entries[0].evidenceSamples, ['\u597d\u5609\u4f19\u6211\u5c31\u50bb\u76ef\u7740\u8fd9\u5f39\u5e55\u53d8\u8272[\u5fae\u7b11]']);
 });
 
+test('normalizeKeywordEntries prunes public-title evidence for no-use absolute term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6beb\u65e0\u540a\u7528',
+      family: 'absolutes',
+      meaning: 'absolute dismissal that something is useless',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u522b\u4e70\uff0c\u6beb\u65e0\u540a\u7528',
+        'Bilibili public video title: \u201c\u8001\u516c\u53d8\u6210\u4e27\u5c38\u6beb\u65e0\u540a\u7528...\u201d',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u522b\u4e70\uff0c\u6beb\u65e0\u540a\u7528' },
+        { source: 'Bilibili public video title', sample: 'Bilibili public video title: \u201c\u8001\u516c\u53d8\u6210\u4e27\u5c38\u6beb\u65e0\u540a\u7528...\u201d' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u522b\u4e70\uff0c\u6beb\u65e0\u540a\u7528']);
+});
+
+test('normalizeKeywordEntries prunes public-title evidence for hard-to-persuade attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u597d\u8a00\u96be\u529d\u60f3\u6b7b\u7684\u9b3c',
+      family: 'attack',
+      meaning: 'attacks someone as refusing advice and courting disaster',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u8fd9\u8f66\u4e0d\u9760\u8c31\uff0c\u597d\u8a00\u96be\u529d\u60f3\u6b7b\u7684\u9b3c',
+        'Bilibili public video title: \u4e3a\u4ec0\u4e48\u8bf4\u597d\u8a00\u96be\u529d\u60f3\u6b7b\u7684\u9b3c\uff1f',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u8f66\u4e0d\u9760\u8c31\uff0c\u597d\u8a00\u96be\u529d\u60f3\u6b7b\u7684\u9b3c' },
+        { source: 'Bilibili public video title', sample: 'Bilibili public video title: \u4e3a\u4ec0\u4e48\u8bf4\u597d\u8a00\u96be\u529d\u60f3\u6b7b\u7684\u9b3c\uff1f' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u8f66\u4e0d\u9760\u8c31\uff0c\u597d\u8a00\u96be\u529d\u60f3\u6b7b\u7684\u9b3c']);
+});
+
+test('normalizeKeywordEntries prunes public-title evidence for good-era-arrived term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u597d\u65f6\u4ee3\u6765\u4e34\u529b',
+      family: 'cooperation',
+      meaning: 'expresses positive expectation that a good era has arrived',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u611f\u89c9\u65e0\u85cf\u6253\u6cd5\u7684\u4e95\u55b7\u671f\u4e86\uff0c\u597d\u65f6\u4ee3\u6765\u4e34\u529b\uff01',
+        'Bilibili public video title: \u4eba\u4eba\u90fd\u6709\u9c81\u4f2f\u7279\u7684\u597d\u65f6\u4ee3\u6765\u4e34\u529b!',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u611f\u89c9\u65e0\u85cf\u6253\u6cd5\u7684\u4e95\u55b7\u671f\u4e86\uff0c\u597d\u65f6\u4ee3\u6765\u4e34\u529b\uff01' },
+        { source: 'Bilibili public video title', sample: 'Bilibili public video title: \u4eba\u4eba\u90fd\u6709\u9c81\u4f2f\u7279\u7684\u597d\u65f6\u4ee3\u6765\u4e34\u529b!' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u611f\u89c9\u65e0\u85cf\u6253\u6cd5\u7684\u4e95\u55b7\u671f\u4e86\uff0c\u597d\u65f6\u4ee3\u6765\u4e34\u529b\uff01']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {

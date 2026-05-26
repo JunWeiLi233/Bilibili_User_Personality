@@ -1104,6 +1104,12 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   if (['\u89c4\u8bad\u987e\u5ba2', '\u597d\u5609\u4f19'].includes(term) && family === 'attack') {
     if (isVideoContextSample(sample)) return true;
   }
+  if (['\u6beb\u65e0\u540a\u7528', '\u597d\u8a00\u96be\u529d\u60f3\u6b7b\u7684\u9b3c'].includes(term) && (family === 'absolutes' || family === 'attack')) {
+    if (isVideoContextSample(sample)) return true;
+  }
+  if (term === '\u597d\u65f6\u4ee3\u6765\u4e34\u529b' && family === 'cooperation') {
+    if (isVideoContextSample(sample)) return true;
+  }
   if (term === '\u55d1\u74dc\u5b50' && family === 'evasion') {
     const rawSample = String(sample || '').trim();
     const emoteSuffixContext = /\[\u55d1\u74dc\u5b50\]/u.test(rawSample) && !rawSample.replace(/\[[^\]]+\]/g, '').includes('\u55d1\u74dc\u5b50');
