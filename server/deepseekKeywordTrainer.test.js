@@ -2730,6 +2730,26 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested suffix, address, a
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects harvested username-only ASCII evidence', () => {
+  const dictionary = {
+    entries: [
+      { term: 'lsp', family: 'attack', meaning: 'sexualized insult shorthand' },
+      { term: '\u7a7a\u964d', family: 'cooperation', meaning: 'timestamp navigation helper' },
+    ],
+  };
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, '\u56de\u590d @LSP\u7684N\u6b21\u65b9 :\u55f7\u55f7\uff0c\u597d\u7684');
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    ['\u4f60\u8fd9\u4e2alsp\u522b\u518d\u5237\u4e86', '\u7a7a\u964d2:15'].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['lsp', '\u7a7a\u964d']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

@@ -966,6 +966,11 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const burdenShiftContext = /(?:\u4f60(?:\u81ea\u5df1\u5b66|\u81ea\u5df1\u641c|\u81ea\u5df1\u53bb\u5b66)|(?:\u522b\u95ee\u6211|\u61d2\u5f97\u6559).*\u81ea\u5df1\u5b66)/u.test(cleanSample);
     return embeddedLearningContext && !burdenShiftContext;
   }
+  if (term === 'lsp' && family === 'attack') {
+    const usernameOnlyContext = /^(?:\u56de\u590d)?lsp(?:\u7684|[a-z0-9]+).*?(?:\u55f7\u55f7|\u597d\u7684|\u8c22\u8c22|\u6536\u5230)?$/iu.test(cleanSample);
+    const directedInsultContext = /(?:\u4f60|\u8fd9\u4e2a|\u522b|lsp.*(?:\u522b|\u6076\u5fc3|\u5237))/iu.test(cleanSample);
+    return usernameOnlyContext && !directedInsultContext;
+  }
   if (term === '\u56e2\u706d\u590d\u4ec7\u8005\u8054\u76df' && family === 'cooperation') {
     const plotSummaryContext = /(?:\u590d\u4ec7\u8005|\u7f8e\u961f|\u5b9d\u77f3|\u6b63\u7247|\u5267\u60c5|\u4e3b\u8981\u539f\u56e0|\u8d2a\u4e8e\u4eab\u4e50|\u77e5\u9053\u81ea\u5df1\u8fd9\u8fb9\u7684\u60c5\u51b5)/u.test(cleanSample);
     return plotSummaryContext;
