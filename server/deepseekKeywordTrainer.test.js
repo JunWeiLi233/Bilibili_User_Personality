@@ -5704,6 +5704,69 @@ test('normalizeKeywordEntries prunes persisted Taffy proper-name drama evidence'
   assert.deepEqual(entries[0].evidenceSources, []);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects latest harvested generic mod, emote, and praise false positives', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u6a21\u7ec4', family: 'cooperation', meaning: 'request or share a useful mod' },
+      { term: '\u8131\u5355', family: 'cooperation', meaning: 'support someone getting into a relationship' },
+      { term: '\u95ee\u8001\u9a6c\u672c\u4eba', family: 'evasion', meaning: 'dismissively tell someone to ask the original speaker' },
+      { term: '\u5168\u90fd\u662f\u5bf9', family: 'absolutes', meaning: 'unqualified agreement used as closed judgment' },
+      { term: '\u61c2\u4e86\u5427', family: 'evasion', meaning: 'dismissive phrase implying the answer is obvious' },
+    ],
+  };
+  const falsePositiveText = [
+    '\u4e3b\u64ad\u4e3b\u64ad\uff0c\u6211\u8981\u8fd9\u4e00\u4e2a\u6a21\u7ec4\uff0c\u6211\u7ed9\u4f60\u4e00\u952e\u4e09\u8fde\u4e86',
+    '\u56db\u963f\u54e5\u7684\u533e\u989d\u3010\u9ad8\u77bb\u8fdc\u77a9\u3011\uff08\u8fd9\u7b97\u4e0d\u7b97\u6697\u793a\u4e86\u56db\u7237\u6700\u540e\u80fd\u593a\u5ae1\u6210\u529f[\u8131\u5355doge]\uff09',
+    'All Your Base Are Belong to Us\uff081998\uff09',
+    '\u54c8\u54c8\u54c8\u8fd9\u5c4a\u7f51\u53cb\u592a\u9002\u5408\u8bedc\u4e86\uff0c\u5168\u90fd\u662f\u5bf9\u8d34\u5408\u4eba\u7269\u6f14\u6280\u7684\u6b23\u8d4f\u554a',
+    '\u59d0\u59b9\u52a0\u6cb9\u54e6\uff0c\u5176\u5b9e\u771f\u7684\u4e0d\u600e\u4e48\u96be\uff0c\u5b8c\u5168\u662f\u5bf9\u4e2d\u8003\u6709\u5e2e\u52a9\u7684\u7ec3\u4e60',
+    '\u8fd9\u6e38\u620f\uff0c\u6bd5\u7adf\u662f\u5c11\u4f17\uff0c\u8fd9\u79cd\u653b\u7565\u89c6\u9891\u505a\u597d\u4e86\uff0c\u6d41\u91cf\u4e5f\u5dee\uff0c\u505a\u4e0d\u597d\uff0c\u4e00\u5806\u4eba\u55b7\uff0c\u61c2\u4e86\u5427[doge]',
+    '\u4f60\u770b\uff0c\u61c2\u4e86\u5427',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u8fd9\u4e2a\u6a21\u7ec4\u94fe\u63a5\u53ef\u4ee5\u5206\u4eab\u4e00\u4e0b\u5417\uff0c\u6211\u60f3\u590d\u73b0\u8fd9\u4e2a\u95ee\u9898',
+      '\u795d\u4f60\u65e9\u65e5\u8131\u5355\uff0c\u627e\u5230\u559c\u6b22\u7684\u5bf9\u8c61',
+      '\u522b\u95ee\u6211\u4e86\uff0c\u95ee\u8001\u9a6c\u672c\u4eba\u53bb',
+      '\u4f60\u8fd9\u4e2a\u8bf4\u6cd5\u6ca1\u6709\u4efb\u4f55\u53cd\u4f8b\uff0c\u662f\u4e0d\u662f\u89c9\u5f97\u81ea\u5df1\u5168\u90fd\u662f\u5bf9',
+      '\u8bc1\u636e\u4e0d\u7ed9\uff0c\u53ea\u8bf4\u6211\u90fd\u8bf4\u5230\u8fd9\u4efd\u4e0a\u4e86\u4f60\u61c2\u4e86\u5427',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u6a21\u7ec4',
+    '\u8131\u5355',
+    '\u95ee\u8001\u9a6c\u672c\u4eba',
+    '\u5168\u90fd\u662f\u5bf9',
+    '\u61c2\u4e86\u5427',
+  ]);
+});
+
+test('findDictionaryEntriesWithTextEvidence keeps pig-nose insult for momentary dumb behavior criticism', () => {
+  const dictionary = {
+    entries: [
+      {
+        term: '\u732a\u9f3b',
+        family: 'attack',
+        meaning: 'criticizes someone as acting dumb or making a stupid move in the moment',
+      },
+    ],
+  };
+
+  const entries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    '\u4f60\u8fd9\u64cd\u4f5c\u771f\u732a\u9f3b\uff0c\u521a\u624d\u90a3\u6ce2\u5c31\u662f\u5728\u72af\u8822',
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u732a\u9f3b']);
+});
+
 test('normalizeKeywordEntries prunes persisted literal traditional-character samples for video-language attack terms', () => {
   const entries = normalizeKeywordEntries([
     {
