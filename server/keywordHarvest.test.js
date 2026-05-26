@@ -977,6 +977,37 @@ test('buildKeywordHarvestQueries starts with priority weak action aliases', () =
   }
 });
 
+test('buildKeywordHarvestQueries starts with comment aliases for current zero-evidence terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '0\u63d0\u5347', family: 'cooperation', evidenceCount: 0 },
+        { term: '10\u5e74\u8001\u7c89', family: 'evidence', evidenceCount: 0 },
+        { term: '12300\u5de5\u4fe1\u90e8\u6295\u8bc9', family: 'evidence', evidenceCount: 0 },
+        { term: '2026\u6253\u5361', family: 'evasion', evidenceCount: 0 },
+        { term: '\u57c3\u53ca\u5427', family: 'evasion', evidenceCount: 0 },
+        { term: '\u7231\u548b\u548b\u5730', family: 'evasion', evidenceCount: 0 },
+        { term: '\u767e\u5ea6\u767e\u79d1', family: 'evidence', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 28,
+      queryVariantsPerTerm: 4,
+      targetEvidence: 3,
+    },
+  );
+
+  assert.equal(queries.includes('\u96f6\u63d0\u5347 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u5341\u5e74\u8001\u7c89 \u8bc1\u636e \u6765\u6e90 \u8bc4\u8bba\u533a'), true);
+  assert.equal(queries.includes('\u5de5\u4fe1\u90e8\u6295\u8bc9 \u8bc1\u636e \u6765\u6e90 \u8bc4\u8bba\u533a'), true);
+  assert.equal(queries.includes('\u6253\u53612026 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u57c3\u53ca\u5427\u8001\u54e5 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u968f\u4fbf\u4f60\u7231\u548b\u548b\u5730 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4'), true);
+  assert.equal(queries.includes('\u767e\u5ea6\u767e\u79d1\u6709\u5199 \u8bc1\u636e \u6765\u6e90 \u8bc4\u8bba\u533a'), true);
+});
+
 test('buildKeywordHarvestQueries uses topic contexts for hard zero-evidence terms', () => {
   const cases = [
     {

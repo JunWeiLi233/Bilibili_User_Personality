@@ -4508,6 +4508,46 @@ test('findDictionaryEntriesWithTextEvidence maps latest sample-backed weak alias
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence maps current zero-evidence aliases back to targets', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '0\u63d0\u5347', family: 'cooperation', meaning: 'claim there is zero improvement' },
+        { term: '10\u5e74\u8001\u7c89', family: 'evidence', meaning: 'long-time fan source framing' },
+        { term: '12300\u5de5\u4fe1\u90e8\u6295\u8bc9', family: 'evidence', meaning: 'consumer complaint source channel' },
+        { term: '2026\u6253\u5361', family: 'evasion', meaning: 'future check-in marker' },
+        { term: '\u57c3\u53ca\u5427', family: 'evasion', meaning: 'forum-source reference' },
+        { term: '\u7231\u548b\u548b\u5730', family: 'evasion', meaning: 'dismissive let-it-be wording' },
+        { term: '\u767e\u5ea6\u767e\u79d1', family: 'evidence', meaning: 'citation to Baidu Baike' },
+      ],
+    },
+    [
+      '\u8fd9\u70b9\u786e\u5b9e\u96f6\u63d0\u5347\uff0c\u548c\u4e0a\u6b21\u4e00\u6837',
+      '\u6211\u5341\u5e74\u8001\u7c89\u8bf4\u4e00\u53e5\uff0c\u8fd9\u8d44\u6599\u662f\u6709\u6765\u6e90\u7684',
+      '\u5b9e\u5728\u4e0d\u884c\u5c31\u625312300\u6295\u8bc9\uff0c\u8d70\u5de5\u4fe1\u90e8\u6295\u8bc9\u6e20\u9053',
+      '\u6253\u53612026\uff0c\u5230\u65f6\u5019\u518d\u56de\u6765\u770b',
+      '\u4e0d\u89e3\u91ca\u4e86\uff0c\u81ea\u5df1\u53bb\u57c3\u53ca\u5427\u627e\u539f\u5e16',
+      '\u968f\u4fbf\u4f60\u7231\u548b\u548b\u5730\uff0c\u53cd\u6b63\u6211\u4e0d\u89e3\u91ca\u4e86',
+      '\u767e\u5ea6\u767e\u79d1\u6709\u5199\uff0c\u81ea\u5df1\u770b\u6765\u6e90',
+    ].join('\n'),
+    {
+      source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-zero-evidence-alias/',
+      uid: 'BV-zero-evidence-alias',
+    },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '0\u63d0\u5347',
+    '10\u5e74\u8001\u7c89',
+    '12300\u5de5\u4fe1\u90e8\u6295\u8bc9',
+    '2026\u6253\u5361',
+    '\u57c3\u53ca\u5427',
+    '\u7231\u548b\u548b\u5730',
+    '\u767e\u5ea6\u767e\u79d1',
+  ]);
+  assert.equal(entries.every((entry) => entry.evidenceSources[0].uid === 'BV-zero-evidence-alias'), true);
+});
+
 test('findDictionaryEntriesWithTextEvidence maps network-cable meme anchors back to target term', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

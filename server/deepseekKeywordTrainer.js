@@ -120,6 +120,15 @@ const FAMILY_ALIASES = {
   revision: 'correction',
 };
 const TERM_EVIDENCE_ALIASES = {
+  '0\u63d0\u5347': ['\u96f6\u63d0\u5347', '\u6ca1\u6709\u63d0\u5347', '\u4e00\u70b9\u63d0\u5347\u6ca1\u6709', '\u6beb\u65e0\u63d0\u5347'],
+  '10\u5e74\u8001\u7c89': ['\u5341\u5e74\u8001\u7c89', '\u8001\u7c89\u5341\u5e74', '\u5341\u5e74\u8001\u7c89\u4e0d\u8bf7\u81ea\u6765'],
+  '12300\u5de5\u4fe1\u90e8\u6295\u8bc9': ['\u5de5\u4fe1\u90e8\u6295\u8bc9', '12300\u6295\u8bc9', '\u625312300\u6295\u8bc9'],
+  '2026\u6253\u5361': ['\u6253\u53612026', '2026\u5e74\u6253\u5361', '2026\u6253\u5361\u6210\u529f'],
+  '\u57c3\u53ca\u5427': ['\u57c3\u53ca\u5427\u8001\u54e5', '\u57c3\u53ca\u5427\u5427\u53cb', '\u57c3\u53ca\u5427\u6765\u4e86'],
+  '\u7231\u548b\u548b\u5730': ['\u968f\u4fbf\u4f60\u7231\u548b\u548b\u5730', '\u7231\u548b\u548b\u7684', '\u7231\u600e\u4e48\u7740\u600e\u4e48\u7740'],
+  '\u7231\u548b\u548b\u7684': ['\u968f\u4fbf\u4f60\u7231\u548b\u548b\u7684', '\u7231\u548b\u548b\u5730', '\u7231\u600e\u4e48\u7740\u600e\u4e48\u7740'],
+  '\u767e\u5ea6\u767e\u79d1': ['\u767e\u5ea6\u767e\u79d1\u6709\u5199', '\u767e\u79d1\u6709\u5199', '\u67e5\u767e\u5ea6\u767e\u79d1'],
+  '\u767e\u79d1': ['\u767e\u5ea6\u767e\u79d1\u6709\u5199', '\u767e\u79d1\u6709\u5199', '\u67e5\u767e\u79d1'],
   '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97': ['\u4e0d\u4f1a\u771f\u6709\u4eba', '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97', '\u4e0d\u4f1a\u771f\u6709\u4eba\u4ee5\u4e3a'],
   '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u5427': ['\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97', '\u4e0d\u4f1a\u771f\u6709\u4eba', '\u4e0d\u4f1a\u6709\u4eba\u771f\u89c9\u5f97'],
   '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97\u8fd9\u53eb\u8bc1\u636e\u5427': [
@@ -502,7 +511,7 @@ function mergeKeywordEntry(existing, incoming, now) {
 }
 
 function aliasEvidenceEntriesForEntry(entryMap, entry) {
-  const aliases = TERM_EVIDENCE_ALIASES[cleanTerm(entry?.term).toLowerCase()] || [];
+  const aliases = evidenceAliasesForTerm(entry?.term);
   return aliases
     .map((alias) => entryMap.get(cleanTerm(alias)))
     .filter((aliasEntry) => aliasEntry && Number(aliasEntry.evidenceCount || 0) > 0)
@@ -512,6 +521,15 @@ function aliasEvidenceEntriesForEntry(entryMap, entry) {
       evidenceSamples: aliasEntry.evidenceSamples || [],
       evidenceSources: aliasEntry.evidenceSources || [],
     }));
+}
+
+function evidenceAliasesForTerm(term) {
+  const rawTerm = String(term || '').trim();
+  const cleanedTerm = cleanTerm(rawTerm).toLowerCase();
+  return unique([
+    ...(TERM_EVIDENCE_ALIASES[rawTerm] || []),
+    ...(TERM_EVIDENCE_ALIASES[cleanedTerm] || []),
+  ]);
 }
 
 function caseFoldEvidenceEntriesForEntry(entryMap, entry) {
@@ -710,8 +728,10 @@ function cleanEvidenceText(text) {
 }
 
 function generatedEvidenceAliasesForTerm(term) {
+  const raw = String(term || '').trim();
   const clean = cleanTerm(term);
   const aliases = [];
+  if (raw === '0\u63d0\u5347') aliases.push('\u96f6\u63d0\u5347', '\u6ca1\u6709\u63d0\u5347', '\u4e00\u70b9\u63d0\u5347\u6ca1\u6709', '\u6beb\u65e0\u63d0\u5347');
   const percentMatch = clean.match(/^(100|100%|\u767e\u5206\u767e|\u767e\u5206\u4e4b\u767e)(.+)$/);
   if (percentMatch) {
     const tail = percentMatch[2];
@@ -824,7 +844,7 @@ function generatedFixedCommentSuffixAliases(clean) {
 function evidenceNeedlesForTerm(term) {
   return unique([
     term,
-    ...(TERM_EVIDENCE_ALIASES[cleanTerm(term).toLowerCase()] || []),
+    ...evidenceAliasesForTerm(term),
     ...generatedEvidenceAliasesForTerm(term),
   ].map(cleanEvidenceText)).filter(Boolean);
 }
@@ -996,8 +1016,12 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     return numericAudienceContext && !zeroPersonMockContext;
   }
   if (term === '0\u63d0\u5347' && family === 'cooperation') {
-    const gameStatContext = /(?:\u7b49\u7ea7|\u8d85\u9650|\u7a81\u7834|\u62c9\u9ad8\u7b49\u7ea7|\u751f\u5b58|\u7cbe\u901a|\u9632\u5fa1|\u53cd\u5e94|\u76f4\u4f24|\u88c5\u5907|\u6570\u503c).*0\u63d0\u5347|0\u63d0\u5347.*(?:\u7b49\u7ea7|\u88c5\u5907|\u6570\u503c|\u4f24\u5bb3)/u.test(cleanSample);
-    const concessionContext = /(?:\u6211\u627f\u8ba4|\u786e\u5b9e|\u4f60\u8bf4\u5f97\u5bf9|\u8fd9\u70b9).*0\u63d0\u5347/u.test(cleanSample);
+    const rawSample = String(sample || '').normalize('NFKC');
+    if (/(?:\u6211\u627f\u8ba4|\u786e\u5b9e|\u4f60\u8bf4\u5f97\u5bf9|\u8fd9\u70b9).*(?:0\u63d0\u5347|\u96f6\u63d0\u5347|\u6ca1\u6709\u63d0\u5347|\u4e00\u70b9\u63d0\u5347\u6ca1\u6709|\u6beb\u65e0\u63d0\u5347)/u.test(rawSample)) return false;
+    const zeroBoost = '(?:0|\u96f6|\u6ca1\u6709|\u4e00\u70b9)?\u63d0\u5347|\u6beb\u65e0\u63d0\u5347';
+    const gameStatContext = new RegExp(`(?:\\u7b49\\u7ea7|\\u8d85\\u9650|\\u7a81\\u7834|\\u62c9\\u9ad8\\u7b49\\u7ea7|\\u751f\\u5b58|\\u7cbe\\u901a|\\u9632\\u5fa1|\\u53cd\\u5e94|\\u76f4\\u4f24|\\u88c5\\u5907|\\u6570\\u503c).*${zeroBoost}|${zeroBoost}.*(?:\\u7b49\\u7ea7|\\u88c5\\u5907|\\u6570\\u503c|\\u4f24\\u5bb3)`, 'u').test(cleanSample);
+    const concessionContext = new RegExp(`(?:\\u6211\\u627f\\u8ba4|\\u786e\\u5b9e|\\u4f60\\u8bf4\\u5f97\\u5bf9|\\u8fd9\\u70b9).*${zeroBoost}`, 'u').test(cleanSample)
+      || /(?:\u6211\u627f\u8ba4|\u786e\u5b9e|\u4f60\u8bf4\u5f97\u5bf9|\u8fd9\u70b9).*\u63d0\u5347/u.test(cleanSample);
     return !concessionContext || gameStatContext;
   }
   if (term === '\u4fe1\u4ef0' && family === 'attack') {
