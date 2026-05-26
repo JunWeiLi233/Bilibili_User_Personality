@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
+import { priorityActionItemsFromCoverageActions, serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
 
 test('serializeVideoKeywordDiscoveryReport keeps per-query diagnostics for harvest triage', () => {
   const report = serializeVideoKeywordDiscoveryReport(
@@ -113,4 +113,33 @@ test('serializeVideoKeywordDiscoveryReport counts accepted evidence by unique co
   );
 
   assert.equal(report.rounds[0].results[0].acceptedEvidenceCount, 2);
+});
+
+test('priorityActionItemsFromCoverageActions serializes current non-empty next queries', () => {
+  const items = priorityActionItemsFromCoverageActions([
+    {
+      term: 'old term',
+      family: 'attack',
+      action: 'none',
+      status: 'covered',
+      nextQuery: 'old term',
+      suggestedQueries: ['old term alt'],
+    },
+    {
+      term: 'next term',
+      family: 'evidence',
+      action: 'retry_with_new_variant',
+      status: 'weak_missed',
+      nextQuery: 'next term 评论区',
+      suggestedQueries: ['next term 弹幕', ''],
+    },
+  ]);
+
+  assert.deepEqual(
+    items.map((item) => ({ term: item.term, query: item.query, nextQuery: item.nextQuery })),
+    [
+      { term: 'next term', query: 'next term 评论区', nextQuery: 'next term 评论区' },
+      { term: 'next term', query: 'next term 弹幕', nextQuery: 'next term 弹幕' },
+    ],
+  );
 });

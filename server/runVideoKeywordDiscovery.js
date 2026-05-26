@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 
 import { withFileLock } from './fileLock.js';
 import { countAcceptedEvidenceHits, harvestKeywordDictionaryRounds } from './keywordHarvest.js';
-import { serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
+import { priorityActionItemsFromCoverageActions, serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
 import { buildVideoKeywordDiscoveryOptions, parsePriorityQueryContent } from './runVideoKeywordDiscoveryOptions.js';
 
 function parseList(value) {
@@ -182,6 +182,11 @@ const newTerms = result.rounds.flatMap((round) => round.growth.newTerms || []);
 if (newTerms.length) {
   console.log('New keywords:');
   for (const entry of newTerms.slice(0, 40)) printKeyword(entry);
+}
+
+if (process.env.BILIBILI_HARVEST_PRIORITY_ACTION_FILE && result.coverageActions) {
+  const priorityActionItems = priorityActionItemsFromCoverageActions(result.coverageActions);
+  await writeJson(process.env.BILIBILI_HARVEST_PRIORITY_ACTION_FILE, priorityActionItems);
 }
 
 await writeJson(reportPath, serializeVideoKeywordDiscoveryReport(result, statePath, reportPath));

@@ -1,5 +1,16 @@
 import { countAcceptedEvidenceHits } from './keywordHarvest.js';
 
+export function priorityActionItemsFromCoverageActions(actions = []) {
+  return (Array.isArray(actions) ? actions : [])
+    .filter((item) => item?.action && item.action !== 'none')
+    .flatMap((item) => {
+      const queries = [item.nextQuery, ...(Array.isArray(item.suggestedQueries) ? item.suggestedQueries : [])]
+        .map((query) => String(query || '').trim())
+        .filter(Boolean);
+      return queries.map((query) => ({ ...item, query, nextQuery: query }));
+    });
+}
+
 export function serializeVideoKeywordDiscoveryReport(result, statePath, reportPath) {
   return {
     generatedAt: new Date().toISOString(),
