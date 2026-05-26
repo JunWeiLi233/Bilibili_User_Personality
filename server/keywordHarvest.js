@@ -780,6 +780,11 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
   for (const query of TERM_PRIORITY_QUERIES[String(term || '').trim()] || []) {
     pushManualVariant(query);
   }
+  if (options.preferShortCommentVariants === true && String(term || '').trim()) {
+    const cleanTerm = String(term).trim();
+    pushManualVariant(`${cleanTerm} \u8bc4\u8bba\u533a`);
+    pushManualVariant(`${cleanTerm} \u70ed\u8bc4`);
+  }
   for (const searchTerm of searchTerms.filter(isCompactMetricSearchTerm)) {
     pushManualVariant(searchTerm);
     pushManualVariant(`${searchTerm} \u70ed\u8bc4`);
@@ -1472,6 +1477,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const ownVariants = queryVariantsForTerm(term, family, templateLimit, {
       ...options,
       interleaveAliasCommentVariants: attemptsCount > 0 && successfulAttempts === 0,
+      preferShortCommentVariants: options.requireCommentBackedEvidence === true && attemptsCount === 0,
     });
     const relatedSearchTerms = relatedContainedSearchTerms(entries, entry).filter((relatedTerm) => {
       const cleanRelatedTerm = String(relatedTerm || '').trim();

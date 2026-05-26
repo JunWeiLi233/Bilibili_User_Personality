@@ -2236,6 +2236,27 @@ test('buildCoverageActions retries alias comment queries earlier after scaffold 
   assert.equal(action.nextQuery, '\u4fdd\u62a4\u6211\u65b9up \u8bc4\u8bba\u533a');
 });
 
+test('buildCoverageActions starts strict comment-backed weak terms with short comment searches', () => {
+  const actions = buildCoverageActions(
+    {
+      entries: [
+        {
+          term: '\u79d1\u6280\u4e0e\u72e0\u6d3b',
+          family: 'attack',
+          evidenceCount: 1,
+          evidenceSources: [{ source: 'Bilibili public video comment scan', uid: 'BVsample', sample: '\u79d1\u6280\u4e0e\u72e0\u6d3b' }],
+        },
+      ],
+    },
+    { termAttempts: {} },
+    { targetEvidence: 3, requireCommentBackedEvidence: true },
+  );
+
+  assert.equal(actions[0].status, 'weak_unattempted');
+  assert.equal(actions[0].nextQuery, '\u79d1\u6280\u4e0e\u72e0\u6d3b \u8bc4\u8bba\u533a');
+  assert.notEqual(actions[0].nextQuery, '\u79d1\u6280\u4e0e\u72e0\u6d3b \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
+});
+
 test('buildDictionaryCoverageAudit prioritizes near-complete weak terms within the same action class', () => {
   const audit = buildDictionaryCoverageAudit(
     {
