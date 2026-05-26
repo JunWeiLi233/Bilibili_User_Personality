@@ -154,6 +154,65 @@ test('searchVideoKeywords scans existing evidence source videos when discovery f
   assert.deepEqual(trainedPayloads[0].targetExistingTerms, ['\u5f88\u61c2\u561b']);
 });
 
+test('searchVideoKeywords broadens existing evidence source fallback beyond discovery limit', async () => {
+  const scannedBvids = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u5927\u8c61\u611f\u5192\u4e86 \u5f39\u5e55',
+      discoveryMode: 'search',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      evidenceSourceVideoFallback: true,
+      includeVideoContext: false,
+      includeVideoObjectEvidence: false,
+      targetExistingTerms: ['\u5927\u8c61\u611f\u5192\u4e86'],
+    },
+    {
+      discoverVideosByKeyword: async () => [],
+      readKeywordDictionary: async () => ({
+        entries: [
+          {
+            term: '\u5927\u8c61\u611f\u5192\u4e86',
+            family: 'evasion',
+            evidenceSources: [
+              {
+                source:
+                  'Bilibili public search-discovered video comment scan: https://www.bilibili.com/video/BVsource001/, https://www.bilibili.com/video/BVsource002/, https://www.bilibili.com/video/BVsource003/, https://www.bilibili.com/video/BVsource004/, https://www.bilibili.com/video/BVsource005/',
+                uid: 'BVsource001,BVsource002,BVsource003,BVsource004,BVsource005',
+                sample: '\u5927\u8c61\u611f\u5192\u4e86\uff0c\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc',
+              },
+            ],
+          },
+        ],
+      }),
+      fetchJson: async (url) => {
+        const textUrl = String(url);
+        if (textUrl.includes('/x/web-interface/view')) {
+          const bvid = new URL(textUrl).searchParams.get('bvid');
+          scannedBvids.push(bvid);
+          return {
+            code: 0,
+            data: {
+              aid: scannedBvids.length,
+              bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 0 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionaryEvidenceEntries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(scannedBvids, ['BVsource001', 'BVsource002', 'BVsource003', 'BVsource004', 'BVsource005']);
+  assert.equal(result.collectionDiagnostics.scannedVideos, 5);
+});
+
 test('searchVideoKeywords reports target diagnostics when discovered video scans fail', async () => {
   const result = await searchVideoKeywords(
     {

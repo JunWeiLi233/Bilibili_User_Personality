@@ -607,10 +607,16 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       payload.allowEvidenceSourceVideoFallback === true ||
       deps.evidenceSourceVideoFallback === true ||
       deps.allowEvidenceSourceVideoFallback === true;
+    const evidenceSourceFallbackLimit = boundedInt(
+      payload.evidenceSourceFallbackLimit ?? deps.evidenceSourceFallbackLimit ?? process.env.BILIBILI_EVIDENCE_SOURCE_FALLBACK_LIMIT ?? Math.max(12, discoveryLimit),
+      Math.max(12, discoveryLimit),
+      discoveryLimit,
+      50,
+    );
     if (discoveredVideos.length === 0 && evidenceSourceVideoFallback && existingTermsOnly && targetExistingTerms.length > 0) {
       try {
         const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
-        discoveredVideos = evidenceSourceVideosForTerms(await readKeywordDictionary(), targetExistingTerms, discoveryLimit, excludeBvids);
+        discoveredVideos = evidenceSourceVideosForTerms(await readKeywordDictionary(), targetExistingTerms, evidenceSourceFallbackLimit, excludeBvids);
         usedEvidenceSourceFallback = discoveredVideos.length > 0;
       } catch (error) {
         discoveryWarnings.push(`existing evidence-source fallback: ${error.message}`);
