@@ -1630,6 +1630,35 @@ test('findDictionaryEntriesWithTextEvidence rejects literal customs, food, and w
   assert.deepEqual(entries[2].evidenceSamples, ['\u56de\u590d @\u7855official :\u5320\u4eba\u7cbe\u795e\uff0c\u745e\u601d\u62dc']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal tree, missing-person, and split shenshen evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u4e0a\u6811', family: 'cooperation', meaning: '\u8db3\u7403\u5708\u7b49\u7b49\u6d88\u606f\u7684\u81ea\u6211\u8c03\u4f83', evidenceCount: 0 },
+        { term: '\u5931\u8e2a\u4eba\u53e3', family: 'attack', meaning: '\u8c03\u4f83\u957f\u65f6\u95f4\u4e0d\u51fa\u73b0\u7684\u4eba', evidenceCount: 0 },
+        { term: '\u795e\u795e', family: 'attack', meaning: '\u9635\u8425\u6307\u79f0\u6216\u620f\u8c11\u5632\u8bbd', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u8868\u9762\u4e0a:\u5154\u5b50\u4e0a\u6811',
+      '\u8f6c\u4f1a\u7a97\u8fd8\u6ca1\u5b98\u5ba3\uff0c\u7403\u8ff7\u53c8\u8981\u4e0a\u6811\u7b49\u6d88\u606f\u4e86',
+      '\u7f51\u4e0a\u6d41\u4f20\u5931\u8e2a\u4eba\u53e3\u8d85\u8fc72/3\u88ab\u627e\u56de',
+      '\u5931\u8e2a\u4eba\u53e3\u56de\u5f52\u4e86',
+      '\u8868\u793a\u539f\u795e\u3001\u795e\u5948\u3001\u90fd\u662f\u5728shimeji\u7684\u57fa\u7840\u4e0a\u4fee\u6539\u7684',
+      '\u8fd9\u7fa4\u795e\u795e\u53c8\u5f00\u59cb\u8df3\u4e86',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-literal-tree-missing-shenshen/', uid: 'BV-literal-tree-missing-shenshen' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u4e0a\u6811', '\u5931\u8e2a\u4eba\u53e3', '\u795e\u795e']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8f6c\u4f1a\u7a97\u8fd8\u6ca1\u5b98\u5ba3\uff0c\u7403\u8ff7\u53c8\u8981\u4e0a\u6811\u7b49\u6d88\u606f\u4e86']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u5931\u8e2a\u4eba\u53e3\u56de\u5f52\u4e86']);
+  assert.equal(entries[2].evidenceCount, 1);
+  assert.deepEqual(entries[2].evidenceSamples, ['\u8fd9\u7fa4\u795e\u795e\u53c8\u5f00\u59cb\u8df3\u4e86']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

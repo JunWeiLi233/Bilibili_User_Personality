@@ -835,6 +835,21 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const praiseContext = /(?:\u5320\u4eba\u7cbe\u795e|\u9760\u81ea\u5df1\u52aa\u529b|\u5f97\u5230\u4e86\u745e\u601d\u62dc|\u771f\u745e\u601d\u62dc|\u503c\u5f97\u745e\u601d\u62dc|\u592a\u5f3a\u4e86|\u4f69\u670d|\u5c0a\u91cd|respect)/iu.test(cleanSample);
     return wordExplanationContext && !praiseContext;
   }
+  if (term === '\u4e0a\u6811' && family === 'cooperation') {
+    const literalTreeContext = /(?:\u5154\u5b50\u4e0a\u6811|\u7f8a\u4e3a\u4ec0\u4e48\u4f1a\u4e0a\u6811|\u88ab.*\u521b\u4e0a\u6811|\u722c\u4e0a\u6811|\u5728\u6811\u4e0a|\u6751\u957f\u4e0a\u6811\d*)/u.test(cleanSample);
+    const transferOrWaitContext = /(?:\u8f6c\u4f1a|\u5b98\u5ba3|\u7403\u8ff7|\u7b49\u6d88\u606f|\u7b49\u4fe1|\u7b49\u5b98\u65b9|\u4e0b\u6811|\u6811\u4e0a\u7684\u5144\u5f1f|\u8e72\u6d88\u606f)/u.test(cleanSample);
+    return literalTreeContext && !transferOrWaitContext;
+  }
+  if (term === '\u5931\u8e2a\u4eba\u53e3' && family === 'attack') {
+    const literalMissingPersonContext = /(?:\u80fd\u627e\u5931\u8e2a\u4eba\u53e3|\u627e\u5931\u8e2a\u4eba\u53e3|\u88ab\u627e\u56de|\u79bb\u5bb6\u51fa\u8d70|\u5931\u8e2a\u4eba\u53e3\u56fe\u7247|\u5931\u8e2a\u4eba\u53e3\u8d85\u8fc7|\u62a5\u8b66|\u5bfb\u4eba)/u.test(cleanSample);
+    const comebackContext = /(?:\u5931\u8e2a\u4eba\u53e3\u56de\u5f52|\u5931\u8e2a\u4eba\u53e3\u56de\u6765|\u5931\u8e2a\u4eba\u53e3\u56de\u5f52\u4e86|\u7ec8\u4e8e\u66f4\u65b0|\u597d\u4e45\u4e0d\u89c1|\u4f60\u8fd8\u77e5\u9053\u56de\u6765)/u.test(cleanSample);
+    return literalMissingPersonContext && !comebackContext;
+  }
+  if (term === '\u795e\u795e' && family === 'attack') {
+    const splitNameContext = /(?:\u539f\u795e[\u3001\uff0c,]\u795e\u5948|\u539f\u795e.*\u795e\u5948|shimeji|\u684c\u5ba0\u6846\u67b6)/iu.test(cleanSample);
+    const attackContext = /(?:\u8fd9\u7fa4\u795e\u795e|\u795e\u795e\u53c8|\u795e\u795e\u4eec|\u80a5\u795e\u795e|\u8df3|\u6025|\u7834\u9632|\u5c0f\u9b3c|\u62bd\u8c61)/u.test(cleanSample);
+    return splitNameContext && !attackContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }
