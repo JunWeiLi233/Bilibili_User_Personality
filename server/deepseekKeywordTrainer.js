@@ -942,8 +942,14 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   }
   if (term === '\u6307\u8def' && family === 'cooperation') {
     const emptySignpostContext = /\u6307\u8def[:\uff1a]?\s*$/u.test(cleanSample);
+    const literalNavigationContext = /(?:\u5317\u65b9\u4eba|\u5317\u4eac|\u8def\u4e0a|\u6307\u8def\u724c|\u4e1c\u5357\u897f\u5317|\u8def\u724c).{0,24}\u6307\u8def|\u6307\u8def.{0,24}(?:\u4e1c\u5357\u897f\u5317|\u6307\u8def\u724c|\u8001\u4e00\u8f88|\u8def\u4e0a|\u5317\u4eac)/u.test(cleanSample);
     const hasTargetContext = /\u6307\u8def.{0,24}(?:https?:\/\/|BV[0-9A-Za-z]+|av\d+|\u94fe\u63a5|\u8fd9\u91cc|\u4e0a\u9762|\u4e0b\u9762)|(?:https?:\/\/|BV[0-9A-Za-z]+|av\d+|\u94fe\u63a5).{0,24}\u6307\u8def/iu.test(cleanSample);
-    if (emptySignpostContext && !hasTargetContext) return true;
+    if ((emptySignpostContext || literalNavigationContext) && !hasTargetContext) return true;
+  }
+  if (term === '\u6cb9\u7ba1' && family === 'evidence') {
+    const platformComplaintContext = /(?:\u6cb9\u7ba1|\u63a8\u7279).{0,24}(?:\u5783\u573e|\u53cd\u4eba\u7c7b|\u793e\u4ea4\u8f6f\u4ef6)|(?:\u5783\u573e|\u53cd\u4eba\u7c7b|\u793e\u4ea4\u8f6f\u4ef6).{0,24}(?:\u6cb9\u7ba1|\u63a8\u7279)/u.test(cleanSample);
+    const sourceContext = /\u6cb9\u7ba1.{0,18}(?:\u5b98\u7f51|\u89c6\u9891|\u94fe\u63a5|\u539f\u7247|\u6765\u6e90|\u4e0b\u5230|\u641c)|(?:\u5b98\u7f51|\u89c6\u9891|\u94fe\u63a5|\u539f\u7247|\u6765\u6e90|\u4e0b\u5230|\u641c).{0,18}\u6cb9\u7ba1/u.test(cleanSample);
+    if (platformComplaintContext && !sourceContext) return true;
   }
   if (term === '\u826f\u4f5c\u65e0\u4eba' && family === 'cooperation') {
     const standaloneLabelContext = cleanSample === '\u826f\u4f5c\u65e0\u4eba';
@@ -995,7 +1001,7 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     if (literalCostumeContext && !cooperativeAssetContext) return true;
   }
   if (term === '\u6a21\u7ec4' && family === 'cooperation') {
-    const literalGameModContext = /(?:\u70e6\u6751|\u51fb\u6740\u8ba1\u5206|\u4efb\u52a1|\u7834\u574f|\u60ca\u53d8100\u5929|\u642c\u8fd0|\u91cd\u4e86|\u4e3b\u64ad|\u6211\u8981|\u4e00\u952e\u4e09\u8fde).{0,18}\u6a21\u7ec4|\u6a21\u7ec4.{0,18}(?:\u70e6\u6751|\u51fb\u6740\u8ba1\u5206|\u4efb\u52a1|\u7834\u574f|\u60ca\u53d8100\u5929|\u642c\u8fd0|\u91cd\u4e86|\u4e3b\u64ad|\u6211\u8981|\u4e00\u952e\u4e09\u8fde)/u.test(cleanSample);
+    const literalGameModContext = /(?:\u6709\u589e\u5f3a\u6a21\u7ec4|\u589e\u5f3a\u6a21\u7ec4)|(?:\u70e6\u6751|\u51fb\u6740\u8ba1\u5206|\u4efb\u52a1|\u7834\u574f|\u60ca\u53d8100\u5929|\u642c\u8fd0|\u91cd\u4e86|\u4e3b\u64ad|\u6211\u8981|\u4e00\u952e\u4e09\u8fde|\u9001\u7ed9\u6211|\u4e09\u4e2a\u6a21\u7ec4).{0,18}\u6a21\u7ec4|\u6a21\u7ec4.{0,18}(?:\u70e6\u6751|\u51fb\u6740\u8ba1\u5206|\u4efb\u52a1|\u7834\u574f|\u60ca\u53d8100\u5929|\u642c\u8fd0|\u91cd\u4e86|\u4e3b\u64ad|\u6211\u8981|\u4e00\u952e\u4e09\u8fde|\u9001\u7ed9\u6211|\u4e09\u4e2a|\u589e\u5f3a)/u.test(cleanSample);
     const cooperativeModContext = /\u6a21\u7ec4.{0,18}(?:\u94fe\u63a5|\u5206\u4eab|\u53d1\u4e00\u4e0b|\u53ef\u4ee5\u8d34|\u590d\u73b0|\u600e\u4e48\u88c5)|(?:\u94fe\u63a5|\u5206\u4eab|\u53d1\u4e00\u4e0b|\u53ef\u4ee5\u8d34|\u590d\u73b0|\u600e\u4e48\u88c5).{0,18}\u6a21\u7ec4/u.test(cleanSample);
     if (literalGameModContext && !cooperativeModContext) return true;
   }

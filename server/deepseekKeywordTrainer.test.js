@@ -4571,6 +4571,9 @@ test('normalizeKeywordEntries prunes empty signpost evidence for direction terms
       evidenceSamples: [
         'PS\uff1a\u5728\u672c\u89c6\u9891\u8bc4\u8bba\u533a\u6216\u4e0b\u534a\u90e8\u5206\u8bfe\u7a0b\u8bc4\u8bba\u533a\uff08\u6307\u8defhttps://www.bilibili.com/video/BV1Wq4y1S7Rn\uff09\u6253\u5361\u7686\u53ef',
         '\u5982\u679c\u6709\u540c\u5b66\u60f3\u7ee7\u7eed\u89c2\u770b\u66f4\u65b0\u524d\u7684\u65e7\u7248\u8bfe\u7a0b\uff0c\u6307\u8def\uff1a',
+        '\u5317\u65b9\u4eba\u6307\u8def\u4e00\u822c\u90fd\u662f\u4e1c\u5357\u897f\u5317\uff0c\u5e76\u4e0d\u662f\u8001\u4e00\u8f88(',
+        '\u5317\u4eac\u8d85\u7ea7\u9002\u5408\u8fd9\u4e48\u6307\u8defhhh',
+        '\u5176\u5b9e\u8def\u4e0a\u7684\u6307\u8def\u724c\u6709\u4e1c\u5357\u897f\u5317\u7684',
       ],
       evidenceSources: [],
     },
@@ -4578,6 +4581,47 @@ test('normalizeKeywordEntries prunes empty signpost evidence for direction terms
 
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
     ['\u6307\u8def', ['PS\uff1a\u5728\u672c\u89c6\u9891\u8bc4\u8bba\u533a\u6216\u4e0b\u534a\u90e8\u5206\u8bfe\u7a0b\u8bc4\u8bba\u533a\uff08\u6307\u8defhttps://www.bilibili.com/video/BV1Wq4y1S7Rn\uff09\u6253\u5361\u7686\u53ef']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes literal mod item evidence without sharing context', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6a21\u7ec4',
+      family: 'cooperation',
+      meaning: 'request or share a useful mod',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u6211\u53ef\u4ee5\u7ed9\u4e09\u8fde\u4f46\u9996\u5148\u4f60\u4fdd\u8bc1\u4e0d\u4f1a\u62c9\u9ed1\u6211\u3002\u4ee5\u53ca\u9001\u7ed9\u6211\u8fd9\u4e09\u4e2a\u6a21\u7ec4\u3002\u3002',
+        '\u6709\u589e\u5f3a\u6a21\u7ec4',
+        '\u8fd9\u4e2a\u6a21\u7ec4\u94fe\u63a5\u53ef\u4ee5\u5206\u4eab\u4e00\u4e0b\u5417\uff0c\u6211\u60f3\u590d\u73b0\u8fd9\u4e2a\u95ee\u9898',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u6a21\u7ec4', ['\u8fd9\u4e2a\u6a21\u7ec4\u94fe\u63a5\u53ef\u4ee5\u5206\u4eab\u4e00\u4e0b\u5417\uff0c\u6211\u60f3\u590d\u73b0\u8fd9\u4e2a\u95ee\u9898']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes platform complaint evidence for youtube source term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6cb9\u7ba1',
+      family: 'evidence',
+      meaning: 'points to YouTube as an external source',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u897f\u65b9\u4eba\u505a\u7684\u8f6f\u4ef6\u5728\u4f7f\u7528\u4e0a\u90fd\u5f88\u5783\u573e\uff0c\u7eaf\u7eaf\u53cd\u4eba\u7c7b\uff0c\u6cb9\u7ba1\u63a8\u7279\u7b80\u76f4\u662f\u6211\u7528\u8fc7\u7684\u6700\u5783\u573e\u7684\u793e\u4ea4\u8f6f\u4ef6',
+        '\u8fd9\u4e2a\u5e94\u8be5\u53ef\u4ee5\u5728AOA\u7684\u6cb9\u7ba1\u5b98\u7f51\u4e0a\u4e0b\u52301080P\u7684',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u6cb9\u7ba1', ['\u8fd9\u4e2a\u5e94\u8be5\u53ef\u4ee5\u5728AOA\u7684\u6cb9\u7ba1\u5b98\u7f51\u4e0a\u4e0b\u52301080P\u7684']],
   ]);
 });
 
