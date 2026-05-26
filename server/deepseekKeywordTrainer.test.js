@@ -4951,7 +4951,7 @@ test('findDictionaryEntriesWithTextEvidence rejects latest harvested literal and
       '\u4ed6\u62ff\u4fe1\u4ef0\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u5c31\u662f\u4e0d\u56de\u5e94\u95ee\u9898',
       '\u522b\u518d\u7528\u795e\u795e\u90a3\u5957\u8bdd\u672f\u6263\u5e3d\u5b50\u4e86',
       '\u524d\u9762\u8bf4\u91cd\u4e86\uff0c\u6211\u6536\u56de\u521a\u624d\u90a3\u53e5',
-      '\u4f60\u5c31\u522b\u732a\u9f3b\u4e00\u6837\u786c\u62ac\u4e86',
+      '\u4f60\u8fd9\u6ce2\u732a\u9f3b\u64cd\u4f5c\u5c31\u662f\u5f53\u65f6\u72af\u8822',
       '\u5ddd\u5efa\u56fd\u7c89\u4e1d\u53c8\u6765\u590d\u8bfb\u90a3\u5957\u8bdd\u672f',
       '\u522b\u53ea\u8bf4\u53ea\u53ef\u610f\u4f1a\uff0c\u8bc1\u636e\u548c\u903b\u8f91\u5462',
       '\u4f60\u4e0d\u4f1a\u81ea\u5df1\u53bb\u641c\u5417\uff0c\u522b\u95ee\u6211',
@@ -5522,6 +5522,49 @@ test('findDictionaryEntriesWithTextEvidence rejects latest harvested username li
     '\u4e00\u6761\u9f99',
     '\u4e3b\u5305',
     '\u8bb0\u9519\u4e86',
+  ]);
+});
+
+test('findDictionaryEntriesWithTextEvidence rejects latest harvested emote and bookmark false positives', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u5154\u5154\u5c9b', family: 'cooperation', meaning: 'friendly Rabbit Island community reference' },
+      { term: '\u5154\u5154\u5c9b\u7761\u89c9', family: 'cooperation', meaning: 'Rabbit Island sleeping emote text' },
+      { term: '\u63d2\u4e2a\u773c', family: 'cooperation', meaning: 'bookmark for later follow-up' },
+      { term: '\u7b11\u563b\u4e86', family: 'cooperation', meaning: 'light positive reaction' },
+      { term: '\u5f00\u667a\u4e86', family: 'attack', meaning: 'mocking someone as only now enlightened' },
+    ],
+  };
+  const falsePositiveText = [
+    '\u96be\u9053\u4e0d\u662f\u523b\u610f\u7684\u5f2f\u4e0b\u8170\u7684\u5417[\u5154\u5154\u5c9b_\u7761\u89c9]',
+    '\u63d2\u4e2a\u773c\u4e24\u5468\u540e\u7ee7\u7eed\uff0c\u4e4b\u524d PHQ-9 \u9a6c\u4e0a\u4e5f\u8981\u5230\u7b2c\u4e09\u6b21\u54e9[doge]',
+    '\u63d2\u4e2a\u773c\u6bcf\u5929\u4e00\u95ee\u6d3b\u7740\u5417',
+    '\u738b\u516c\u770bwbg\u6700\u63ea\u5fc3\uff0c\u770b\u52302\u6bd40\u7b11\u563b\u4e86\uff0c2\u6bd41\u8138\u8272\u4e0d\u5bf9\u4e86\uff0c2\u6bd42\u4e0d\u8bf4\u8bdd\u4e86',
+    '\u6211\u8bfb\u5c0f\u5b66\u65f6\u7684\u4e92\u8054\u7f51\u4e0a\uff0c99%\u90fd\u662f\u7537\u4eba\u7684\u8fd9\u7c7b\u6076\u81ed\u8a00\u8bba\uff0c\u8fd9\u51e0\u5e74\u4e92\u8054\u7f51\u50cf\u7a81\u7136\u5f00\u667a\u4e86\u4e00\u6837',
+    '\u5f53\u4e00\u4e2a\u4eba\u53ef\u4ee5\u627f\u8ba4\u81ea\u5df1\u201c\u6211\u6ca1\u5f00\u667a\u201d\u65f6\uff0c\u4ed6\u5c31\u5df2\u7ecf\u5f00\u667a\u4e86\u3002',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u5154\u5154\u5c9b\u8fd9\u8fb9\u6709\u8865\u5145\u8d44\u6599\u53ef\u4ee5\u8d34\u5417',
+      '\u5154\u5154\u5c9b\u7761\u89c9\u8868\u60c5\u5305\u6765\u6e90\u53ef\u4ee5\u8865\u4e00\u4e0b',
+      '\u63d2\u4e2a\u773c\uff0c\u7b49\u4f60\u628a\u8bc1\u636e\u94fe\u63a5\u8865\u4e0a',
+      '\u8fd9\u6bb5\u89e3\u91ca\u5f88\u6e05\u695a\uff0c\u770b\u5b8c\u7b11\u563b\u4e86',
+      '\u4f60\u8fd9\u903b\u8f91\u7ec8\u4e8e\u5f00\u667a\u4e86\uff1f\u8bc1\u636e\u524d\u9762\u90fd\u8d34\u4e86',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u5154\u5154\u5c9b',
+    '\u5154\u5154\u5c9b\u7761\u89c9',
+    '\u63d2\u4e2a\u773c',
+    '\u7b11\u563b\u4e86',
+    '\u5f00\u667a\u4e86',
   ]);
 });
 
