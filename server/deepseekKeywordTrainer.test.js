@@ -3728,6 +3728,72 @@ test('normalizeKeywordEntries prunes generic support evidence for support-force 
   assert.deepEqual(entries[0].evidenceSources.map((source) => source.sample), ['\u8fd9\u6ce2\u652f\u6301\u529b\u62c9\u6ee1']);
 });
 
+test('normalizeKeywordEntries prunes generic support evidence for support-up term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u652f\u6301\u4e00\u4e0bup',
+      family: 'cooperation',
+      meaning: 'ask viewers to support the uploader rather than generic support comments',
+      evidenceCount: 3,
+      evidenceSamples: ['\u652f\u6301', '\u652f\u6301\u4f60', '\u559c\u6b22\u8fd9\u671f\u5c31\u652f\u6301\u4e00\u4e0bup'],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u652f\u6301' },
+        { source: 'Bilibili public video comment scan', sample: '\u652f\u6301\u4f60' },
+        { source: 'Bilibili public video comment scan', sample: '\u559c\u6b22\u8fd9\u671f\u5c31\u652f\u6301\u4e00\u4e0bup' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u559c\u6b22\u8fd9\u671f\u5c31\u652f\u6301\u4e00\u4e0bup']);
+  assert.deepEqual(entries[0].evidenceSources.map((source) => source.sample), ['\u559c\u6b22\u8fd9\u671f\u5c31\u652f\u6301\u4e00\u4e0bup']);
+});
+
+test('normalizeKeywordEntries prunes username substring evidence for zhou-pi attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7ca5\u6279',
+      family: 'attack',
+      meaning: 'derogatory label for Arknights players',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '19\u5e7420\u5e74\u7ca5\u6279\u5e74\u4ee3\u9f0e\u76db\u671f\uff0c\u6076\u81ed\u7a0b\u5ea6\u4e0d\u4e0b\u4e8e\u25cb',
+        '\u56de\u590d @AAA\u9178\u89d2\u7ca5\u6279\u53d1\u5546 :\u6240\u4ee5\u8bf4\uff0c\u4ee5\u540e\u63a2\u6708\u653e\u4e2a\u5730\u7403\u4e0d\u5c31\u884c\u4e86',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '19\u5e7420\u5e74\u7ca5\u6279\u5e74\u4ee3\u9f0e\u76db\u671f\uff0c\u6076\u81ed\u7a0b\u5ea6\u4e0d\u4e0b\u4e8e\u25cb' },
+        { source: 'Bilibili public video comment scan', sample: '\u56de\u590d @AAA\u9178\u89d2\u7ca5\u6279\u53d1\u5546 :\u6240\u4ee5\u8bf4\uff0c\u4ee5\u540e\u63a2\u6708\u653e\u4e2a\u5730\u7403\u4e0d\u5c31\u884c\u4e86' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['19\u5e7420\u5e74\u7ca5\u6279\u5e74\u4ee3\u9f0e\u76db\u671f\uff0c\u6076\u81ed\u7a0b\u5ea6\u4e0d\u4e0b\u4e8e\u25cb']);
+});
+
+test('normalizeKeywordEntries prunes video-title context evidence for dark-door insult term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6697\u95e8\u5b50',
+      family: 'attack',
+      meaning: 'derogatory insult that frames a woman as a hidden sex worker',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u660e\u661f=\u9ad8\u7ea7jn\uff0c\u5973\u4e3b\u64ad=\u6697\u95e8\u5b50',
+        'Bilibili video context: \u5ab3\u5987\u5e72\u8d77\u8db3\u7597\u5e08 \u6000\u7591\u59bb\u5b50\u5916\u8fb9\u6709\u4eba\u505a\u8d77\u6697\u95e8\u5b50',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u660e\u661f=\u9ad8\u7ea7jn\uff0c\u5973\u4e3b\u64ad=\u6697\u95e8\u5b50' },
+        { source: 'Bilibili public search-discovered video context', sample: 'Bilibili video context: \u5ab3\u5987\u5e72\u8d77\u8db3\u7597\u5e08 \u6000\u7591\u59bb\u5b50\u5916\u8fb9\u6709\u4eba\u505a\u8d77\u6697\u95e8\u5b50' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u660e\u661f=\u9ad8\u7ea7jn\uff0c\u5973\u4e3b\u64ad=\u6697\u95e8\u5b50']);
+  assert.deepEqual(entries[0].evidenceSources.map((source) => source.sample), ['\u660e\u661f=\u9ad8\u7ea7jn\uff0c\u5973\u4e3b\u64ad=\u6697\u95e8\u5b50']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {

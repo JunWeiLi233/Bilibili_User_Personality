@@ -1077,6 +1077,17 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   if (term === '\u652f\u6301\u529b' && family === 'cooperation') {
     return !cleanSample.includes('\u652f\u6301\u529b');
   }
+  if (term === '\u652f\u6301\u4e00\u4e0bup' && family === 'cooperation') {
+    const supportUpContext = /\u652f\u6301\u4e00\u4e0bup|\u652f\u6301\u4e00\u4e0bup\u4e3b|\u652f\u6301up|\u652f\u6301up\u4e3b/u.test(cleanSample);
+    return !supportUpContext;
+  }
+  if (term === '\u7ca5\u6279' && family === 'attack') {
+    const usernameOnlyContext = /@\S*\u7ca5\u6279\S*/u.test(String(sample || '')) && !String(sample || '').replace(/@\S+/gu, '').includes('\u7ca5\u6279');
+    if (usernameOnlyContext) return true;
+  }
+  if (term === '\u6697\u95e8\u5b50' && family === 'attack') {
+    if (isVideoContextSample(sample)) return true;
+  }
   if (term === '\u55d1\u74dc\u5b50' && family === 'evasion') {
     const rawSample = String(sample || '').trim();
     const emoteSuffixContext = /\[\u55d1\u74dc\u5b50\]/u.test(rawSample) && !rawSample.replace(/\[[^\]]+\]/g, '').includes('\u55d1\u74dc\u5b50');
