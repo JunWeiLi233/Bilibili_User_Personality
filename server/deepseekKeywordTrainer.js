@@ -2214,6 +2214,7 @@ function hasQuestionMarkMojibake(value) {
 function normalizeAnalysisAxisLabel(axis) {
   const text = String(axis || '').trim();
   if (!text) return '';
+  if (text.includes('|')) return '';
   if (ANALYSIS_AXIS_LABELS.includes(text)) return text;
   if (ANALYSIS_AXIS_ALIASES.has(text)) return ANALYSIS_AXIS_ALIASES.get(text);
   const lower = text.toLowerCase();

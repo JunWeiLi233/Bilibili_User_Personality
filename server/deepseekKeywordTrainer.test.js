@@ -276,6 +276,62 @@ test('analyzeCommentsWithDeepSeek maps mojibake axis labels to real Chinese labe
   assert.deepEqual(result.sentenceAnalyses[0].axisImpacts.map((impact) => impact.axis), ['\u8bc1\u636e\u654f\u611f', '\u5bf9\u6297\u6027\u52a8\u673a']);
 });
 
+test('analyzeCommentsWithDeepSeek rejects pipe-delimited axis label lists', async () => {
+  const originalSentence = '\u8fd9\u53e5\u53ea\u662f\u8981\u6c42\u5bf9\u65b9\u8865\u5145\u6765\u6e90\u3002';
+  const badAxisList = [
+    String.fromCodePoint(0x7035, 0x89c4, 0x59c9),
+    String.fromCodePoint(0x7481, 0x3087, 0x7161),
+    String.fromCodePoint(0x7487, 0x4f79, 0x5d41),
+    String.fromCodePoint(0x95ab, 0x660f, 0x7ddb),
+    String.fromCodePoint(0x935a, 0x581c, 0x7d94),
+    String.fromCodePoint(0x6dc7, 0xe1bd, 0xe11c),
+  ].join('|') + '|';
+
+  const result = await analyzeCommentsWithDeepSeek(
+    { text: originalSentence },
+    {
+      env: {
+        DEEPSEEK_API_KEY: 'test-key',
+        DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
+        DEEPSEEK_MODEL: 'deepseek-v4-flash',
+      },
+      fetch: async (url) => {
+        if (String(url).endsWith('/models')) {
+          return { ok: true, json: async () => ({ data: [{ id: 'deepseek-v4-flash' }] }) };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    axes: [{ axis: badAxisList, score: 88, evidence: [originalSentence], reasoning: '\u6a21\u578b\u8bef\u628a schema \u5019\u9009\u8f74\u5f53\u6210\u4e00\u4e2a\u8f74\u540d\u3002' }],
+                    sentenceAnalyses: [
+                      {
+                        quote: originalSentence,
+                        speechAct: '\u8981\u6c42\u6765\u6e90',
+                        target: '\u5bf9\u65b9\u7684\u65ad\u8a00',
+                        risk: 'low',
+                        axisImpacts: [{ axis: badAxisList, direction: 'risk', strength: 0.9 }],
+                      },
+                    ],
+                    overall: { riskBand: '\u4f4e\u98ce\u9669\u8ba8\u8bba\u578b', summary: '\u6a21\u578b\u8f93\u51fa\u4e86\u65e0\u6548\u8f74\u540d\u3002' },
+                    confidence: 0.72,
+                  }),
+                },
+              },
+            ],
+          }),
+        };
+      },
+    },
+  );
+
+  assert.equal(result.axes.find((axis) => axis.axis === '\u5bf9\u6297\u6027\u52a8\u673a').score, 50);
+  assert.deepEqual(result.sentenceAnalyses[0].axisImpacts, []);
+});
+
 test('analyzeCommentsWithDeepSeek retries with compact comments when model returns garbled Chinese evidence', async () => {
   const originalSentence = '\u6ca1\u6709\u8f66\u5bb6\u519b\uff0c\u8fd9\u4e9b\u5c31\u662f\u5e9f\u94dc\u70c2\u94c1[doge]';
   const requests = [];
