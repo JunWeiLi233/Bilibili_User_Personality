@@ -906,6 +906,27 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const evasionContext = /(?:\u522b\u53ea\u8bf4\u8c01\u61c2|\u8c01\u61c2.*(?:\u4e0d\u89e3\u91ca|\u61c2\u7684\u90fd\u61c2|\u8bc1\u636e\u8d34\u51fa\u6765|\u81ea\u5df1\u641c))/u.test(cleanSample);
     if (audienceCountContext && !evasionContext) return true;
   }
+  if (term === '\u963f\u9ed1\u989c' && family === 'attack') {
+    const literalExpressionContext = /(?:\u963f\u9ed1\u989c.*(?:\u4e0d\u662f|\u662f|\u6ca1\u90a3\u4e48\u660e\u663e|\u7ffb\u767d\u773c|\u5410\u820c\u5934|\u6bd4\u8036|\u7528\u529b)|(?:\u6597\u9e21\u773c|\u7ffb\u767d\u773c|\u5410\u820c\u5934|\u6bd4\u8036).*\u963f\u9ed1\u989c)/u.test(cleanSample);
+    const degradingContext = /(?:\u4f60|\u4ed6|\u5979|\u522b|[^\s]{1,8}).*(?:\u8bf4\u6210|\u9a82\u6210|\u5f53\u6210).*\u963f\u9ed1\u989c|\u963f\u9ed1\u989c.*(?:\u4e0d\u5c0a\u91cd|\u4fae\u8fb1|\u6076\u5fc3|\u522b\u8fd9\u4e48\u8bf4)/u.test(cleanSample);
+    if (literalExpressionContext && !degradingContext) return true;
+  }
+  if (term === '\u94fe\u63a5' && family === 'evidence') {
+    const shoppingLinkContext = /(?:\u88e4\u5b50|\u8863\u670d|\u978b|\u5e97|\u5546\u54c1|\u597d\u597d\u770b|\u6709\u65e0|\u6c42).{0,8}\u94fe\u63a5|\u94fe\u63a5.{0,8}(?:\u6709\u65e0|\u6c42|\u4e70|\u5e97|\u5546\u54c1)/u.test(cleanSample);
+    const evidenceLinkContext = /(?:\u8bc1\u636e|\u6765\u6e90|\u539f\u6587|\u8d44\u6599|\u6570\u636e).*\u94fe\u63a5|\u94fe\u63a5.*(?:\u8bc1\u636e|\u6765\u6e90|\u539f\u6587|\u8d44\u6599|\u6570\u636e|\u8d34\u51fa\u6765)/u.test(cleanSample);
+    if (shoppingLinkContext && !evidenceLinkContext) return true;
+  }
+  if (term === '\u77e5\u8bc6\u589e\u52a0' && family === 'cooperation') {
+    const emoteWrapperContext = /\[\u70ed\u8bcd\u7cfb\u5217[_-]\u77e5\u8bc6\u589e\u52a0\]/u.test(String(sample || ''));
+    const textOutsideEmotes = String(sample || '').replace(/\[[^\]]+\]/g, '');
+    const learningContext = /(?:\u77e5\u8bc6\u589e\u52a0\u4e86|\u5b66\u5230|\u79d1\u666e|\u539f\u6765).*\u77e5\u8bc6|\u77e5\u8bc6\u589e\u52a0.*(?:\u5b66\u5230|\u79d1\u666e)/u.test(cleanSample);
+    if (emoteWrapperContext && !textOutsideEmotes.includes('\u77e5\u8bc6\u589e\u52a0') && !learningContext) return true;
+  }
+  if (term === '\u8d34\u5427' && family === 'evasion') {
+    const genericPlatformContext = /\u8d34\u5427/u.test(cleanSample);
+    const evasionPlatformContext = /(?:\u8d34\u5427\u89c1|\u53bb\u8d34\u5427|\u8d34\u5427\u6302|\u88ab\u8d34\u5427\u6302|\u8d34\u5427.*(?:\u8bc1\u636e|\u81ea\u5df1\u770b|\u522b\u95ee))/u.test(cleanSample);
+    if (genericPlatformContext && !evasionPlatformContext) return true;
+  }
   if (term === '0\u4eba' && family === 'attack') {
     const numericAudienceContext = /(?:\d+\+?\u4eba|[一二三四五六七八九十百千万]+(?:\u4e2a)?\u4eba|\u51cc\u6668|\u5728\u7ebf|\u89c2\u770b|\u76f4\u64ad\u95f4|\u6392\u961f)/u.test(cleanSample);
     const zeroPersonMockContext = /(?:0\u4eba\u652f\u6301|0\u4eba\u7406\u4f60|0\u4eba\u5728\u4e4e|0\u4eba\u8ba4\u540c|\u6ca1\u4eba\u652f\u6301|\u6ca1\u4eba\u7406)/u.test(cleanSample);

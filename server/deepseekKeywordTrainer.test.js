@@ -3469,6 +3469,59 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested praise, apology-ne
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal expression-definition evidence for attack terms', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u963f\u9ed1\u989c', family: 'attack', meaning: 'use a sexualized face meme as an insult or degrading comparison' },
+    ],
+  };
+  const text = [
+    '\u8fd9\u662f\u6597\u9e21\u773c\uff0c\u963f\u9ed1\u989c\u4e0d\u662f\u7ffb\u767d\u773c+\u5410\u820c\u5934+\u53cc\u624b\u6bd4\u8036\u90a3\u79cd\u5417[\u7b11\u54ed]',
+    '\u6ca1\u6709\u7279\u522b\u7528\u529b\uff0c\u6240\u4ee5\u963f\u9ed1\u989c\u6ca1\u90a3\u4e48\u660e\u663e[\u7b11\u54ed]',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    '\u4f60\u522b\u628a\u6bcf\u4e2a\u4eba\u90fd\u8bf4\u6210\u963f\u9ed1\u989c\uff0c\u8fd9\u79cd\u8bdd\u5f88\u4e0d\u5c0a\u91cd',
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u963f\u9ed1\u989c']);
+});
+
+test('findDictionaryEntriesWithTextEvidence rejects harvested shopping links, emote wrappers, and platform mentions', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u94fe\u63a5', family: 'evidence', meaning: 'ask for or provide a source link as evidence' },
+      { term: '\u77e5\u8bc6\u589e\u52a0', family: 'cooperation', meaning: 'acknowledge learning from a comment' },
+      { term: '\u8d34\u5427', family: 'evasion', meaning: 'deflect the discussion to Tieba or mention being hung there' },
+    ],
+  };
+  const text = [
+    '\u8fd9\u4e2a\u88e4\u5b50\u597d\u597d\u770b\u5662\uff0c\u6709\u65e0\u94fe\u63a5',
+    '\u6bd5\u4e1a\u540e\u5c31\u4e0d\u8054\u7cfb\u4e86[\u70ed\u8bcd\u7cfb\u5217_\u77e5\u8bc6\u589e\u52a0]',
+    '\u8fd9\u5728\u8d34\u5427\u7b97\u5723\u4eba',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u8bc1\u636e\u94fe\u63a5\u8d34\u51fa\u6765\uff0c\u5426\u5219\u6ca1\u6cd5\u5224\u65ad',
+      '\u770b\u5b8c\u8fd9\u6761\u79d1\u666e\u771f\u662f\u77e5\u8bc6\u589e\u52a0\u4e86',
+      '\u522b\u53ea\u8bf4\u8d34\u5427\u89c1\uff0c\u8fd9\u91cc\u628a\u8bc1\u636e\u8bf4\u6e05\u695a',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u94fe\u63a5', '\u77e5\u8bc6\u589e\u52a0', '\u8d34\u5427']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
