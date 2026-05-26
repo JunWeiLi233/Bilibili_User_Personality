@@ -2,8 +2,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import { withFileLock } from './fileLock.js';
-import { countAcceptedEvidenceHits, harvestKeywordDictionaryRounds } from './keywordHarvest.js';
-import { priorityActionItemsFromCoverageActions, serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
+import { buildDictionaryCoverageAudit, countAcceptedEvidenceHits, harvestKeywordDictionaryRounds } from './keywordHarvest.js';
+import { priorityActionItemsFromHarvestResult, serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
 import { buildVideoKeywordDiscoveryOptions, parsePriorityQueryContent } from './runVideoKeywordDiscoveryOptions.js';
 
 function parseList(value) {
@@ -120,6 +120,18 @@ const result = await withFileLock(
   () => harvestKeywordDictionaryRounds(harvestOptions),
   { staleMs: lockStaleMs },
 );
+if (result.dictionary && result.state) {
+  result.priorityCoverageActions = buildDictionaryCoverageAudit(result.dictionary, result.state, {
+    targetEvidence: harvestOptions.targetEvidence,
+    maxActions: harvestOptions.maxActions,
+    requireSourceBackedEvidence: harvestOptions.requireSourceBackedEvidence,
+    requireCommentBackedEvidence: harvestOptions.requireCommentBackedEvidence,
+    prioritizeSourceGaps: harvestOptions.prioritizeSourceGaps,
+    retryBeforeUnattemptedLimit: harvestOptions.retryBeforeUnattemptedLimit,
+    extraQueryTemplates: harvestOptions.extraQueryTemplates,
+    exhaustedSuggestionTemplates: harvestOptions.exhaustedSuggestionTemplates,
+  }).nextActions;
+}
 
 for (let index = 0; index < result.rounds.length; index += 1) {
   reportRound(result.rounds[index], index, result.requestedRounds);
@@ -185,7 +197,7 @@ if (newTerms.length) {
 }
 
 if (process.env.BILIBILI_HARVEST_PRIORITY_ACTION_FILE && result.coverageActions) {
-  const priorityActionItems = priorityActionItemsFromCoverageActions(result.coverageActions);
+  const priorityActionItems = priorityActionItemsFromHarvestResult(result);
   await writeJson(process.env.BILIBILI_HARVEST_PRIORITY_ACTION_FILE, priorityActionItems);
 }
 

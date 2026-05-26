@@ -11,6 +11,14 @@ export function priorityActionItemsFromCoverageActions(actions = []) {
     });
 }
 
+export function priorityActionItemsFromHarvestResult(result = {}) {
+  return priorityActionItemsFromCoverageActions(
+    Array.isArray(result.priorityCoverageActions) && result.priorityCoverageActions.length
+      ? result.priorityCoverageActions
+      : result.coverageActions,
+  );
+}
+
 export function serializeVideoKeywordDiscoveryReport(result, statePath, reportPath) {
   return {
     generatedAt: new Date().toISOString(),

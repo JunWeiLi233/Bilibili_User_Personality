@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { priorityActionItemsFromCoverageActions, serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
+import {
+  priorityActionItemsFromCoverageActions,
+  priorityActionItemsFromHarvestResult,
+  serializeVideoKeywordDiscoveryReport,
+} from './runVideoKeywordDiscoveryReport.js';
 
 test('serializeVideoKeywordDiscoveryReport keeps per-query diagnostics for harvest triage', () => {
   const report = serializeVideoKeywordDiscoveryReport(
@@ -142,4 +146,19 @@ test('priorityActionItemsFromCoverageActions serializes current non-empty next q
       { term: 'next term', query: 'next term 弹幕', nextQuery: 'next term 弹幕' },
     ],
   );
+});
+
+test('priorityActionItemsFromHarvestResult prefers sorted audit next actions over raw coverage actions', () => {
+  const items = priorityActionItemsFromHarvestResult({
+    coverageActions: [
+      { term: 'timeoutHeavy', family: 'cooperation', action: 'harvest_more_evidence', status: 'weak_partial', nextQuery: 'timeoutHeavy 评论区' },
+      { term: 'betterNext', family: 'attack', action: 'retry_with_new_variant', status: 'weak_missed', nextQuery: 'betterNext 评论区' },
+    ],
+    priorityCoverageActions: [
+      { term: 'betterNext', family: 'attack', action: 'retry_with_new_variant', status: 'weak_missed', nextQuery: 'betterNext 评论区' },
+      { term: 'timeoutHeavy', family: 'cooperation', action: 'harvest_more_evidence', status: 'weak_partial', nextQuery: 'timeoutHeavy 评论区' },
+    ],
+  });
+
+  assert.deepEqual(items.map((item) => item.term), ['betterNext', 'timeoutHeavy']);
 });
