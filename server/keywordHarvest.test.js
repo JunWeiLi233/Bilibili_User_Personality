@@ -2399,7 +2399,7 @@ test('buildDictionaryCoverageAudit rotates repeated comment misses after unattem
   assert.equal(audit.nextActions[1].currentCommentMisses, 3);
 });
 
-test('buildDictionaryCoverageAudit retries no-video discovery misses before fresh weak terms', () => {
+test('buildDictionaryCoverageAudit rotates no-video discovery misses after retry limit behind fresh weak terms', () => {
   const missed = 'noVideoMiss';
   const audit = buildDictionaryCoverageAudit(
     {
@@ -2435,8 +2435,8 @@ test('buildDictionaryCoverageAudit retries no-video discovery misses before fres
     { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 1 },
   );
 
-  assert.deepEqual(audit.nextActions.map((item) => item.term), [missed, 'freshWeak']);
-  assert.equal(audit.nextActions[0].nextQuery, 'noVideoMiss \u8bc4\u8bba\u533a');
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['freshWeak', missed]);
+  assert.equal(audit.nextActions[1].nextQuery, 'noVideoMiss \u8bc4\u8bba\u533a');
 });
 
 test('buildDictionaryCoverageAudit rotates repeated no-video zero-evidence misses behind fresh weak terms', () => {
@@ -4131,6 +4131,81 @@ test('harvestKeywordDictionary does not report coverage progress when every quer
       evidenceGained: 0,
       evidenceDeficitReduced: 0,
     });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary report actions respect retry-before-unattempted limit', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-report-retry-limit-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        harvestStrategyVersion: 4,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        searchedQueries: [],
+        scannedBvids: [],
+        termAttempts: {
+          noVideoMiss: {
+            term: 'noVideoMiss',
+            family: 'attack',
+            evidenceAtPlanTime: 1,
+            attempts: 1,
+            successfulAttempts: 0,
+            queries: [
+              {
+                query: 'noVideoMiss \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+                strategyVersion: 4,
+                ok: false,
+                hit: false,
+                videos: 0,
+                comments: 0,
+                error: 'No Bilibili videos were discovered from the backend discovery mode.',
+              },
+            ],
+            lastQuery: 'noVideoMiss \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+            lastError: 'No Bilibili videos were discovered from the backend discovery mode.',
+          },
+        },
+        runs: [],
+      }),
+      'utf8',
+    );
+
+    const result = await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        targetEvidence: 3,
+        retryBeforeUnattemptedLimit: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: 'noVideoMiss', family: 'attack', evidenceCount: 1 },
+            { term: 'freshWeak', family: 'attack', evidenceCount: 1 },
+          ],
+        }),
+        searchVideoKeywords: async () => ({
+          ok: false,
+          error: 'No Bilibili videos were discovered from the backend discovery mode.',
+          warnings: [],
+          videos: [],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.deepEqual(
+      result.coverageActions.filter((item) => item.action !== 'none').slice(0, 2).map((item) => item.term),
+      ['freshWeak', 'noVideoMiss'],
+    );
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -982,7 +982,7 @@ function actionSortRank(action, options = {}) {
     successfulAttempts === 0 &&
     currentCommentMisses === 0 &&
     /No Bilibili videos were discovered/u.test(String(action?.lastError || ''));
-  if (noVideoDiscoveryMiss && retryLimit > 0 && attempts > retryLimit) {
+  if (noVideoDiscoveryMiss && retryLimit > 0 && attempts >= retryLimit) {
     return coverageActionRank('harvest') + 0.5 + priorityPenalty;
   }
   if (
@@ -2083,6 +2083,8 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     targetEvidence: options.targetEvidence,
     requireSourceBackedEvidence: options.requireSourceBackedEvidence,
     requireCommentBackedEvidence: options.requireCommentBackedEvidence,
+    retryBeforeUnattemptedLimit: options.retryBeforeUnattemptedLimit,
+    prioritizeSourceGaps: options.prioritizeSourceGaps,
     extraQueryTemplates: options.extraQueryTemplates,
     exhaustedSuggestionTemplates: options.exhaustedSuggestionTemplates,
   });
