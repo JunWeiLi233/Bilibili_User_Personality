@@ -1659,8 +1659,35 @@ function summarizeCoverageProgress(beforeCoverage, afterCoverage) {
   };
 }
 
+function zeroCoverageProgress() {
+  return {
+    weakTermsResolved: 0,
+    zeroEvidenceResolved: 0,
+    evidenceGained: 0,
+    evidenceDeficitReduced: 0,
+  };
+}
+
 function findResultDictionaryEntry(result, term) {
   return (Array.isArray(result?.dictionary?.entries) ? result.dictionary.entries : []).find((entry) => String(entry?.term || '').trim() === term);
+}
+
+function hasHarvestEvidenceProgress(results = [], beforeDictionary = {}, options = {}) {
+  const beforeEntries = new Map((Array.isArray(beforeDictionary?.entries) ? beforeDictionary.entries : []).map((entry) => [String(entry?.term || '').trim(), entry]));
+  return results.some((item) => {
+    const result = item?.result || {};
+    if (!result.ok) return false;
+    if (countAcceptedEvidenceHits(result.entries || []) > 0) return true;
+    if (countAcceptedEvidenceHits(result.keywordTraining?.dictionaryEvidenceEntries || []) > 0) return true;
+    const targets = Array.isArray(result.collectionDiagnostics?.targetExistingTerms) ? result.collectionDiagnostics.targetExistingTerms : [];
+    return targets.some((target) => {
+      const term = String(target || '').trim();
+      if (!term) return false;
+      const beforeEntry = beforeEntries.get(term);
+      const afterEntry = findResultDictionaryEntry(result, term);
+      return coverageEvidenceCount(afterEntry, options) > coverageEvidenceCount(beforeEntry, options);
+    });
+  });
 }
 
 async function withTimeout(promise, timeoutMs, message, controller = null) {
@@ -2046,7 +2073,8 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const after = options.existingTermsOnly === true ? dictionaryRestrictedToTerms(rawAfter, beforeTermSet) : rawAfter;
   const growth = summarizeDictionaryGrowth(before, after);
   const coverage = summarizeEvidenceCoverage(after, coverageOptions);
-  const coverageProgress = summarizeCoverageProgress(beforeCoverage, coverage);
+  const rawCoverageProgress = summarizeCoverageProgress(beforeCoverage, coverage);
+  const coverageProgress = hasHarvestEvidenceProgress(results, before, coverageOptions) ? rawCoverageProgress : zeroCoverageProgress();
   const termAttemptSummary = summarizeTermAttempts({ termAttempts }, after, {
     extraQueryTemplates: options.extraQueryTemplates,
     exhaustedSuggestionTemplates: options.exhaustedSuggestionTemplates,

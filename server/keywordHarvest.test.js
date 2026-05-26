@@ -4086,6 +4086,56 @@ test('harvestKeywordDictionary runs dictionary-seeded searches and reports growt
   }
 });
 
+test('harvestKeywordDictionary does not report coverage progress when every query fails without evidence', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-no-progress-failed-'));
+  const statePath = join(dir, 'state.json');
+  const dictionaries = [
+    {
+      entries: [
+        { term: 'staleExternal', family: 'attack', evidenceCount: 1 },
+        { term: 'queuedWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      entries: [
+        { term: 'staleExternal', family: 'attack', evidenceCount: 3 },
+        { term: 'queuedWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+  ];
+  try {
+    const result = await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        coverageMode: 'all-weak',
+        targetEvidence: 3,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => dictionaries.shift() || dictionaries.at(-1),
+        searchVideoKeywords: async () => ({
+          ok: false,
+          error: 'No Bilibili videos were discovered from the backend discovery mode.',
+          warnings: [],
+          videos: [],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.deepEqual(result.coverageProgress, {
+      weakTermsResolved: 0,
+      zeroEvidenceResolved: 0,
+      evidenceGained: 0,
+      evidenceDeficitReduced: 0,
+    });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary reports DeepSeek training diagnostics per run', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-diagnostics-'));
   const statePath = join(dir, 'state.json');
