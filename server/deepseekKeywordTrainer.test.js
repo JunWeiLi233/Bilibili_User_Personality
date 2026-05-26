@@ -1518,6 +1518,24 @@ test('findDictionaryEntriesWithTextEvidence rejects quoted evil-laugh source dis
   assert.deepEqual(entries[0].evidenceSamples, ['\u6840\u6840\u6840\uff0c\u4f60\u4eec\u8fd9\u7fa4\u4eba\u5c31\u7ee7\u7eed\u6025\u5427']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects benign laoliu praise and title evidence for attack terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [{ term: '\u8001\u516d', family: 'attack', meaning: '\u9634\u4eba\u3001\u5077\u88ad\u6216\u5410\u69fd\u5bf9\u65b9\u592a\u8001\u516d\u7684\u8bed\u5883', evidenceCount: 0 }],
+    },
+    [
+      'top06 \u5927\u660e\u8001\u516d',
+      '\u4e94\u5237\uff01\u8001\u516d\u5b9e\u5728\u662f\u592a\u597d\u770b\u4e86',
+      '\u8fd9\u4eba\u53c8\u8e72\u8349\u9634\u4eba\uff0c\u771f\u8001\u516d',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-laoliu-context/', uid: 'BV-laoliu-context' },
+  );
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u4eba\u53c8\u8e72\u8349\u9634\u4eba\uff0c\u771f\u8001\u516d']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

@@ -790,6 +790,11 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const attackContext = /(?:\u4f60|\u4f60\u4eec|\u4ed6\u4eec|\u7ee7\u7eed|\u6025|\u7834\u9632|\u5c31\u8fd9|\u4e0d\u4f1a\u5427|\u7b11\u6b7b|\u8e66\u8df6)/u.test(cleanSample);
     return sourceDiscussionContext && !attackContext;
   }
+  if (term === '\u8001\u516d' && family === 'attack') {
+    const benignTitleOrPraiseContext = /(?:top\d+|\u5927\u660e\u8001\u516d|\u4e94\u5237|\u597d\u770b|\u592a\u597d\u770b|\u5b9e\u5728\u662f|\u89d2\u8272|\u4e3b\u89d2|\u7247\u540d|\u5267\u540d|\u8fd9\u90e8|\u8fd9\u96c6|\u8865\u756a)/iu.test(cleanSample);
+    const attackContext = /(?:\u771f\u8001\u516d|\u53c8\u8001\u516d|\u9634\u4eba|\u5077\u88ad|\u8e72\u8349|\u8e72\u5751|\u5751\u4eba|\u641e\u5077\u88ad|\u80cc\u523a|\u6076\u5fc3|\u6025|\u7834\u9632|\u641e\u5fc3\u6001)/u.test(cleanSample);
+    return benignTitleOrPraiseContext && !attackContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }
