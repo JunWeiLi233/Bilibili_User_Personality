@@ -4175,6 +4175,116 @@ test('normalizeKeywordEntries prunes latest loose harvested cooperation and atta
   ]);
 });
 
+test('normalizeKeywordEntries prunes negated praise, generic address, and truncated emote evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u795e\u4ed9\u4e0b\u51e1',
+      family: 'absolutes',
+      meaning: 'extreme praise, describing someone as perfect like a deity',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u6211\u770b\u4f60\u795e\u4ed9\u4e0b\u51e1\u4e0d\u6b62\u4e00\u4e2a\u89c6\u9891\uff0c\u4f60\u6015\u662f\u5f53\u771f\u4e86\u3002\u82e6\u6d77\u65e0\u8fb9\uff0c\u56de\u5934\u662f\u5cb8\u3002\u4f60\u4e00\u4ecb\u51e1\u592b\uff0c\u4e0d\u8981\u5984\u60f3\u4ec0\u4e48\u795e\u4ed9\u4e0b\u51e1\u3002\u4f60\u53bb\u795e\u7ecf\u75c5\u79d1\u5f00\u4e9b\u836f\u5403\u4e00\u6bb5\u65f6\u95f4\u5e94\u8be5\u80fd\u7f13\u4e00\u7f13\u75c5\u60c5',
+        '\u8fd9\u6bb5\u64cd\u4f5c\u771f\u662f\u795e\u4ed9\u4e0b\u51e1\uff0c\u5b8c\u5168\u6ca1\u6709\u5931\u8bef',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u770b\u4f60\u795e\u4ed9\u4e0b\u51e1\u4e0d\u6b62\u4e00\u4e2a\u89c6\u9891\uff0c\u4f60\u6015\u662f\u5f53\u771f\u4e86\u3002\u82e6\u6d77\u65e0\u8fb9\uff0c\u56de\u5934\u662f\u5cb8\u3002\u4f60\u4e00\u4ecb\u51e1\u592b\uff0c\u4e0d\u8981\u5984\u60f3\u4ec0\u4e48\u795e\u4ed9\u4e0b\u51e1\u3002\u4f60\u53bb\u795e\u7ecf\u75c5\u79d1\u5f00\u4e9b\u836f\u5403\u4e00\u6bb5\u65f6\u95f4\u5e94\u8be5\u80fd\u7f13\u4e00\u7f13\u75c5\u60c5' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u6bb5\u64cd\u4f5c\u771f\u662f\u795e\u4ed9\u4e0b\u51e1\uff0c\u5b8c\u5168\u6ca1\u6709\u5931\u8bef' },
+      ],
+    },
+    {
+      term: '\u90fd\u662f\u5bb6\u4eba',
+      family: 'cooperation',
+      meaning: 'solidarity that everyone is family',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5bb6\u4eba\u4eec\uff0c\u8c01\u61c2\u554a\u2197\uff1f\ud83c\udf49',
+        '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5bb6\u4eba\u4eec\uff0c\u8c01\u61c2\u554a\u2197\uff1f\ud83c\udf49' },
+        { source: 'Bilibili public video comment scan', sample: '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba' },
+      ],
+    },
+    {
+      term: '\u5854\u83f2',
+      family: 'cooperation',
+      meaning: 'Taffy-related cooperative context',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u6211\u5c31\u662f\u90a3\u79cd\u8f6f\u8f6f\u5976\u5976\u7684\u7537\u5b69\u5b50\uff0c\u4e00\u78b0\u8033\u6735\u548c\u8138\u5c31\u4f1a\u7ea2\u7684\u7537\u5b69\u5b50[\u6c38\u96cf\u5854\u83f2_...',
+        '\u5854\u83f2\u76f8\u5173\u8d44\u6599\u53ef\u4ee5\u53c2\u8003\u8fd9\u4e2a\u94fe\u63a5',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u5c31\u662f\u90a3\u79cd\u8f6f\u8f6f\u5976\u5976\u7684\u7537\u5b69\u5b50\uff0c\u4e00\u78b0\u8033\u6735\u548c\u8138\u5c31\u4f1a\u7ea2\u7684\u7537\u5b69\u5b50[\u6c38\u96cf\u5854\u83f2_...' },
+        { source: 'Bilibili public video comment scan', sample: '\u5854\u83f2\u76f8\u5173\u8d44\u6599\u53ef\u4ee5\u53c2\u8003\u8fd9\u4e2a\u94fe\u63a5' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u795e\u4ed9\u4e0b\u51e1', ['\u8fd9\u6bb5\u64cd\u4f5c\u771f\u662f\u795e\u4ed9\u4e0b\u51e1\uff0c\u5b8c\u5168\u6ca1\u6709\u5931\u8bef']],
+    ['\u90fd\u662f\u5bb6\u4eba', ['\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba']],
+    ['\u5854\u83f2', ['\u5854\u83f2\u76f8\u5173\u8d44\u6599\u53ef\u4ee5\u53c2\u8003\u8fd9\u4e2a\u94fe\u63a5']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes game map-cannon and loose family evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u5730\u56fe\u70ae',
+      family: 'attack',
+      meaning: 'attack a whole region or group indiscriminately',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u5730\u56fe\u70ae\uff0c',
+        '5.\u9ad8\u65af (\u4f24\u5bb3\u5728\u5730\u56fe\u70ae\u91cc\u4e0d\u662f\u6700\u9ad8\u7684\uff0c\u4f46\u6e05\u602a\u4e00\u5b9a\u662f\u6700\u5feb\u7684[\u8131\u5355doge]\uff09',
+        '\u5c31\u53ea\u6015\u70b8\u6bdb\u602a\uff0c\u653b\u901f\u9ad8\u7684\u8fdc\u7a0b\u6280\u80fd\u602a\uff0c\u5f00\u91d1\u8272\u5730\u56fe\u70ae\u6280\u80fd\u7684\u602a',
+        '\u522b\u5f00\u5730\u56fe\u70ae\uff0c\u8fd9\u5c31\u662f\u5730\u57df\u9ed1',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5730\u56fe\u70ae\uff0c' },
+        { source: 'Bilibili public video comment scan', sample: '5.\u9ad8\u65af (\u4f24\u5bb3\u5728\u5730\u56fe\u70ae\u91cc\u4e0d\u662f\u6700\u9ad8\u7684\uff0c\u4f46\u6e05\u602a\u4e00\u5b9a\u662f\u6700\u5feb\u7684[\u8131\u5355doge]\uff09' },
+        { source: 'Bilibili public video comment scan', sample: '\u5c31\u53ea\u6015\u70b8\u6bdb\u602a\uff0c\u653b\u901f\u9ad8\u7684\u8fdc\u7a0b\u6280\u80fd\u602a\uff0c\u5f00\u91d1\u8272\u5730\u56fe\u70ae\u6280\u80fd\u7684\u602a' },
+        { source: 'Bilibili public video comment scan', sample: '\u522b\u5f00\u5730\u56fe\u70ae\uff0c\u8fd9\u5c31\u662f\u5730\u57df\u9ed1' },
+      ],
+    },
+    {
+      term: '\u795e\u4ed9\u4e0b\u51e1',
+      family: 'absolutes',
+      meaning: 'extreme praise, describing someone as perfect like a deity',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u4ec0\u4e48\u795e\u4ed9\u4e0b\u51e1',
+        '\u6211\u4e5f\u559c\u6b22\uff01\uff01\uff01\u611f\u89c9\u50cf\u521d\u604b\u7684\u767d\u6708\u5149\uff0c\u795e\u4ed9\u4e0b\u51e1[\u5927\u54ed]',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u4ec0\u4e48\u795e\u4ed9\u4e0b\u51e1' },
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u4e5f\u559c\u6b22\uff01\uff01\uff01\u611f\u89c9\u50cf\u521d\u604b\u7684\u767d\u6708\u5149\uff0c\u795e\u4ed9\u4e0b\u51e1[\u5927\u54ed]' },
+      ],
+    },
+    {
+      term: '\u90fd\u662f\u5bb6\u4eba',
+      family: 'cooperation',
+      meaning: 'solidarity that everyone is family',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8fd9\u79cd\u5730\u65b9\u7684\u53ef\u4e50\u4e5f\u624d18\uff0c\u5c0f\u6768\u54e5\u97f3\u4e50\u8282\u4e00\u676f\u6c3420\uff0c\u90fd\u662f\u5bb6\u4eba\u554a',
+        '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u79cd\u5730\u65b9\u7684\u53ef\u4e50\u4e5f\u624d18\uff0c\u5c0f\u6768\u54e5\u97f3\u4e50\u8282\u4e00\u676f\u6c3420\uff0c\u90fd\u662f\u5bb6\u4eba\u554a' },
+        { source: 'Bilibili public video comment scan', sample: '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u5730\u56fe\u70ae', ['\u522b\u5f00\u5730\u56fe\u70ae\uff0c\u8fd9\u5c31\u662f\u5730\u57df\u9ed1']],
+    ['\u795e\u4ed9\u4e0b\u51e1', ['\u6211\u4e5f\u559c\u6b22\uff01\uff01\uff01\u611f\u89c9\u50cf\u521d\u604b\u7684\u767d\u6708\u5149\uff0c\u795e\u4ed9\u4e0b\u51e1[\u5927\u54ed]']],
+    ['\u90fd\u662f\u5bb6\u4eba', ['\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes trump username mention evidence for chuan-jianguo attack term', () => {
   const entries = normalizeKeywordEntries([
     {
@@ -4634,7 +4744,7 @@ test('findDictionaryEntriesWithTextEvidence maps common comment variants back to
         { term: '\u5bb6\u4eba', family: 'cooperation', meaning: 'parasocial family wording' },
       ],
     },
-    '\u8fd9\u4e2a\u53d8\u58f0\u5668\u771f\u6ca1\u7ef7\u4f4f\n\u7eed\u822a\u6ca1\u7528\u771f\u7ef7\u4e0d\u4f4f\n\u5bb6\u4eba\u4eec\u8c01\u61c2\u554a\uff0c\u8bc4\u8bba\u533a\u7b11\u4e0d\u6d3b',
+    '\u8fd9\u4e2a\u53d8\u58f0\u5668\u771f\u6ca1\u7ef7\u4f4f\n\u7eed\u822a\u6ca1\u7528\u771f\u7ef7\u4e0d\u4f4f\n\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba',
     {
       source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-common-alias/',
       uid: 'BV-common-alias',
