@@ -980,6 +980,26 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const theftMetaphorContext = /(?:\u62a2\u8d70|\u7a83\u53d6|\u522b\u4eba\u7684\u673a\u4f1a|\u522b\u4eba\u7684\u6210\u5c31|\u4e0d\u6b63\u5f53|\u88ab\u62a2|\u62a2\u529f)/u.test(cleanSample);
     return songOrTitleContext && !theftMetaphorContext;
   }
+  if (term === '\u9e21\u8d3c' && family === 'attack') {
+    const pvzChickenZombieContext = /(?:\u5927\u55b7\u83c7|\u5730\u523a|\u51b0\u897f\u74dc|\u50f5\u5c38|\u690d\u7269|\u897f\u74dc\u5b50\u5f39|\u4e8c\u4ee3\u8bbe\u8ba1|\u9e21\u591a|\u9e21\u8d3c\u4e00\u51fa)/u.test(cleanSample);
+    const slyPersonContext = /(?:\u5403\u76f8|\u5360\u4fbf\u5b9c|\u800d\u5c0f\u806a\u660e|\u7b97\u8ba1|\u5957\u8def|\u5fc3\u773c|\u9634|\u574f|\u4fbf\u5b9c)/u.test(cleanSample);
+    return pvzChickenZombieContext && !slyPersonContext;
+  }
+  if (term === '\u6781\u9650\u6a21\u5f0f' && family === 'cooperation') {
+    const literalGameModeContext = /(?:\u5907\u4efd|\u5b58\u6863|\u73a9\u6781\u9650\u6a21\u5f0f|\u4e0d\u662f\u6781\u9650\u6a21\u5f0f\u5417|\u6e38\u620f|\u901a\u5173|\u5f00\u6863|\u96be\u5ea6|\u5b58\u6863\u7684\u8bdd)/u.test(cleanSample);
+    const metaphorHardModeContext = /(?:\u9879\u76ee|\u5de5\u671f|\u751f\u6d3b|\u4eba\u751f|\u5de5\u4f5c|\u88ab\u538b\u5230|\u5f88\u96be\u9876|\u73b0\u5b9e|\u72b6\u6001)/u.test(cleanSample);
+    return literalGameModeContext && !metaphorHardModeContext;
+  }
+  if (term === '\u6025\u6b7b\u4e86' && family === 'attack') {
+    const selfEmotionContext = /(?:\u521a\u4e70|\u809d\u4e86|\u6211\u771f|\u6211\u90fd|\u771f\u7684\u6025\u6b7b\u4e86|\u7b49\u4e0d\u5230|\u597d\u7740\u6025|\u6211\u5feb)/u.test(cleanSample);
+    const mockOtherContext = /(?:\u5546\u4eba|\u7b56\u5212|\u4f60|\u4f60\u4eec|\u4ed6|\u5979|\u9ed1\u5b50|\u7c89\u4e1d|\u6025\u6b7b\u4ed6|\u6025\u6b7b\u4f60|\u6025\u4e86)/u.test(cleanSample);
+    return selfEmotionContext && !mockOtherContext;
+  }
+  if (term === '\u96c6\u7f8e' && family === 'cooperation') {
+    const adLikeBestieContext = /(?:\u95fa\u871c\u7ed9\u6211\u63a8\u8350|\u51fa\u5dee.*\u63a8\u8350\u4e86\u8fd9\u4e00\u6b3e\u6e38\u620f|\u524d\u51e0\u5929\u53bb.*\u51fa\u5dee)/u.test(cleanSample);
+    const directSisterAddressContext = /(?:\u96c6\u7f8e|\u59d0\u59b9|\u59d0\u4eec|\u96c6\u7f8e\u4eec)/u.test(cleanSample);
+    return adLikeBestieContext && !directSisterAddressContext;
+  }
   return false;
 }
 
