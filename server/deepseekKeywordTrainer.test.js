@@ -1553,6 +1553,30 @@ test('findDictionaryEntriesWithTextEvidence rejects literal powerhouse-country e
   assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u4eec\u731c\u731c\u97e9\u56fd\u68d2\u5b50\u4f1a\u4e0d\u4f1a\u8df3\u51fa\u6765\u547c\u5401\u68d2\u5b50\u624d\u662f\u4e16\u754c\u7b2c\u4e00\u5f3a\u56fd\uff1f']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal ASMR and game-item evidence for rhetorical terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u9885\u5185\u9ad8\u6f6e', family: 'attack', meaning: '\u5bf9\u8a00\u8bba\u81ea\u6211\u9676\u9189\u6216\u60c5\u7eea\u4e0a\u5934\u7684\u8bbd\u523a', evidenceCount: 0 },
+        { term: '\u514d\u6b7b\u91d1\u724c', family: 'evasion', meaning: '\u7528\u7279\u6743\u6216\u8eab\u4efd\u56de\u907f\u6279\u8bc4\u7684\u6bd4\u55bb', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u7ecf\u5e38\u542casmr\u52a9\u7720 \u4f46\u662f\u6ca1\u9885\u5185\u9ad8\u6f6e\u8fc7\uff0c\u4e00\u76f4\u4e0d\u77e5\u9053asmr\u8fd8\u80fd\u5e72\u8fd9\u4e2a',
+      '\u770b\u8fd9\u6bb5\u81ea\u6211\u611f\u52a8\u7684\u8f93\u51fa\uff0c\u4ed6\u4eec\u771f\u662f\u9885\u5185\u9ad8\u6f6e\u4e86',
+      '\u90a3\u4e2a\u88ab\u6253\u6b7b\u4f1a\u5206\u88c2\u7684\u65b0\u602a\u914d\u4e0a\u514d\u6b7b\u91d1\u724c\u592a\u9006\u5929\u4e86\uff0c\u672c\u4f53\u5148\u89e6\u53d1\u4e00\u6b21\u514d\u6b7b\u91d1\u724c',
+      '\u4e0d\u8981\u628a\u8001\u7c89\u8eab\u4efd\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u8be5\u9a82\u8fd8\u662f\u8981\u9a82',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-literal-context/', uid: 'BV-literal-context' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u9885\u5185\u9ad8\u6f6e', '\u514d\u6b7b\u91d1\u724c']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u770b\u8fd9\u6bb5\u81ea\u6211\u611f\u52a8\u7684\u8f93\u51fa\uff0c\u4ed6\u4eec\u771f\u662f\u9885\u5185\u9ad8\u6f6e\u4e86']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u4e0d\u8981\u628a\u8001\u7c89\u8eab\u4efd\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u8be5\u9a82\u8fd8\u662f\u8981\u9a82']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

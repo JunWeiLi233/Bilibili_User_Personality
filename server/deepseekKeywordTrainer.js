@@ -800,6 +800,16 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const attackContext = /(?:\u68d2\u5b50|\u4e16\u754c\u7b2c\u4e00|\u8df3\u51fa\u6765|\u4f60\u4eec|\u5439|\u6025|\u7834\u9632|\u5c31\u8fd9|\u4e0d\u4f1a\u5427|\u7b11\u6b7b|\u8d62\u9ebb)/u.test(cleanSample);
     return literalPowerhouseContext && !attackContext;
   }
+  if (term === '\u9885\u5185\u9ad8\u6f6e' && family === 'attack') {
+    const literalAsmrContext = /(?:asmr|\u52a9\u7720|\u542c|\u6ca1\u9885\u5185\u9ad8\u6f6e\u8fc7|\u8fd8\u80fd\u5e72\u8fd9\u4e2a|\u751f\u7406|\u611f\u53d7|\u8033\u6735|\u8033\u673a)/iu.test(cleanSample);
+    const attackContext = /(?:\u81ea\u6211\u611f\u52a8|\u8f93\u51fa|\u4ed6\u4eec|\u4f60\u4eec|\u53c8|\u771f\u662f|\u770b\u8fd9\u6bb5|\u6025|\u7834\u9632|\u5439|\u8d62\u9ebb)/u.test(cleanSample);
+    return literalAsmrContext && !attackContext;
+  }
+  if (term === '\u514d\u6b7b\u91d1\u724c' && family === 'evasion') {
+    const literalGameItemContext = /(?:\u65b0\u602a|\u602a|\u89e6\u53d1|\u672c\u4f53|\u5206\u88c2|\u653b\u51fb|\u4f24\u5bb3|\u4e00\u6ef4\u8840|\u4e0d\u4f1a\u4f4e\u4e8e|\u81f4\u547d\u4f24\u5bb3|\u6280\u80fd|\u9053\u5177|\u6e38\u620f)/u.test(cleanSample);
+    const evasionContext = /(?:\u5f53\u514d\u6b7b\u91d1\u724c|\u62ff.*\u514d\u6b7b\u91d1\u724c|\u8001\u7c89|\u8eab\u4efd|\u7279\u6743|\u8be5\u9a82|\u4e0d\u80fd\u9a82|\u62a4\u8eab\u7b26|\u7f6a\u4e0d\u81f3\u6b64)/u.test(cleanSample);
+    return literalGameItemContext && !evasionContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }
