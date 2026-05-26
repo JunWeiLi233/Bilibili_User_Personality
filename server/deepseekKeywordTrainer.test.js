@@ -4311,6 +4311,125 @@ test('normalizeKeywordEntries prunes generic moral obligation evidence for chari
   assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u4e48\u5634\u6bd2\uff0c\u5148\u53bb\u884c\u5584\u79ef\u5fb7\u5427\uff0c\u522b\u518d\u5bb3\u4eba']);
 });
 
+test('normalizeKeywordEntries prunes latest harvested medical, game, and generic cooperation evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u9633\u75ff',
+      family: 'attack',
+      meaning: 'vulgar attack on sexual ability',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u611f\u8c22\u533b\u751f\uff0c\u6211\u662f\u9526\u7389\u516b\u5e74\u7eaa20\u73ed\u5de6\u5b50\u8c6a\uff0c15\u5e74\u4e86\u4e00\u76f4\u5012\u704c\u624d\u53d1\u73b0\u81ea\u5df1\u9633\u75ff',
+        '\u6ca1\u6709\u9633\u75ff',
+        '\u5854\u83f2\u7684\u804a\u5929\u8bb0\u5f55\u6839\u672c\u4e0d\u662f\u4ed6\u672c\u4eba\u653e\u51fa\u53bb\u7684\uff0c\u662f\u8fd0\u8425\u7206\u51fa\u6765\u7684\u4f46\u662f\u5f53\u65f6\u963f\u8428\u524d\u5973\u53cb\u5df2\u7ecf\u51fa\u6765\u8f9f\u8c23\u4e86\uff0c\u963f\u8428\u5f53\u65f6\u6ca1\u6709\u51fa\u95e8\u8bb0\u5f55\u554a\u5e76\u4e14\u4e5f\u7206\u51fa\u6765\u9633\u75ff\u4e86',
+        '\u6211\u6f58\u6b63\u541b\u6562\u4f5c\u6562\u5f53\uff0c\u9633\u75ff\u5c31\u662f\u9633\u75ff',
+        '\u4f60\u8fd9\u53d1\u8a00\u771f\u9633\u75ff\uff0c\u522b\u88c5\u4e86',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u611f\u8c22\u533b\u751f\uff0c\u6211\u662f\u9526\u7389\u516b\u5e74\u7eaa20\u73ed\u5de6\u5b50\u8c6a\uff0c15\u5e74\u4e86\u4e00\u76f4\u5012\u704c\u624d\u53d1\u73b0\u81ea\u5df1\u9633\u75ff' },
+        { source: 'Bilibili public video comment scan', sample: '\u6ca1\u6709\u9633\u75ff' },
+        { source: 'Bilibili public video comment scan', sample: '\u5854\u83f2\u7684\u804a\u5929\u8bb0\u5f55\u6839\u672c\u4e0d\u662f\u4ed6\u672c\u4eba\u653e\u51fa\u53bb\u7684\uff0c\u662f\u8fd0\u8425\u7206\u51fa\u6765\u7684\u4f46\u662f\u5f53\u65f6\u963f\u8428\u524d\u5973\u53cb\u5df2\u7ecf\u51fa\u6765\u8f9f\u8c23\u4e86\uff0c\u963f\u8428\u5f53\u65f6\u6ca1\u6709\u51fa\u95e8\u8bb0\u5f55\u554a\u5e76\u4e14\u4e5f\u7206\u51fa\u6765\u9633\u75ff\u4e86' },
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u6f58\u6b63\u541b\u6562\u4f5c\u6562\u5f53\uff0c\u9633\u75ff\u5c31\u662f\u9633\u75ff' },
+        { source: 'Bilibili public video comment scan', sample: '\u4f60\u8fd9\u53d1\u8a00\u771f\u9633\u75ff\uff0c\u522b\u88c5\u4e86' },
+      ],
+    },
+    {
+      term: '\u6b65\u5175',
+      family: 'evasion',
+      meaning: 'uses foot-soldier metaphor to avoid addressing evidence',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u6211\u73a9\u90a3\u4e48\u4e45\u53ea\u6709\u6302\u548c\u5929\u57fa\u70ae\u80fd\u628a\u6211\u6253\u4e0b\u6765\uff0c\u4e00\u822c\u7684\u6b65\u5175\u5b8c\u5168\u6ca1\u6709\u62b5\u6297\u80fd\u529b',
+        '\u522b\u62ff\u6b65\u5175\u5f53\u501f\u53e3\uff0c\u8bc1\u636e\u8bf4\u6e05\u695a',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u73a9\u90a3\u4e48\u4e45\u53ea\u6709\u6302\u548c\u5929\u57fa\u70ae\u80fd\u628a\u6211\u6253\u4e0b\u6765\uff0c\u4e00\u822c\u7684\u6b65\u5175\u5b8c\u5168\u6ca1\u6709\u62b5\u6297\u80fd\u529b' },
+        { source: 'Bilibili public video comment scan', sample: '\u522b\u62ff\u6b65\u5175\u5f53\u501f\u53e3\uff0c\u8bc1\u636e\u8bf4\u6e05\u695a' },
+      ],
+    },
+    {
+      term: '\u4e25\u7236',
+      family: 'attack',
+      meaning: 'meme for something that hard-counters or humiliates an opponent',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u4e5f\u662f\u71c3\u85aa\u866b\u4e25\u7236',
+        '\u8fd9\u6b3e\u673a\u5b50\u5c31\u662f\u540c\u4ef7\u4f4d\u4e25\u7236\uff0c\u628a\u5bf9\u624b\u6253\u7206',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u4e5f\u662f\u71c3\u85aa\u866b\u4e25\u7236' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u6b3e\u673a\u5b50\u5c31\u662f\u540c\u4ef7\u4f4d\u4e25\u7236\uff0c\u628a\u5bf9\u624b\u6253\u7206' },
+      ],
+    },
+    {
+      term: '\u5b9e\u540d\u5236',
+      family: 'cooperation',
+      meaning: 'explicitly identify or support a stance',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8fd9\u5c31\u4e0d\u5f97\u4e0d\u63d0\u83dc\u5200\u5b9e\u540d\u5236\u7684\u5730\u533a\u4e86',
+        '\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u5c31\u4e0d\u5f97\u4e0d\u63d0\u83dc\u5200\u5b9e\u540d\u5236\u7684\u5730\u533a\u4e86' },
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790' },
+      ],
+    },
+    {
+      term: 'bgm\u5473',
+      family: 'cooperation',
+      meaning: 'constructive recognition of background music style',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8fd9bgm\u5473\u592a\u51b2\u4e86',
+        '\u8fd9\u4e2abgm\u5473\u5f88\u5bf9\uff0c\u6c42\u6b4c\u540d',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9bgm\u5473\u592a\u51b2\u4e86' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u4e2abgm\u5473\u5f88\u5bf9\uff0c\u6c42\u6b4c\u540d' },
+      ],
+    },
+    {
+      term: '\u6ca1\u6bdb\u75c5\u554a',
+      family: 'cooperation',
+      meaning: 'agreement that there is no issue',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u662f\u54af\uff0c\u6309\u7167\u56fd\u60c5\u53d1\u5200\u4e5f\u6ca1\u6bdb\u75c5\u7684\u8111\u5b50\u53ef\u4ee5\u53bb\u6cbb\u7597\u4e86',
+        '\u8fd9\u4e2a\u89e3\u91ca\u6ca1\u6bdb\u75c5\u554a\uff0c\u6211\u540c\u610f',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u662f\u54af\uff0c\u6309\u7167\u56fd\u60c5\u53d1\u5200\u4e5f\u6ca1\u6bdb\u75c5\u7684\u8111\u5b50\u53ef\u4ee5\u53bb\u6cbb\u7597\u4e86' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u4e2a\u89e3\u91ca\u6ca1\u6bdb\u75c5\u554a\uff0c\u6211\u540c\u610f' },
+      ],
+    },
+    {
+      term: '\u90fd\u662f\u5bb6\u4eba',
+      family: 'cooperation',
+      meaning: 'solidarity that everyone is family',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5bb6\u4eba\u4eec\u70b9\u70b9\u5c0f\u7ea2\u5fc3\u652f\u6301\u4e0b',
+        '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5bb6\u4eba\u4eec\u70b9\u70b9\u5c0f\u7ea2\u5fc3\u652f\u6301\u4e0b' },
+        { source: 'Bilibili public video comment scan', sample: '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u9633\u75ff', ['\u4f60\u8fd9\u53d1\u8a00\u771f\u9633\u75ff\uff0c\u522b\u88c5\u4e86']],
+    ['\u6b65\u5175', ['\u522b\u62ff\u6b65\u5175\u5f53\u501f\u53e3\uff0c\u8bc1\u636e\u8bf4\u6e05\u695a']],
+    ['\u4e25\u7236', ['\u8fd9\u6b3e\u673a\u5b50\u5c31\u662f\u540c\u4ef7\u4f4d\u4e25\u7236\uff0c\u628a\u5bf9\u624b\u6253\u7206']],
+    ['\u5b9e\u540d\u5236', ['\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790']],
+    ['bgm\u5473', ['\u8fd9\u4e2abgm\u5473\u5f88\u5bf9\uff0c\u6c42\u6b4c\u540d']],
+    ['\u6ca1\u6bdb\u75c5\u554a', ['\u8fd9\u4e2a\u89e3\u91ca\u6ca1\u6bdb\u75c5\u554a\uff0c\u6211\u540c\u610f']],
+    ['\u90fd\u662f\u5bb6\u4eba', ['\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes trump username mention evidence for chuan-jianguo attack term', () => {
   const entries = normalizeKeywordEntries([
     {
