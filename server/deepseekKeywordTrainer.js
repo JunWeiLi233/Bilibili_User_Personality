@@ -865,6 +865,26 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const commitmentContext = /(?:\u53c8\u68ad\u54c8|\u91cc\u68ad\u54c8|\u5168\u662f.*\u68ad\u54c8|\u5168\u90e8\u68ad\u54c8|\u5168\u4ed3|\u538b\u4e0a|\u62bc\u4e0a|\u8d4c|\u6295\u5165)/u.test(cleanSample);
     return standaloneContext && !commitmentContext;
   }
+  if (term === '\u62ac\u6760' && family === 'attack') {
+    const disclaimerContext = /(?:\u4e0d\u662f\u62ac\u6760|\u6ca1\u6709\u62ac\u6760\u7684\u610f\u601d|\u65e0\u610f\u62ac\u6760|\u4e0d\u60f3\u62ac\u6760)/u.test(cleanSample);
+    const accusationContext = /(?:\u9047\u5230\u62ac\u6760|\u62ac\u6760\u7684|\u6765\u62ac\u6760|\u6545\u610f\u62ac\u6760|\u907f\u91cd\u5c31\u8f7b\u62ac\u6760|\u771f\u6760|\u6760\u7cbe|\u6076\u5fc3)/u.test(cleanSample);
+    return disclaimerContext && !accusationContext;
+  }
+  if (term === '\u6295\u5c04' && family === 'attack') {
+    const literalProjectileOrSportsContext = /(?:\u6295\u5c04\u7269|\u6295\u5c04\u80fd\u529b|\u4f2f\u5fb7\u6295\u5c04|\u7bee\u7403|\u675c\u5170\u7279|\u5fb7\u514b|projectile|increase projectile damage|\u98de\u5251|\u82f1\u7075|\u971e\u5f39)/iu.test(cleanSample);
+    const psychologyContext = /(?:\u5fc3\u7406\u5b66|\u810f\u4e1c\u897f|\u62cd\u5230\u522b\u4eba\u8eab\u4e0a|\u81ea\u5df1\u7684|\u8d1f\u9762|\u5ba2\u4f53|\u95ed\u73af|\u63a8\u5230\u522b\u4eba)/u.test(cleanSample);
+    return literalProjectileOrSportsContext && !psychologyContext;
+  }
+  if (term === '\u73a9\u4e0d\u8d77' && family === 'attack') {
+    const affordabilityContext = /(?:\u4e70\u4e0d\u8d77|\u76d7\u7248|\u6b63\u7248|\u4fbf\u5b9c|\u592a\u8d35|\u6ca1\u94b1|\u8d35\u6240\u4ee5|\u4ef7\u683c|\u4e0d\u73a9\u4e86)/u.test(cleanSample);
+    const soreLoserContext = /(?:\u957f\u5c06|\u8f93\u4e0d\u8d77|\u800d\u8d56|\u8fd9\u68cb|\u7834\u9632|\u6025|\u5f00\u4e0d\u8d77\u73a9\u7b11|\u73a9\u4e0d\u8d77\u5c31)/u.test(cleanSample);
+    return affordabilityContext && !soreLoserContext;
+  }
+  if (term === '\u4e38\u4e86' && family === 'cooperation') {
+    const substringContext = /(?:\u7cd6\u4e38\u4e86|\u836f\u4e38\u4e86|\u5f39\u4e38\u4e86)/u.test(cleanSample);
+    const selfDeprecatingContext = /(?:\u54c8\u54c8.*\u4e38\u4e86|\u5b8c\u4e86|\u8981\u4e38|\u8fd9\u4e0b\u4e38\u4e86|\u65e0\u4e86)/u.test(cleanSample) || /(?:^|[，。！？!?\\s])\u4e38\u4e86$/u.test(cleanSample);
+    return substringContext && !selfDeprecatingContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }

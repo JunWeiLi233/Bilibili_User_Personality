@@ -1688,6 +1688,40 @@ test('findDictionaryEntriesWithTextEvidence rejects username, source-discussion,
   assert.deepEqual(entries[2].evidenceSamples, ['\u4f60\u770b\uff0c\u53c8\u68ad\u54c8[\u7b11\u54ed]']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects disclaimer, projectile, affordability, and substring evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u62ac\u6760', family: 'attack', meaning: '\u6307\u8d23\u5bf9\u65b9\u65e0\u7406\u4e89\u8fa9', evidenceCount: 0 },
+        { term: '\u6295\u5c04', family: 'attack', meaning: '\u6307\u8d23\u4ed6\u4eba\u628a\u81ea\u5df1\u8d1f\u9762\u7279\u8d28\u52a0\u5230\u522b\u4eba\u8eab\u4e0a', evidenceCount: 0 },
+        { term: '\u73a9\u4e0d\u8d77', family: 'attack', meaning: '\u6307\u8d23\u5bf9\u65b9\u8f93\u4e0d\u8d77\u6216\u800d\u8d56', evidenceCount: 0 },
+        { term: '\u4e38\u4e86', family: 'cooperation', meaning: '\u8c10\u97f3\u5b8c\u4e86\uff0c\u8868\u793a\u7cdf\u7cd5\u6216\u65e0\u5948', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u4e0d\u662f\u62ac\u6760\uff0c\u4f46\u4e07\u4e00\u4ee5\u540e\u51fa\u4e86\u65b0\u5fcd\u8005\u662f\u4e0d\u662f\u8fd8\u8981\u7ee7\u7eed\u9002\u914d[\u7b11\u54ed]',
+      '\u771f\u662f\uff0c\u4eca\u5929\u521a\u9047\u5230\u62ac\u6760\u7684\u7ed9\u6211\u6076\u5fc3\u5230\u4e86',
+      '\u4f2f\u5fb7\u6295\u5c04\u80fd\u529b\u5f3a\uff0c\u4f46\u662f\u8d76\u675c\u5170\u7279\u548c\u5fb7\u514b\u8fd8\u662f\u5dee\u5f97\u6709\u70b9\u591a\u54e6',
+      '\u8fd9\u79cd\u4e00\u79cd\u5178\u578b\u7684\u6295\u5c04\uff08\u5fc3\u7406\u5b66\u540d\u5b57\uff09\uff0c\u4ed6\u5fc3\u91cc\u6709\u810f\u4e1c\u897f\uff0c\u8981\u638f\u51fa\u6765\u62cd\u5230\u522b\u4eba\u8eab\u4e0a',
+      '\u4e70\u76d7\u7248\u7684\u4eba\u662f\u56e0\u4e3a\u76d7\u7248\u4fbf\u5b9c\uff0c\u5982\u679c\u76d7\u7248\u6ca1\u4e86\u57fa\u672c\u4e0a\u5c31\u4e0d\u73a9\u4e86\uff0c\u6b63\u7248\u73a9\u4e0d\u8d77',
+      '\u8fd9\u68cb\u975e\u5f97\u957f\u5c06\uff0c\u5c31\u662f\u73a9\u4e0d\u8d77[\u7b11\u54ed]',
+      '\u53eb\u59b9\u59b9\u53eb\u5b9d\u5b9d\u90fd\u53ef\u4ee5\u7406\u89e3\uff0c\u59b9\u5b9d\u8fd9\u4e2a\u8bcd\u9664\u975e\u5f62\u5bb9\u5f88\u5c0f\u7684\u5c0f\u5973\u5b69\u5426\u5219\u6211\u7684\u8bc4\u4ef7\u662f\u7cd6\u4e38\u4e86',
+      '\u54c8\u54c8\u54c8\uff0c\u6211\u98ce\u70ed\u5feb\u597d\u53c8\u6d17\u4e86\u4e2a\u6fa1\uff0c\u4e38\u4e86',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-disclaimer-literal-contexts/', uid: 'BV-disclaimer-literal-contexts' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u62ac\u6760', '\u6295\u5c04', '\u73a9\u4e0d\u8d77', '\u4e38\u4e86']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u771f\u662f\uff0c\u4eca\u5929\u521a\u9047\u5230\u62ac\u6760\u7684\u7ed9\u6211\u6076\u5fc3\u5230\u4e86']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u8fd9\u79cd\u4e00\u79cd\u5178\u578b\u7684\u6295\u5c04\uff08\u5fc3\u7406\u5b66\u540d\u5b57\uff09\uff0c\u4ed6\u5fc3\u91cc\u6709\u810f\u4e1c\u897f\uff0c\u8981\u638f\u51fa\u6765\u62cd\u5230\u522b\u4eba\u8eab\u4e0a']);
+  assert.equal(entries[2].evidenceCount, 1);
+  assert.deepEqual(entries[2].evidenceSamples, ['\u8fd9\u68cb\u975e\u5f97\u957f\u5c06\uff0c\u5c31\u662f\u73a9\u4e0d\u8d77[\u7b11\u54ed]']);
+  assert.equal(entries[3].evidenceCount, 1);
+  assert.deepEqual(entries[3].evidenceSamples, ['\u54c8\u54c8\u54c8\uff0c\u6211\u98ce\u70ed\u5feb\u597d\u53c8\u6d17\u4e86\u4e2a\u6fa1\uff0c\u4e38\u4e86']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
