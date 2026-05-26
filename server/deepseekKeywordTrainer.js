@@ -1110,6 +1110,15 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   if (term === '\u597d\u65f6\u4ee3\u6765\u4e34\u529b' && family === 'cooperation') {
     if (isVideoContextSample(sample)) return true;
   }
+  if (term === '\u8352\u91ce\u5927\u8fea\u5ba2' && family === 'attack') {
+    const standalonePunContext = /^\u8352\u91ce\u5927\u8fea\u5ba2(?:[\s!！。,.，]*|\[[^\]]+\])*$/u.test(String(sample || '').trim());
+    const targetedCriticismContext = /(?:\u4f60|\u8fd9|up|\u8d77\u540d|\u53d6\u540d|\u6076\u4fd7|\u4e0b\u5934|\u522b).{0,18}\u8352\u91ce\u5927\u8fea\u5ba2|\u8352\u91ce\u5927\u8fea\u5ba2.{0,18}(?:\u6076\u4fd7|\u4e0b\u5934|\u522b|\u592a)/u.test(cleanSample);
+    if (standalonePunContext && !targetedCriticismContext) return true;
+  }
+  if (term === '\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5' && family === 'attack') {
+    const standaloneReferenceContext = /^(?:\u5077\u5077\u544a\u8bc9\u4f60\u4eec)?\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5$/u.test(cleanSample);
+    if (standaloneReferenceContext) return true;
+  }
   if (term === '\u55d1\u74dc\u5b50' && family === 'evasion') {
     const rawSample = String(sample || '').trim();
     const emoteSuffixContext = /\[\u55d1\u74dc\u5b50\]/u.test(rawSample) && !rawSample.replace(/\[[^\]]+\]/g, '').includes('\u55d1\u74dc\u5b50');

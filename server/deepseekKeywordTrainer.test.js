@@ -3972,6 +3972,50 @@ test('normalizeKeywordEntries prunes public-title evidence for good-era-arrived 
   assert.deepEqual(entries[0].evidenceSamples, ['\u611f\u89c9\u65e0\u85cf\u6253\u6cd5\u7684\u4e95\u55b7\u671f\u4e86\uff0c\u597d\u65f6\u4ee3\u6765\u4e34\u529b\uff01']);
 });
 
+test('normalizeKeywordEntries prunes standalone game-pun evidence for wild-dick attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u8352\u91ce\u5927\u8fea\u5ba2',
+      family: 'attack',
+      meaning: 'sexualized pun used as an insulting meme',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8352\u91ce\u5927\u8fea\u5ba2[\u7b11\u54ed]',
+        '\u4f60\u8fd9\u8d77\u540d\u8352\u91ce\u5927\u8fea\u5ba2\u4e5f\u592a\u6076\u4fd7\u4e86',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u8352\u91ce\u5927\u8fea\u5ba2[\u7b11\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u4f60\u8fd9\u8d77\u540d\u8352\u91ce\u5927\u8fea\u5ba2\u4e5f\u592a\u6076\u4fd7\u4e86' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u8d77\u540d\u8352\u91ce\u5927\u8fea\u5ba2\u4e5f\u592a\u6076\u4fd7\u4e86']);
+});
+
+test('normalizeKeywordEntries prunes standalone hui-character meme evidence without attack target', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5',
+      family: 'attack',
+      meaning: 'mocks pedantry by referencing the four ways to write hui',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5077\u5077\u544a\u8bc9\u4f60\u4eec \u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5',
+        '\u4f60\u8fd9\u4e0d\u5c31\u662f\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5\u5417\uff0c\u522b\u5728\u8fd9\u62a0\u5b57\u773c\u4e86',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5077\u5077\u544a\u8bc9\u4f60\u4eec \u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5' },
+        { source: 'Bilibili public video comment scan', sample: '\u4f60\u8fd9\u4e0d\u5c31\u662f\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5\u5417\uff0c\u522b\u5728\u8fd9\u62a0\u5b57\u773c\u4e86' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u4e0d\u5c31\u662f\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5\u5417\uff0c\u522b\u5728\u8fd9\u62a0\u5b57\u773c\u4e86']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
