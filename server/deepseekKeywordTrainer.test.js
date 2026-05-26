@@ -998,6 +998,16 @@ test('normalizes away weak ASCII technical and id fragments while keeping known 
   assert.deepEqual(entries.map((entry) => entry.term), ['doge', 'dddd', 'yygq', 'wdnmd', 'nocap']);
 });
 
+test('normalizes away mojibake Chinese-looking keyword terms', () => {
+  const entries = normalizeKeywordEntries([
+    { term: '\u7035\u89c4\u59c9', family: 'attack', meaning: 'UTF-8/GBK mojibake for a Chinese category label' },
+    { term: '\u7537\u76d7\u5973\u5a3c', family: 'attack', meaning: 'real Chinese attack phrase' },
+    { term: 'doge', family: 'cooperation', meaning: 'allowed Bilibili ASCII meme shorthand' },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u7537\u76d7\u5973\u5a3c', 'doge']);
+});
+
 test('mergeEntriesIntoDictionary prunes persisted non Chinese or Latin noise terms', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-noise-'));
   const dictionaryPath = join(dir, 'dictionary.json');

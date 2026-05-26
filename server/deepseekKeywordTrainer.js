@@ -43,6 +43,22 @@ const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'yygq',
   'yyds',
 ]);
+const KNOWN_MOJIBAKE_CHINESE_TERMS = new Set([
+  '\u7035\u89c4\u59c9',
+  '\u9422\u98ce\u6d0d\u6fc2\u51b2',
+]);
+const MOJIBAKE_MARKER_CHARS = new Set([
+  '\u7035',
+  '\u59c9',
+  '\u9422',
+  '\u6d0d',
+  '\u6fc2',
+  '\u60e7',
+  '\u74a7',
+  '\u6d94',
+  '\u95ab',
+  '\u7ddf',
+]);
 const FAMILY_ALIASES = {
   sarcasm: 'attack',
   meme: 'cooperation',
@@ -261,8 +277,20 @@ function dictionaryScopedToTerms(dictionary, targetTerms) {
   };
 }
 
+function looksLikeMojibakeChinese(term) {
+  const text = String(term || '').trim();
+  if (!text || !/[\p{Script=Han}]/u.test(text)) return false;
+  if (KNOWN_MOJIBAKE_CHINESE_TERMS.has(text)) return true;
+  if (/[�]|\?{2,}/u.test(text)) return true;
+
+  const chars = [...text];
+  const markerCount = chars.filter((char) => MOJIBAKE_MARKER_CHARS.has(char)).length;
+  return markerCount >= 2 && markerCount / chars.length >= 0.5;
+}
+
 function isNoisyTerm(term) {
   if (URL_HOST_FRAGMENT_TERMS.has(String(term).toLowerCase())) return true;
+  if (looksLikeMojibakeChinese(term)) return true;
   if (!term || STOP_TERMS.has(term) || /^变体\d+$/.test(term)) return true;
   if (/[^\p{Script=Han}A-Za-z0-9]/u.test(term)) return true;
   if (/^(?:BV[0-9A-Za-z]{8,}|av\d{6,})$/i.test(term)) return true;
