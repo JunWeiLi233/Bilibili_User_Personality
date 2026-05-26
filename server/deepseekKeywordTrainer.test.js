@@ -1824,6 +1824,33 @@ test('findDictionaryEntriesWithTextEvidence rejects meme-source discussion for e
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal sexual-fantasy and biological-stress evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u610f\u6deb', family: 'attack', meaning: '\u8d2c\u4f4e\u5bf9\u65b9\u7a7a\u60f3\u3001\u4e0d\u5207\u5b9e\u9645\uff0c\u7528\u4e8e\u5632\u8bbd', evidenceCount: 0 },
+        { term: '\u5e94\u6fc0', family: 'attack', meaning: '\u7f51\u7edc\u7528\u8bed\uff0c\u6307\u5bf9\u67d0\u4e8b\u8fc7\u5ea6\u53cd\u5e94\u3001\u4e00\u60ca\u4e00\u4e4d', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u8ba8\u538c\u610f\u6deb',
+      '\u8bf4\u51fa\u4e86\u6211\u7684\u5fc3\u58f0\u2026\u2026\u88ab\u4eba\u610f\u6deb\u771f\u7684\u5f88\u6076\u5fc3\u7684\u8bf4',
+      '\u4f60\u8fd9\u5c31\u662f\u5728\u610f\u6deb\u5bf9\u65b9\u4f1a\u9053\u6b49\uff0c\u522b\u505a\u68a6\u4e86',
+      '\u5e94\u6fc0\u4e3a\u4ec0\u4e48\u548c\u514d\u75ab\u529b\u6709\u5173\u8bf6\uff1f\uff08\u65b0\u4eba\u597d\u5947\uff09',
+      '\u6211\u7684\u706b\u7130\u5c31\u662f\u62ff\u56de\u5bb6\u4e4b\u540e\u5e94\u6fc0\u6b7b\u7684\uff0c\u4e00\u665a\u4e0a\u5c31\u50f5\u76f4\u4e86',
+      '\u5565?\u4e4c\u9f9f\u4e5f\u4f1a\u5e94\u6fc0',
+      '\u4f60\u4eec\u770b\u89c1\u7c73\u54c8\u6e38\u5c31\u5e94\u6fc0\uff0c\u522b\u592a\u6025',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-literal-fantasy-stress/', uid: 'BV-literal-fantasy-stress' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u610f\u6deb', '\u5e94\u6fc0']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u5c31\u662f\u5728\u610f\u6deb\u5bf9\u65b9\u4f1a\u9053\u6b49\uff0c\u522b\u505a\u68a6\u4e86']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u4f60\u4eec\u770b\u89c1\u7c73\u54c8\u6e38\u5c31\u5e94\u6fc0\uff0c\u522b\u592a\u6025']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
