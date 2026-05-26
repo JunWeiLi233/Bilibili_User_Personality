@@ -1138,6 +1138,18 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const satireContext = /(?:\u62a5\u544a\u7ec4\u7ec7|\u6253\u51fb\u5b8c\u6bd5|\u5fc3\u91cc\u6ca1\u70b9b\u6570|\u6cbb\u4e0d\u4e86|\u602a\u6e38\u620f|\u9b3c\u755c\u4e4b\u738b|\u7279\u6717\u666e).{0,24}(?:\u5ddd\u5efa\u56fd|\u5ddd\u666e)|(?:\u5ddd\u5efa\u56fd|\u5ddd\u666e).{0,24}(?:\u62a5\u544a\u7ec4\u7ec7|\u6253\u51fb\u5b8c\u6bd5|\u5fc3\u91cc\u6ca1\u70b9b\u6570|\u6cbb\u4e0d\u4e86|\u602a\u6e38\u620f|\u9b3c\u755c\u4e4b\u738b|\u7279\u6717\u666e)/iu.test(cleanSample);
     if ((usernameMentionOnlyContext || metaNameDiscussionContext || creatorTrafficContext || neutralTrumpAliasContext) && !satireContext) return true;
   }
+  if (term === '\u5ddd\u666e' && family === 'attack') {
+    const creatorTrafficContext = /(?:up\u4e3b|\bup\b|\u6da8\u4e86|\u6da8\u7c89|\u7c89).{0,18}\u5ddd\u666e|\u5ddd\u666e.{0,18}(?:up\u4e3b|\bup\b|\u5fc3\u5c16\u5ba0|\u6da8\u4e86|\u6da8\u7c89|\u7c89)/iu.test(cleanSample);
+    const neutralTrumpAliasContext = /\u5ddd\u666e/u.test(cleanSample)
+      && /(?:\u4fdd\u62a4\u6211\u65b9|\u6210\u529f|\u81ea\u4fe1|\u4ece\u5c0f\u5230\u5927)/u.test(cleanSample);
+    const criticalTrumpContext = /\u5ddd\u666e.{0,24}(?:\u5fc3\u91cc\u6ca1\u70b9b\u6570|\u6cbb\u4e0d\u4e86|\u602a\u6e38\u620f|\u79bb\u8c31|\u8352\u8c2c)|(?:\u5fc3\u91cc\u6ca1\u70b9b\u6570|\u6cbb\u4e0d\u4e86|\u602a\u6e38\u620f|\u79bb\u8c31|\u8352\u8c2c).{0,24}\u5ddd\u666e/iu.test(cleanSample);
+    if ((creatorTrafficContext || neutralTrumpAliasContext) && !criticalTrumpContext) return true;
+  }
+  if (term === '\u963f\u7f8e\u8389\u5361' && family === 'attack') {
+    const literalNameContext = /(?:\u963f\u7f8e\u8389\u5361|\u7f8e\u5229\u575a).{0,24}(?:\u7ffb\u8bd1|\u8da3\u95fb|\u4e00\u671f\u4e0d\u843d|\u795d\u798f|\u771f\u5fc3)|(?:\u7ffb\u8bd1|\u8da3\u95fb|\u4e00\u671f\u4e0d\u843d|\u795d\u798f|\u771f\u5fc3).{0,24}(?:\u963f\u7f8e\u8389\u5361|\u7f8e\u5229\u575a)/u.test(cleanSample);
+    const americaMockContext = /(?:\u963f\u7f8e|\u963f\u7f8e\u8389\u5361|\u7f8e\u5229\u575a).{0,20}(?:\u592a\u8352\u8c2c|\u8352\u8c2c|\u7b11\u8bdd|\u592a\u5e74\u8f7b)|(?:\u592a\u8352\u8c2c|\u8352\u8c2c|\u7b11\u8bdd|\u592a\u5e74\u8f7b).{0,20}(?:\u963f\u7f8e|\u963f\u7f8e\u8389\u5361|\u7f8e\u5229\u575a)/u.test(cleanSample);
+    if (literalNameContext && !americaMockContext) return true;
+  }
   if (term === 'tv\u574f\u7b11' && family === 'attack') {
     const rawSample = String(sample || '');
     const emoteContext = /\[(?:tv_|[^\]]*_)?\u574f\u7b11\]/u.test(rawSample);

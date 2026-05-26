@@ -4178,6 +4178,58 @@ test('normalizeKeywordEntries prunes broad understands-substring evidence for do
   assert.deepEqual(entries[0].evidenceSamples, ['\u8bc1\u636e\u4e0d\u653e\u4e86\uff0c\u61c2\u7684\u90fd\u61c2']);
 });
 
+test('normalizeKeywordEntries prunes neutral trump alias evidence for chuanpu attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u5ddd\u666e',
+      family: 'attack',
+      meaning: 'Trump nickname used in critical contexts',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u5ddd\u666e\u73b0\u5728\u6210\u4e3a\u4e86up\u4e3b\u7684\u5fc3\u5c16\u5ba0[\u5fae\u7b11]',
+        '\u597d\u591aup\u56e0\u4e3a\u5ddd\u666e\u90fd\u6da8\u4e86\u597d\u51e0\u5341\u4e07\u7c89[\u7b11\u54ed]',
+        '\u4fdd\u62a4\u6211\u65b9\u5ddd\u666e\uff01[\u5999\u554a]',
+        '\u5ddd\u666e\u5fc3\u91cc\u6ca1\u70b9b\u6570\u561b[\u629f\u9f3b]\u81ea\u5df1\u6cbb\u4e0d\u4e86\u5c31\u602a\u6e38\u620f',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5ddd\u666e\u73b0\u5728\u6210\u4e3a\u4e86up\u4e3b\u7684\u5fc3\u5c16\u5ba0[\u5fae\u7b11]' },
+        { source: 'Bilibili public video comment scan', sample: '\u597d\u591aup\u56e0\u4e3a\u5ddd\u666e\u90fd\u6da8\u4e86\u597d\u51e0\u5341\u4e07\u7c89[\u7b11\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u4fdd\u62a4\u6211\u65b9\u5ddd\u666e\uff01[\u5999\u554a]' },
+        { source: 'Bilibili public video comment scan', sample: '\u5ddd\u666e\u5fc3\u91cc\u6ca1\u70b9b\u6570\u561b[\u629f\u9f3b]\u81ea\u5df1\u6cbb\u4e0d\u4e86\u5c31\u602a\u6e38\u620f' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u5ddd\u666e\u5fc3\u91cc\u6ca1\u70b9b\u6570\u561b[\u629f\u9f3b]\u81ea\u5df1\u6cbb\u4e0d\u4e86\u5c31\u602a\u6e38\u620f']);
+});
+
+test('normalizeKeywordEntries prunes literal america-name evidence for ameilika attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u963f\u7f8e\u8389\u5361',
+      family: 'attack',
+      meaning: 'mocking nickname for America',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u963f\u7f8e\u8389\u5361 \u662f\u65e9\u671f\u5bf9\u7f8e\u8054\u90a6\u7684\u7ffb\u8bd1\uff0c\u6b27\u7f57\u5df4 \u662f\u6b27\u6d32\u7684\u7ffb\u8bd1',
+        '[\u7b11\u54ed]\u6211\u4e5f\u662f\ud83c\udf08\uff0c\u4f46\u662f\u559c\u6b22\u770bup\u7684\u7f8e\u5229\u575a\u8da3\u95fb[doge]\uff0c\u4e00\u671f\u4e0d\u843d',
+        '\u90a3\u65f6\u795d\u798f\u4e0b\u8f88\u5b50\u7f8e\u5229\u575a\u5927\u5bb6\u662f\u771f\u5fc3\u7684',
+        '\u963f\u7f8e\u554a\uff0c\u4f60\u592a\u8352\u8c2c\u52d2\uff0c\u8fd9\u6837\u771f\u7684\u4f1a\u5f88\u597d\u7b11',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u963f\u7f8e\u8389\u5361 \u662f\u65e9\u671f\u5bf9\u7f8e\u8054\u90a6\u7684\u7ffb\u8bd1\uff0c\u6b27\u7f57\u5df4 \u662f\u6b27\u6d32\u7684\u7ffb\u8bd1' },
+        { source: 'Bilibili public video comment scan', sample: '[\u7b11\u54ed]\u6211\u4e5f\u662f\ud83c\udf08\uff0c\u4f46\u662f\u559c\u6b22\u770bup\u7684\u7f8e\u5229\u575a\u8da3\u95fb[doge]\uff0c\u4e00\u671f\u4e0d\u843d' },
+        { source: 'Bilibili public video comment scan', sample: '\u90a3\u65f6\u795d\u798f\u4e0b\u8f88\u5b50\u7f8e\u5229\u575a\u5927\u5bb6\u662f\u771f\u5fc3\u7684' },
+        { source: 'Bilibili public video comment scan', sample: '\u963f\u7f8e\u554a\uff0c\u4f60\u592a\u8352\u8c2c\u52d2\uff0c\u8fd9\u6837\u771f\u7684\u4f1a\u5f88\u597d\u7b11' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u963f\u7f8e\u554a\uff0c\u4f60\u592a\u8352\u8c2c\u52d2\uff0c\u8fd9\u6837\u771f\u7684\u4f1a\u5f88\u597d\u7b11']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
