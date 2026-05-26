@@ -1,5 +1,9 @@
 import { discoverPopularVideos, discoverVideosByKeyword, extractBvid, fetchJson, fetchRepliesForVideo, fetchText } from './bilibiliCrawler.js';
-import { readKeywordDictionary as defaultReadKeywordDictionary, trainKeywordDictionary as defaultTrainKeywordDictionary } from './deepseekKeywordTrainer.js';
+import {
+  findDictionaryEntriesWithTextEvidence as defaultFindDictionaryEntriesWithTextEvidence,
+  readKeywordDictionary as defaultReadKeywordDictionary,
+  trainKeywordDictionary as defaultTrainKeywordDictionary,
+} from './deepseekKeywordTrainer.js';
 
 export const DEFAULT_VIDEO_LINK =
   process.env.BILIBILI_DEFAULT_VIDEO_LINKS ||
@@ -374,11 +378,16 @@ async function expandTargetTermsFromCommentHits({
   try {
     const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
     const dictionary = await readKeywordDictionary();
-    for (const entry of dictionary.entries || []) {
+    const findDictionaryEntriesWithTextEvidence =
+      deps.findDictionaryEntriesWithTextEvidence || defaultFindDictionaryEntriesWithTextEvidence;
+    const evidenceEntries = findDictionaryEntriesWithTextEvidence(dictionary, commentText, { source: 'Bilibili public comment target expansion' });
+    const manualAliasEntries = (dictionary.entries || []).filter((entry) => {
+      const needles = dictionaryEntryNeedles(entry);
+      return needles.some((needle) => normalizedCommentText.includes(needle));
+    });
+    for (const entry of uniqueByKey([...evidenceEntries, ...manualAliasEntries], (item) => String(item?.term || '').trim())) {
       const term = String(entry?.term || '').trim();
       if (!term || targetSet.has(term) || targetEvidenceCount(entry) >= targetEvidence) continue;
-      const needles = dictionaryEntryNeedles(entry);
-      if (!needles.some((needle) => normalizedCommentText.includes(needle))) continue;
       targetSet.add(term);
       targets.push(term);
       if (targets.length >= limit) break;

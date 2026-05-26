@@ -2007,6 +2007,64 @@ test('searchVideoKeywords expands existing-only targets from collected comment d
   assert.deepEqual(result.collectionDiagnostics.targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd', '\u610f\u5916\u5f31\u8bcd']);
 });
 
+test('searchVideoKeywords expands comment targets through generated evidence aliases', async () => {
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      videoLink: 'https://www.bilibili.com/video/BV19yGa61Ee6/',
+      pages: 1,
+      existingTermsOnly: true,
+      includeVideoContext: false,
+      expandTargetsFromComments: true,
+      targetExistingTerms: ['\u76ee\u6807\u5f31\u8bcd'],
+    },
+    {
+      fetchJson: async (url) => {
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: 'target video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 1,
+                mid: 100,
+                member: { mid: '100', uname: 'alice' },
+                content: { message: '\u8fd9\u4e2a\u8bc4\u8bba\u533a\u5168\u90fd\u662f\u6c34\u519b\uff0c\u4e0d\u662f\u6b63\u5e38\u8ba8\u8bba' },
+                like: 1,
+                ctime: 1710000000,
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      readKeywordDictionary: async () => ({
+        entries: [
+          { term: '\u76ee\u6807\u5f31\u8bcd', family: 'attack', meaning: 'planned term', evidenceCount: 1 },
+          { term: '\u5168\u662f\u6c34\u519b', family: 'absolutes', meaning: 'absolute group accusation', evidenceCount: 1 },
+        ],
+      }),
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return { ok: true, entries: [], dictionary: { entries: [] } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(trainedPayloads[0].targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd', '\u5168\u662f\u6c34\u519b']);
+});
+
 test('searchVideoKeywords can train existing terms from video context when comments are empty', async () => {
   const trainedPayloads = [];
   const result = await searchVideoKeywords(
