@@ -990,6 +990,21 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const plotCriticismContext = /(?:\u4e3b\u89d2|\u5267\u60c5|\u770b\u5565\u609f\u5565|\u79bb\u8c31|\u4e3b\u89d2\u5149\u73af|\u4e0d\u5408\u7406|\u4ec0\u4e48\u90fd\u9760|\u63a8\u8fc7\u53bb|\u8bbe\u5b9a)/u.test(cleanSample);
     return literalCheatCodeContext && !plotCriticismContext;
   }
+  if (term === '\u7ecf\u5178\u52a0\u94b1' && family === 'attack') {
+    const standaloneMemeContext = cleanSample === '\u7ecf\u5178\u52a0\u94b1';
+    const budgetDismissalContext = /(?:\u4f60|\u4f60\u4eec|\u8fd9\u5957|\u63a8\u8350|\u914d\u7f6e|\u4e0d\u770b|\u9884\u7b97|\u6d88\u8d39|\u5347\u7ea7|\u53c8\u662f)/u.test(cleanSample) && !standaloneMemeContext;
+    return standaloneMemeContext && !budgetDismissalContext;
+  }
+  if (term === '\u7cbe\u795e\u7537\u4eba' && family === 'attack') {
+    const metaContrastContext = /(?:\u53ef\u4ece\u6ca1\u8bf4\u8fc7|\u6ca1\u8fb1\u9a82|\u2260\u6211\u5c31\u662f\u7537\u4eba|\u5979\u610f\u601d\u660e\u663e|\u8ddf\u7cbe\u795e\u7537\u4eba\u6700\u4e0d\u4e00\u6837|\u4e0d\u7528\u523b\u610f\u8ba9\u7740\u6211)/u.test(cleanSample);
+    const labelAttackContext = /(?:\u8fd9\u79cd\u8a00\u8bba|\u5f53\u8363\u8a89|\u8e29\u81ea\u5df1\u4eba|\u53cd\u8fc7\u6765|\u8d2c\u4f4e|\u522b\u5f53)/u.test(cleanSample);
+    return metaContrastContext && !labelAttackContext;
+  }
+  if (term === '\u8b66\u60d5\u901f\u80dc\u8bba' && family === 'attack') {
+    const titleTrafficAdviceContext = /(?:\u5efa\u8baeup|\u89c6\u9891\u540d\u5b57|\u6807\u9898|\u5c31\u52a0\u4e0a|\u70b9\u8fdb\u6765|\u4f1a\u66f4\u591a|\u5f15\u6d41)/u.test(cleanSample);
+    const dismissiveArgumentContext = /(?:\u4f60|\u4f60\u4eec|\u4ed6\u4eec|\u8fd8\u5728|\u8fde.*\u90fd\u6ca1|\u57fa\u672c\u6750\u6599|\u6ca1\u770b\u5b8c|\u522b|\u6025|\u6025\u4e8e)/u.test(cleanSample);
+    return titleTrafficAdviceContext && !dismissiveArgumentContext;
+  }
   if (term === 'wdnmd' && family === 'attack') {
     const sourceOrStandaloneMemeContext = /(?:wdnmd\u8fd9\u4e2a\u90fd\u4e0d\u706b|\u70ed\u8bcd\u7cfb\u5217|\u4ec0\u4e48\u6897|\u6897\u6307\u5357|\u662f\u4ec0\u4e48\u6897|^wdnmd$)/iu.test(cleanSample);
     const directedInsultContext = /(?:\u4f60|\u4f60\u4eec|\u8fd9\u64cd\u4f5c|\u522b\u9a82|\u9a82\u4eba|\u771f\u83dc|\u5f00\u53e3|wdnmd.*\u4f60)/iu.test(cleanSample);
