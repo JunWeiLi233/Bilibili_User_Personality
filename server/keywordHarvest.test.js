@@ -643,6 +643,38 @@ test('buildKeywordHarvestQueries broadens long absolute phrases to searchable ta
   }
 });
 
+test('buildKeywordHarvestQueries keeps vague absolute tails anchored to the original phrase', () => {
+  const cases = [
+    {
+      term: '\u7edd\u5bf9\u4e5f\u662f',
+      rejectedQuery: '\u4e5f\u662f \u7edd\u5bf9\u5316 \u8bc4\u8bba \u70ed\u8bc4',
+      expectedFirst: '\u7edd\u5bf9\u4e5f\u662f \u7edd\u5bf9\u5316 \u8bc4\u8bba \u70ed\u8bc4',
+    },
+    {
+      term: '\u7edd\u5bf9\u5e05\u54e5',
+      rejectedQuery: '\u5e05\u54e5 \u7edd\u5bf9\u5316 \u8bc4\u8bba \u70ed\u8bc4',
+      expectedFirst: '\u7edd\u5bf9\u5e05\u54e5 \u7edd\u5bf9\u5316 \u8bc4\u8bba \u70ed\u8bc4',
+    },
+  ];
+
+  for (const item of cases) {
+    const queries = buildKeywordHarvestQueries(
+      {
+        entries: [{ term: item.term, family: 'absolutes', evidenceCount: 1 }],
+      },
+      {
+        seedQueries: [],
+        coverageMode: 'all-weak',
+        maxQueries: 4,
+        queryVariantsPerTerm: 4,
+      },
+    );
+
+    assert.equal(queries[0], item.expectedFirst);
+    assert.equal(queries.includes(item.rejectedQuery), false, `${item.term} should not search generic tail ${item.rejectedQuery}`);
+  }
+});
+
 test('buildKeywordHarvestQueries generates colloquial aliases for weak attack phrases', () => {
   const cases = [
     {

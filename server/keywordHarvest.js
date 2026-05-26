@@ -55,6 +55,7 @@ const DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES = [
   '{term} \u76f4\u64ad\u5207\u7247',
   '{term} B\u7ad9\u8bc4\u8bba',
 ];
+const VAGUE_ABSOLUTE_TAIL_ALIASES = new Set(['\u4e5f\u662f', '\u5e05\u54e5']);
 const TERM_CONTROVERSY_QUERY_TEMPLATES = [
   '{term} \u4e89\u8bae \u70ed\u8bc4',
   '{term} \u8282\u594f \u8bc4\u8bba\u533a',
@@ -580,7 +581,7 @@ function generatedSearchAliasesForTerm(term, options = {}) {
   aliases.push(...generatedUniversalQuantifierSearchAliases(clean));
   if (/^\u7edd\u5bf9(?!\u53ef\u4ee5)/u.test(clean)) {
     const tail = clean.replace(/^\u7edd\u5bf9(?:\u7684)?/u, '');
-    if (tail && tail.length >= 2) aliases.push(tail);
+    if (tail && tail.length >= 2 && !VAGUE_ABSOLUTE_TAIL_ALIASES.has(tail)) aliases.push(tail);
   }
   if (/^(\u6839\u672c\u6ca1\u6709|\u7edd\u5bf9|\u80af\u5b9a|\u5168\u662f|\u5168\u90fd|\u5168\u90fd\u662f|\u6beb\u65e0|\u6ca1\u6709\u4e00\u4e2a|\u6ca1\u540a|\u6ca1\u5185\u5473)/.test(clean)) {
     aliases.push(...generatedChineseTailSearchAliases(clean));
