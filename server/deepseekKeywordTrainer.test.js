@@ -3257,6 +3257,44 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested self-help, negated
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects harvested standalone reaction and broad heat evidence', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u8e6d\u6982\u5ff5', family: 'attack', meaning: 'accuse someone of hijacking a concept rather than ordinary clout chasing' },
+      { term: '\u4eba\u5728\u65e0\u8bed\u7684\u65f6\u5019\u771f\u7684\u4f1a\u7b11', family: 'attack', meaning: 'mock absurd speech as speechless laughter' },
+      { term: '\u65e0\u8bed\u7684\u65f6\u5019\u771f\u7684\u4f1a\u7b11', family: 'attack', meaning: 'shorter variant of speechless laughter mockery' },
+      { term: '\u5b66\u4f1a\u4e86\u5feb\u5220', family: 'attack', meaning: 'sarcastic warning that a harmful trick should be deleted' },
+    ],
+  };
+  const text = [
+    '\u8e6d\u70ed\u5ea6',
+    '\u4e2a\u4e2a\u90fd\u8e6d\u70ed\u5ea6\u6709\u610f\u601d\u5417(\u30fc_\u30fc)!!',
+    '\u4eba\u5728\u65e0\u8bed\u7684\u65f6\u5019\u771f\u7684\u4f1a\u7b11',
+    '\u771f\u5b66\u4f1a\u4e86\u5feb\u5220',
+    '\u5b66\u4f1a\u4e86\u5feb\u5220',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u8fd9\u5c31\u662f\u628a\u666e\u901a\u529f\u80fd\u786c\u8e6dAI\u6982\u5ff5',
+      '\u4f60\u8fd9\u6bb5\u8bdd\u592a\u79bb\u8c31\uff0c\u4eba\u5728\u65e0\u8bed\u7684\u65f6\u5019\u771f\u7684\u4f1a\u7b11',
+      '\u8fd9\u79cd\u5f00\u76d2\u6559\u7a0b\u5b66\u4f1a\u4e86\u5feb\u5220\uff0c\u522b\u5bb3\u4eba',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u8e6d\u6982\u5ff5',
+    '\u4eba\u5728\u65e0\u8bed\u7684\u65f6\u5019\u771f\u7684\u4f1a\u7b11',
+    '\u65e0\u8bed\u7684\u65f6\u5019\u771f\u7684\u4f1a\u7b11',
+    '\u5b66\u4f1a\u4e86\u5feb\u5220',
+  ]);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
