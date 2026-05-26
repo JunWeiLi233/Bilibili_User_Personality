@@ -4253,6 +4253,7 @@ test('harvestKeywordDictionary records a failed attempt when a search exceeds th
         priorityQueries: ['slowTerm \u8bc4\u8bba\u533a'],
         seedQueries: [],
         maxQueries: 1,
+        existingTermsOnly: true,
         perQueryTimeoutMs: 1,
         statePath,
       },
@@ -4273,6 +4274,7 @@ test('harvestKeywordDictionary records a failed attempt when a search exceeds th
     assert.match(result.warnings.join('\n'), /timed out after 1ms/);
     assert.equal(result.results[0].result.ok, false);
     assert.match(result.results[0].result.error, /timed out after 1ms/);
+    assert.deepEqual(result.queryDiagnostics[0].targetExistingTerms, ['slowTerm']);
     const state = JSON.parse(await readFile(statePath, 'utf8'));
     const attempt = state.termAttempts[Buffer.from('slowTerm', 'utf8').toString('base64url')];
     assert.equal(attempt.attempts, 1);

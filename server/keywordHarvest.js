@@ -1965,6 +1965,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       if (options.existingTermsOnly === true && planItem.term) {
         searchPayload.targetExistingTerms = unique([
           ...(Array.isArray(planItem.targetExistingTerms) ? planItem.targetExistingTerms : []),
+          planItem.term,
           ...relatedTargetExistingTerms(before, planItem, options),
         ]);
       }
@@ -2009,7 +2010,21 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       }
     } catch (error) {
       warnings.push(`${query}: ${error.message}`);
-      const result = { ok: false, error: error.message };
+      const targetExistingTerms = planItem.term
+        ? unique([
+            ...(Array.isArray(planItem.targetExistingTerms) ? planItem.targetExistingTerms : []),
+            planItem.term,
+            ...relatedTargetExistingTerms(before, planItem, options),
+          ])
+        : [];
+      const result = {
+        ok: false,
+        error: error.message,
+        collectionDiagnostics: {
+          targetExistingTerms,
+          acceptedTerms: [],
+        },
+      };
       results.push({ query, result });
       searchedQuerySet.add(query);
       updateTermAttempt(termAttempts, planItem, result, attemptFinishedAt, options);
