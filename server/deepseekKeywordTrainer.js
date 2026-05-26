@@ -947,6 +947,16 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const agreementContext = /(?:\u5fc3\u91cc\u7684\u8bdd|\u5634\u66ff\u51fa\u6765|\u6700\u5f3a\u5634\u66ff|\u6211\u7684\u5634\u66ff|\u8bf4\u51fa\u4e86|\u66ff\u6211\u8bf4|\u89c2\u4f17\u5634\u66ff|\u6253\u5de5\u4eba\u5634\u66ff)/u.test(cleanSample);
     return dismissiveContext && !agreementContext;
   }
+  if (term === '\u6700\u540e\u4e00\u821e' && family === 'evasion') {
+    const retirementOrPerformanceContext = /(?:\u6700\u540e\u4e00\u6b66|\u6700\u540e\u4e00\u821e.*\u6700\u540e\u4e00\u6b66|\u6709\u6c34\u51c6|\u7a76\u6781\u4e00\u821e|\u53d1\u72c2\u4e00\u821e|\u5f15\u9000|\u4e0d\u820d|\u514b\u7f57\u65af|\u7403\u8ff7|\u4f53\u80b2|\u8db3\u7403|\u8d5b\u573a|\u8df3\u821e|\u8868\u6f14)/u.test(cleanSample);
+    const lastBetContext = /(?:\u5168\u538b|\u68ad\u54c8|\u8d62\u4e86|\u8f93\u4e86|\u4e0a\u5cb8|\u8d4c|\u6700\u540e\u4e00\u628a|\u5192\u9669|\u56de\u672c|\u7b97\u4e86)/u.test(cleanSample);
+    return retirementOrPerformanceContext && !lastBetContext;
+  }
+  if (term === 'doge\u5723\u8bde' && family === 'cooperation') {
+    const standaloneLaughEmoteContext = /^(?:\u54c8)+(?:doge\u5723\u8bde)+$/u.test(cleanSample);
+    const jokeContext = /(?:\u6beb\u65e0\u8fdd\u548c|\u5973\u88c5|\u624b\u52a8doge|\u53cd\u8bbd|\u73a9\u7b11|\u4fdd\u547d|\u4e0d\u8981\u9a82|doge)/iu.test(cleanSample) && !standaloneLaughEmoteContext;
+    return standaloneLaughEmoteContext && !jokeContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }
