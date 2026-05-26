@@ -4548,6 +4548,118 @@ test('normalizeKeywordEntries prunes latest harvested platform redirect, selecte
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested username, emote-only, and engagement evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u753b\u997c',
+      family: 'attack',
+      meaning: 'empty promise or future-faking accusation',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '@\u7537\u7684\u90fd\u7231\u753b\u997c',
+        '\u4f60\u8fd8\u662f\u6ca1\u61c2\uff0c\u5c31\u662f\u5229\u7528\u4f60\u57fa\u56e0\u6765\u753b\u997c',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u7537\u7684\u90fd\u7231\u753b\u997c',
+      family: 'attack',
+      meaning: 'gendered attack that men all make empty promises',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '@\u7537\u7684\u90fd\u7231\u753b\u997c',
+        '\u8bf4\u767d\u4e86\u5973\u7684\u5c31\u662f\u7ed9\u7537\u7684\u753b\u997c\u6279\u6362\u6280\u672f',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: 'tv\u5455\u5410',
+      family: 'attack',
+      meaning: 'emote expressing disgust at a target',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '[\u5927\u7b11][\u51b7][\u54c8\u6b20][\u6293\u72c2][tv_\u5455\u5410]',
+        '\u540c\u610f\uff0c\u8fd9\u90e8\u7247\u5b50\u611f\u89c9\u5c31\u4e0d\u662f\u4e3a\u4e86\u8bb2\u597d\u6545\u4e8b\u62cd\u7684\uff0c\u800c\u662f\u6545\u610f\u50cf\u89c2\u4f17\u663e\u6446[tv_\u5455\u5410]',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u5df2\u8d5e10\u8bf7\u56de\u4e0b',
+      family: 'cooperation',
+      meaning: 'asks for a reply after liking',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5df2\u8d5e10\uff0c\u8bf7\u56de\u4e0b',
+        '\u5df2\u8d5e10\uff0c\u8bf7\u56de\u4e0b\uff0c\u4f60\u524d\u9762\u7684\u65f6\u95f4\u7ebf\u8bc1\u636e\u80fd\u518d\u8865\u5145\u5417',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u4e0a\u7535\u89c6',
+      family: 'cooperation',
+      meaning: 'comment becomes visible in a video or highlighted context',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5367\u69fd\u6211\u4e0a\u7535\u89c6\u4e86',
+        '\u8fd9\u6761\u4e0a\u7535\u89c6\u4e86\uff0c\u53ef\u4ee5\u628a\u539f\u6765\u7684\u8bc1\u636e\u94fe\u63a5\u4e5f\u8865\u4e0a',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u753b\u997c', ['\u4f60\u8fd8\u662f\u6ca1\u61c2\uff0c\u5c31\u662f\u5229\u7528\u4f60\u57fa\u56e0\u6765\u753b\u997c']],
+    ['\u7537\u7684\u90fd\u7231\u753b\u997c', ['\u8bf4\u767d\u4e86\u5973\u7684\u5c31\u662f\u7ed9\u7537\u7684\u753b\u997c\u6279\u6362\u6280\u672f']],
+    ['tv\u5455\u5410', ['\u540c\u610f\uff0c\u8fd9\u90e8\u7247\u5b50\u611f\u89c9\u5c31\u4e0d\u662f\u4e3a\u4e86\u8bb2\u597d\u6545\u4e8b\u62cd\u7684\uff0c\u800c\u662f\u6545\u610f\u50cf\u89c2\u4f17\u663e\u6446[tv_\u5455\u5410]']],
+    ['\u5df2\u8d5e10\u8bf7\u56de\u4e0b', ['\u5df2\u8d5e10\uff0c\u8bf7\u56de\u4e0b\uff0c\u4f60\u524d\u9762\u7684\u65f6\u95f4\u7ebf\u8bc1\u636e\u80fd\u518d\u8865\u5145\u5417']],
+    ['\u4e0a\u7535\u89c6', ['\u8fd9\u6761\u4e0a\u7535\u89c6\u4e86\uff0c\u53ef\u4ee5\u628a\u539f\u6765\u7684\u8bc1\u636e\u94fe\u63a5\u4e5f\u8865\u4e0a']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes latest harvested literal system, game affection, and game blame evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u5b9e\u540d\u5236',
+      family: 'cooperation',
+      meaning: 'explicitly identify or support a stance',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5b9e\u540d\u5236\u7684\u91cd\u8981\u6027\u3002',
+        '\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u5237\u597d\u611f',
+      family: 'attack',
+      meaning: 'accuses someone of performatively currying favor',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u4e00\u770b\u5c31\u6ca1\u770b\uff0c\u4e91\u9732\u662f\u53ea\u9632\u5fa1\uff0c\u7ed9\u81ea\u5df1\u8001\u5a46\u5237\u597d\u611f\uff0c\u4e0d\u597d\u76f4\u63a5\u6253\u6b7b\u8214\u72d7',
+        '\u8fd8\u662f\u611f\u89c9\u5728\u5237\u597d\u611f[\u5403\u74dc]',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6211\u7684\u95ee\u9898',
+      family: 'correction',
+      meaning: 'accepts responsibility or corrects oneself',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u661f\u7403\u8f70\u70b8\u7838\u6b7b\u6211\uff0c\u662fcs\u8f68\u9053\u64cd\u4f5c\u5458\u7684\u95ee\u9898\uff1b\u4f46\u98de\u9e70\u98ce\u66b4\u59d0\u59d0\u56e2\u6253\u6b7b\u6211\uff0c\u90a3\u4e00\u5b9a\u662f\u6211\u7684\u95ee\u9898\u3002',
+        '\u53ef\u80fd\u662f\u6211\u7684\u95ee\u9898\uff0c\u6211\u628a\u524d\u9762\u7684\u8bf4\u6cd5\u6536\u56de',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u5b9e\u540d\u5236', ['\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790']],
+    ['\u5237\u597d\u611f', ['\u8fd8\u662f\u611f\u89c9\u5728\u5237\u597d\u611f[\u5403\u74dc]']],
+    ['\u6211\u7684\u95ee\u9898', ['\u53ef\u80fd\u662f\u6211\u7684\u95ee\u9898\uff0c\u6211\u628a\u524d\u9762\u7684\u8bf4\u6cd5\u6536\u56de']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes latest harvested proper-name and literal setup evidence', () => {
   const entries = normalizeKeywordEntries([
     {

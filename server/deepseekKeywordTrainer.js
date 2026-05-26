@@ -1001,6 +1001,42 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const selectiveEvidenceContext = /\u7cbe\u9009.{0,18}(?:\u8bc1\u636e|\u6709\u5229|\u53cd\u4f8b)|(?:\u53ea\u653e|\u53ea\u9009|\u53ea\u6311|\u53cd\u4f8b).{0,18}\u7cbe\u9009/u.test(cleanSample);
     if (platformModerationContext && !selectiveEvidenceContext) return true;
   }
+  if (['\u753b\u997c', '\u7537\u7684\u90fd\u7231\u753b\u997c'].includes(term) && family === 'attack') {
+    const rawSample = String(sample || '').trim();
+    const textWithoutMentions = rawSample.replace(/@\S+/gu, '').trim();
+    if (rawSample.includes('@') && !textWithoutMentions.includes('\u753b\u997c')) return true;
+  }
+  if (term === 'tv\u5455\u5410' && family === 'attack') {
+    const rawSample = String(sample || '').trim();
+    const textOutsideEmotes = rawSample.replace(/\[[^\]]+\]/g, '').trim();
+    if (/\[[^\]]*tv[_-]?\u5455\u5410[^\]]*\]/iu.test(rawSample) && !textOutsideEmotes) return true;
+  }
+  if (term === '\u5df2\u8d5e10\u8bf7\u56de\u4e0b' && family === 'cooperation') {
+    const bareEngagementContext = /^\u5df2\u8d5e\d+[\uff0c,]?\s*\u8bf7\u56de\u4e0b[.!！。]*$/u.test(cleanSample);
+    const discussionRequestContext = /(?:\u8bc1\u636e|\u6765\u6e90|\u8865\u5145|\u65f6\u95f4\u7ebf|\u8bf4\u6e05\u695a|\u94fe\u63a5)/u.test(cleanSample);
+    if (bareEngagementContext && !discussionRequestContext) return true;
+  }
+  if (term === '\u4e0a\u7535\u89c6' && family === 'cooperation') {
+    const bareReactionContext = /^(?:\u5367\u69fd|\u6211|\u5367\u69fd\u6211)?\u4e0a\u7535\u89c6\u4e86[!！。]*$/u.test(cleanSample);
+    const discussionContext = /(?:\u8bc1\u636e|\u94fe\u63a5|\u8865\u4e0a|\u6765\u6e90|\u8fd9\u6761)/u.test(cleanSample);
+    if (bareReactionContext && !discussionContext) return true;
+  }
+  if (term === '\u5b9e\u540d\u5236' && family === 'cooperation') {
+    const literalSystemContext = /^\u5b9e\u540d\u5236\u7684\u91cd\u8981\u6027[.!！。]*$/u.test(cleanSample)
+      || /(?:\u83dc\u5200|\u8eab\u4efd\u8bc1|\u6ce8\u518c|\u8d26\u53f7|\u5e73\u53f0).{0,12}\u5b9e\u540d\u5236|\u5b9e\u540d\u5236.{0,12}(?:\u83dc\u5200|\u8eab\u4efd\u8bc1|\u6ce8\u518c|\u8d26\u53f7|\u5e73\u53f0|\u5730\u533a)/u.test(cleanSample);
+    const stanceContext = /\u5b9e\u540d\u5236.{0,12}(?:\u652f\u6301|\u53cd\u5bf9|\u8d5e\u540c|\u5206\u6790)|(?:\u652f\u6301|\u53cd\u5bf9|\u8d5e\u540c).{0,12}\u5b9e\u540d\u5236/u.test(cleanSample);
+    if (literalSystemContext && !stanceContext) return true;
+  }
+  if (term === '\u5237\u597d\u611f' && family === 'attack') {
+    const gameAffectionContext = /(?:\u4e91\u9732|\u8001\u5a46|\u53ea\u9632\u5fa1|\u6253\u6b7b|\u8214\u72d7).{0,18}\u5237\u597d\u611f|\u5237\u597d\u611f.{0,18}(?:\u4e91\u9732|\u8001\u5a46|\u9632\u5fa1|\u6253\u6b7b|\u8214\u72d7)/u.test(cleanSample);
+    const performativeFavorContext = /(?:\u611f\u89c9|\u4ed6|\u5979|\u4e3b\u64ad|up|\u7c89\u4e1d|\u89c2\u4f17|\u8def\u4eba|\u4eba\u8bbe).{0,18}\u5237\u597d\u611f|\u5237\u597d\u611f.{0,18}(?:\u89c2\u4f17|\u8def\u4eba|\u7c89\u4e1d|\u4eba\u8bbe|\u5356\u60e8|\u535a\u597d\u611f)/iu.test(cleanSample);
+    if (gameAffectionContext && !performativeFavorContext) return true;
+  }
+  if (term === '\u6211\u7684\u95ee\u9898' && family === 'correction') {
+    const gameDeathContext = /(?:\u661f\u7403\u8f70\u70b8|cs\u8f68\u9053|\u98de\u9e70\u98ce\u66b4|\u6253\u6b7b\u6211|\u7838\u6b7b\u6211).{0,36}\u6211\u7684\u95ee\u9898|\u6211\u7684\u95ee\u9898.{0,36}(?:\u661f\u7403\u8f70\u70b8|cs\u8f68\u9053|\u98de\u9e70\u98ce\u66b4|\u6253\u6b7b\u6211|\u7838\u6b7b\u6211)/iu.test(cleanSample);
+    const correctionContext = /(?:\u53ef\u80fd\u662f|\u786e\u5b9e\u662f|\u524d\u9762|\u6536\u56de|\u8bf4\u9519|\u6539|\u66f4\u6b63|\u9053\u6b49).{0,18}\u6211\u7684\u95ee\u9898|\u6211\u7684\u95ee\u9898.{0,18}(?:\u6536\u56de|\u66f4\u6b63|\u9053\u6b49|\u6539)/u.test(cleanSample);
+    if (gameDeathContext && !correctionContext) return true;
+  }
   if (term === '\u5c0f\u67d0\u4e66' && family === 'evasion') {
     const platformAdOrTipContext = /(?:\u53bb\u5c0f\u67d0\u4e66\u641c|\u5c0f\u67d0\u4e66\u641c).{0,24}(?:\u798f\u5229|\u8bbe\u7f6e|\u53c2\u8003|\u6559\u7a0b|\u540c\u6b3e|\u5b98\u65b9)/u.test(cleanSample);
     const evidenceEvasionContext = /(?:\u522b|\u4e0d\u8981|\u53ea).{0,16}\u5c0f\u67d0\u4e66.{0,24}(?:\u8bc1\u636e|\u6765\u6e90|\u8bf4\u6e05\u695a)|\u5c0f\u67d0\u4e66.{0,24}(?:\u5f53\u8bc1\u636e|\u4e0d\u7b97\u8bc1\u636e|\u8bc1\u636e\u5728\u54ea)/u.test(cleanSample);
