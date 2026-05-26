@@ -1949,6 +1949,36 @@ test('findDictionaryEntriesWithTextEvidence rejects standalone short attack evid
   assert.deepEqual(entries[1].evidenceSamples, ['\u521a\u88ab\u53cd\u9a73\u5c31\u53eb\u8fd9\u4e48\u723d\uff0c\u4f60\u662f\u6025\u4e86\u5417']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal meme and cheat-code evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u4ecb\u53f8\u9ebb\u82bd', family: 'attack', meaning: '\u65b9\u8a00\u8c10\u97f3\u201c\u8fd9\u662f\u4ec0\u4e48\u5440\u201d\uff0c\u8868\u793a\u8d28\u7591\u6216\u5632\u8bbd', evidenceCount: 0 },
+        { term: '\u91d1\u5777\u5783', family: 'absolutes', meaning: '\u6e90\u81ea\u80a5\u6599\u5e7f\u544a\u7684\u6897\uff0c\u540e\u7528\u4e8e\u6307\u4ee3\u68c0\u9a8c\u795e\u66f2\u7684\u552f\u4e00\u6807\u51c6\u7b49\u7edd\u5bf9\u5316\u65ad\u8a00', evidenceCount: 0 },
+        { term: '\u91d1\u624b\u6307', family: 'attack', meaning: '\u6307\u4e3b\u89d2\u5149\u73af\u6216\u4e0d\u5408\u7406\u7684\u4fbf\u5229\u6761\u4ef6\uff0c\u7528\u4e8e\u6279\u8bc4\u5267\u60c5\u903b\u8f91', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u4ecb\u53f8\u9ebb\u82bd',
+      '\u4f60\u8fd9\u6ce2\u6d17\u767d\u771f\u662f\u4ecb\u53f8\u9ebb\u82bd\uff0c\u8bf4\u4e0d\u901a\u5427',
+      '\u4e00\u4e2a\u9b3c\u755cup\u4e3b\u6ca1\u6709\u91d1\u5777\u5783\u662f\u53ef\u6015\u7684\uff0c\u6709\u4e86\u91d1\u5777\u5783\u4e0d\u53bb\u73cd\u60dc\u662f\u53ef\u60b2\u7684',
+      '\u8fd8\u8bb0\u5f97\u300c\u91d1\u7ebf\u300d\u91cc\u9762\u5199\u7684\u91d1\u5777\u5783\u914d\u65b9\u516c\u5f00\u5417\uff1f\u8fd9\u6b21\u6210\u771f\u4e8b\u4e86\uff01',
+      '\u8fd9\u79cd\u89c6\u9891\u68c0\u9a8c\u795e\u66f2\u53ea\u770b\u91d1\u5777\u5783\uff0c\u8fd9\u5c31\u662f\u552f\u4e00\u6807\u51c6\u5417',
+      '\u8fd9\u4e2a\u53ef\u4ee5\u81ea\u5df1\u5206\u6790\u51fa\u6765\uff0c\u5982\u4f55\u6539\u51fa\u6240\u6709\u7684\u5b9d\u53ef\u68a6\uff0c\u8fd9\u73a9\u610f\u6700\u540e\u9762\u7684\u5c31\u662f\u5341\u516d\u8fdb\u5236\u91d1\u624b\u6307',
+      '\u8fd9\u4e2a\u4e3b\u89d2\u770b\u5565\u609f\u5565\uff0c\u4ec0\u4e48\u90fd\u9760\u91d1\u624b\u6307\u63a8\u8fc7\u53bb\uff0c\u5267\u60c5\u592a\u79bb\u8c31',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-literal-meme-cheat/', uid: 'BV-literal-meme-cheat' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u4ecb\u53f8\u9ebb\u82bd', '\u91d1\u5777\u5783', '\u91d1\u624b\u6307']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u6ce2\u6d17\u767d\u771f\u662f\u4ecb\u53f8\u9ebb\u82bd\uff0c\u8bf4\u4e0d\u901a\u5427']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u8fd9\u79cd\u89c6\u9891\u68c0\u9a8c\u795e\u66f2\u53ea\u770b\u91d1\u5777\u5783\uff0c\u8fd9\u5c31\u662f\u552f\u4e00\u6807\u51c6\u5417']);
+  assert.equal(entries[2].evidenceCount, 1);
+  assert.deepEqual(entries[2].evidenceSamples, ['\u8fd9\u4e2a\u4e3b\u89d2\u770b\u5565\u609f\u5565\uff0c\u4ec0\u4e48\u90fd\u9760\u91d1\u624b\u6307\u63a8\u8fc7\u53bb\uff0c\u5267\u60c5\u592a\u79bb\u8c31']);
+});
+
 test('findDictionaryEntriesWithTextEvidence rejects source-meme insults and literal complaint evidence', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
