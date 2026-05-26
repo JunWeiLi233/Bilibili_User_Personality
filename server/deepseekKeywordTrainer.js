@@ -885,6 +885,21 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const selfDeprecatingContext = /(?:\u54c8\u54c8.*\u4e38\u4e86|\u5b8c\u4e86|\u8981\u4e38|\u8fd9\u4e0b\u4e38\u4e86|\u65e0\u4e86)/u.test(cleanSample) || /(?:^|[，。！？!?\\s])\u4e38\u4e86$/u.test(cleanSample);
     return substringContext && !selfDeprecatingContext;
   }
+  if (term === '\u6211\u6545\u610f\u7684' && family === 'cooperation') {
+    const hotWordSpamContext = /(?:\u70ed\u8bcd\u7cfb\u5217_?\u6211\u6545\u610f\u7684.*\u70ed\u8bcd\u7cfb\u5217_?\u6211\u6545\u610f\u7684|\[\u70ed\u8bcd\u7cfb\u5217_|\u70ed\u8bcd\u7cfb\u5217\u6211\u6545\u610f\u7684)/u.test(cleanSample);
+    const conversationalContext = /(?:\u5bf9\u554a|\u5c31\u662f|\u6ca1\u9519|\u6211\u6545\u610f\u7684[\u5472\u7259\u72d7\u5934\[]|\u6211\u5c31\u6545\u610f)/u.test(cleanSample);
+    return hotWordSpamContext && !conversationalContext;
+  }
+  if (term === '\u65e0\u6148\u60b2' && family === 'attack') {
+    const titleOrRequestContext = /(?:\u7ec8\u4e8e\u6709\u4eba\u505a\u4e86|\u7ec8\u4e8e\u6709\u89c6\u9891\u4e86|\u6c42\u65e0\u6148\u60b2|\u65e0\u6148\u60b2\u89c6\u9891|\u89c6\u9891\u4e86)/u.test(cleanSample);
+    const ruthlessContext = /(?:\u5e72\u6389|\u6485|\u529b|\u5904\u51b3|\u6740|\u8d76\u5c3d\u6740\u7edd|\u88c5\u840c\u65b0|\u51b7\u9177|\u4e0d\u7559\u60c5)/u.test(cleanSample);
+    return titleOrRequestContext && !ruthlessContext;
+  }
+  if (term === '\u543e\u547d\u4f11\u77e3' && family === 'attack') {
+    const gameLocationContext = /(?:\u8681\u7a74|\u51b0\u5c01\u738b\u5ea7|\u7f8e\u4eba\u9c7c\u5c9b|\u7814\u7a76\u6240|\u516b\u89d2\u7b3c|\u5237\u65e0\u547d\u4fee\u77e3|\u4e0d\u52a0)/u.test(cleanSample);
+    const despairContext = /(?:\u88ab\u56f4|\u771f\u7684\u543e\u547d\u4f11\u77e3|\u5b8c\u4e86|\u8981\u6b7b|\u6253\u4e0d\u8fc7|\u6551\u547d|\u4f11\u77e3[\u7b11\u54ed\[])/u.test(cleanSample);
+    return gameLocationContext && !despairContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }

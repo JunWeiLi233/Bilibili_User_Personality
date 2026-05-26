@@ -1722,6 +1722,35 @@ test('findDictionaryEntriesWithTextEvidence rejects disclaimer, projectile, affo
   assert.deepEqual(entries[3].evidenceSamples, ['\u54c8\u54c8\u54c8\uff0c\u6211\u98ce\u70ed\u5feb\u597d\u53c8\u6d17\u4e86\u4e2a\u6fa1\uff0c\u4e38\u4e86']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects hot-word spam, title mention, and game-location evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u6211\u6545\u610f\u7684', family: 'cooperation', meaning: '\u8868\u793a\u6545\u610f\u505a\u67d0\u4e8b', evidenceCount: 0 },
+        { term: '\u65e0\u6148\u60b2', family: 'attack', meaning: '\u8c03\u4f83\u51b7\u9177\u65e0\u60c5', evidenceCount: 0 },
+        { term: '\u543e\u547d\u4f11\u77e3', family: 'attack', meaning: '\u8868\u793a\u7edd\u671b\u6216\u56f0\u5883\u7684\u8c03\u4f83', evidenceCount: 0 },
+      ],
+    },
+    [
+      '[\u70ed\u8bcd\u7cfb\u5217_\u6211\u6545\u610f\u7684][\u70ed\u8bcd\u7cfb\u5217_\u6211\u6545\u610f\u7684][\u70ed\u8bcd\u7cfb\u5217_\u6211\u6545\u610f\u7684]',
+      '\u5bf9\u554a\uff0c\u6211\u6545\u610f\u7684[\u5472\u7259]',
+      '\u6211\u9760\u3002\uff01\uff01\uff01\uff01\uff01\uff01\uff01\uff01\u7ec8\u4e8e\u6709\u4eba\u505a\u4e86\u3002\uff01\uff01\uff01\uff01\uff01\uff01\uff01\uff01\ud83d\ude2d\u592a\u597d\u4e86\u65e0\u6148\u60b2\u7ec8\u4e8e\u6709\u89c6\u9891\u4e86\u3002\u3002\u3002',
+      'homo\u7279\u6709\u7684\u88c5\u840c\u65b0\uff0c\u6211\u8981\u6485\u4f60\u529b\uff08\u65e0\u6148\u60b2\uff09',
+      '\u543e\u547d\u4f11\u77e3\uff0c\u4e00\u4e2a\u5728\u8681\u7a74\uff0c\u4e00\u4e2a\u5728\u51b0\u5c01\u738b\u5ea7\uff0c\u8fd8\u6709\u4e00\u4e2a\u5728\u7f8e\u4eba\u9c7c\u5c9b\u7684\u7814\u7a76\u6240\u91cc\uff0c\u90a3\u4f1a\u5237\u65e0\u547d\u4fee\u77e3',
+      '\u8fd9\u6ce2\u88ab\u56f4\u4e86\uff0c\u771f\u7684\u543e\u547d\u4f11\u77e3[\u7b11\u54ed]',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-low-quality-evidence/', uid: 'BV-low-quality-evidence' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u6211\u6545\u610f\u7684', '\u65e0\u6148\u60b2', '\u543e\u547d\u4f11\u77e3']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u5bf9\u554a\uff0c\u6211\u6545\u610f\u7684[\u5472\u7259]']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['homo\u7279\u6709\u7684\u88c5\u840c\u65b0\uff0c\u6211\u8981\u6485\u4f60\u529b\uff08\u65e0\u6148\u60b2\uff09']);
+  assert.equal(entries[2].evidenceCount, 1);
+  assert.deepEqual(entries[2].evidenceSamples, ['\u8fd9\u6ce2\u88ab\u56f4\u4e86\uff0c\u771f\u7684\u543e\u547d\u4f11\u77e3[\u7b11\u54ed]']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
