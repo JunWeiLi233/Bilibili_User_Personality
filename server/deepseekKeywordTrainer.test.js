@@ -4016,6 +4016,70 @@ test('normalizeKeywordEntries prunes standalone hui-character meme evidence with
   assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u4e0d\u5c31\u662f\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5\u5417\uff0c\u522b\u5728\u8fd9\u62a0\u5b57\u773c\u4e86']);
 });
 
+test('normalizeKeywordEntries prunes loose bengbuzhu reaction evidence for attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7ef7\u4e0d\u4f4f\u4e86',
+      family: 'attack',
+      meaning: 'mocking that something is laughably absurd',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u73b0\u5728\u53c8\u53d1\u8fbe\u4e86 \u8001\u5a46\u8ddf\u5144\u5f1f\u8dd1\u4e86 \u6ca1\u7ef7\u4f4f',
+        'up\u8bed\u6c14\u6ca1\u7ef7\u4f4f',
+        '\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u8fd9\u4e2a\u6ca1\u7ef7\u4f4f',
+        '\u4f60\u8fd9\u4e2a\u6211\u662f\u771f\u7ef7\u4e0d\u4f4f[\u7b11\u54ed]',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u73b0\u5728\u53c8\u53d1\u8fbe\u4e86 \u8001\u5a46\u8ddf\u5144\u5f1f\u8dd1\u4e86 \u6ca1\u7ef7\u4f4f' },
+        { source: 'Bilibili public video comment scan', sample: 'up\u8bed\u6c14\u6ca1\u7ef7\u4f4f' },
+        { source: 'Bilibili public video comment scan', sample: '\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u8fd9\u4e2a\u6ca1\u7ef7\u4f4f' },
+        { source: 'Bilibili public video comment scan', sample: '\u4f60\u8fd9\u4e2a\u6211\u662f\u771f\u7ef7\u4e0d\u4f4f[\u7b11\u54ed]' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u4e2a\u6211\u662f\u771f\u7ef7\u4e0d\u4f4f[\u7b11\u54ed]']);
+});
+
+test('normalizeKeywordEntries prunes trump username mention evidence for chuan-jianguo attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u5ddd\u5efa\u56fd',
+      family: 'attack',
+      meaning: 'mocking nickname for Trump',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '@\u7c73\u7c73\u6478\u6478 @\u534a\u95f4dio\u4e8c @Arcue1t @\u5ddd\u666e\u54e51\u53f7 \u80fd\u61c2\u5c31\u80fd\u7b11\uff0c\u4e0d\u7b11\u94c1\u6291\u90c1',
+        '\u5efa\u8bbe\u56fd\u5bb6\u7684\u610f\u601d\uff0c\u4f46\u53eb\u5ddd\u5efa\u56fd\u4e0d\u662f\u4e3a\u4e86\u7f8e\u56fd[doge]',
+        '\u54c8\u54c8\u54c8 \u4e3a\u6570\u4e0d\u591a\u7684\u641c\u5230\u5ddd\u5efa\u56fd[\u559c\u6781\u800c\u6ce3]',
+        '\u5ddd\u666e\u73b0\u5728\u6210\u4e3a\u4e86up\u4e3b\u7684\u5fc3\u5c16\u5ba0[\u5fae\u7b11]',
+        '\u597d\u591aup\u56e0\u4e3a\u5ddd\u666e\u90fd\u6da8\u4e86\u597d\u51e0\u5341\u4e07\u7c89[\u7b11\u54ed]',
+        '\u4fdd\u62a4\u6211\u65b9\u5ddd\u666e\uff01[\u5999\u554a]',
+        '\u4e3b\u8981\u662f\u4ed6\u4ece\u5c0f\u5230\u5927\u4e00\u8def\u90fd\u662f\u6210\u529f\u5427\uff0c\u518d\u52a0\u4e0a\u5ddd\u666e\u8fd9\u4eba\u672c\u6765\u5c31\u81ea\u4fe1',
+        '\u5ddd\u5efa\u56fd\uff1a\u62a5\u544a\u7ec4\u7ec7\uff01\u9ad8\u79d1\u6280\u53ca\u519c\u4e1a\u6253\u51fb\u5b8c\u6bd5\uff01',
+        '\u5ddd\u666e\u5fc3\u91cc\u6ca1\u70b9b\u6570\u561b[\u629f\u9f3b]\u81ea\u5df1\u6cbb\u4e0d\u4e86\u5c31\u602a\u6e38\u620f',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '@\u7c73\u7c73\u6478\u6478 @\u534a\u95f4dio\u4e8c @Arcue1t @\u5ddd\u666e\u54e51\u53f7 \u80fd\u61c2\u5c31\u80fd\u7b11\uff0c\u4e0d\u7b11\u94c1\u6291\u90c1' },
+        { source: 'Bilibili public video comment scan', sample: '\u5efa\u8bbe\u56fd\u5bb6\u7684\u610f\u601d\uff0c\u4f46\u53eb\u5ddd\u5efa\u56fd\u4e0d\u662f\u4e3a\u4e86\u7f8e\u56fd[doge]' },
+        { source: 'Bilibili public video comment scan', sample: '\u54c8\u54c8\u54c8 \u4e3a\u6570\u4e0d\u591a\u7684\u641c\u5230\u5ddd\u5efa\u56fd[\u559c\u6781\u800c\u6ce3]' },
+        { source: 'Bilibili public video comment scan', sample: '\u5ddd\u666e\u73b0\u5728\u6210\u4e3a\u4e86up\u4e3b\u7684\u5fc3\u5c16\u5ba0[\u5fae\u7b11]' },
+        { source: 'Bilibili public video comment scan', sample: '\u597d\u591aup\u56e0\u4e3a\u5ddd\u666e\u90fd\u6da8\u4e86\u597d\u51e0\u5341\u4e07\u7c89[\u7b11\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u4fdd\u62a4\u6211\u65b9\u5ddd\u666e\uff01[\u5999\u554a]' },
+        { source: 'Bilibili public video comment scan', sample: '\u4e3b\u8981\u662f\u4ed6\u4ece\u5c0f\u5230\u5927\u4e00\u8def\u90fd\u662f\u6210\u529f\u5427\uff0c\u518d\u52a0\u4e0a\u5ddd\u666e\u8fd9\u4eba\u672c\u6765\u5c31\u81ea\u4fe1' },
+        { source: 'Bilibili public video comment scan', sample: '\u5ddd\u5efa\u56fd\uff1a\u62a5\u544a\u7ec4\u7ec7\uff01\u9ad8\u79d1\u6280\u53ca\u519c\u4e1a\u6253\u51fb\u5b8c\u6bd5\uff01' },
+        { source: 'Bilibili public video comment scan', sample: '\u5ddd\u666e\u5fc3\u91cc\u6ca1\u70b9b\u6570\u561b[\u629f\u9f3b]\u81ea\u5df1\u6cbb\u4e0d\u4e86\u5c31\u602a\u6e38\u620f' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSources.map(source => source.sample), [
+    '\u5ddd\u5efa\u56fd\uff1a\u62a5\u544a\u7ec4\u7ec7\uff01\u9ad8\u79d1\u6280\u53ca\u519c\u4e1a\u6253\u51fb\u5b8c\u6bd5\uff01',
+  ]);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
@@ -5261,7 +5325,7 @@ test('findDictionaryEntriesWithTextEvidence rejects latest harvested literal and
       '\u522b\u518d\u7528\u795e\u795e\u90a3\u5957\u8bdd\u672f\u6263\u5e3d\u5b50\u4e86',
       '\u524d\u9762\u8bf4\u91cd\u4e86\uff0c\u6211\u6536\u56de\u521a\u624d\u90a3\u53e5',
       '\u4f60\u8fd9\u6ce2\u732a\u9f3b\u64cd\u4f5c\u5c31\u662f\u5f53\u65f6\u72af\u8822',
-      '\u5ddd\u5efa\u56fd\u7c89\u4e1d\u53c8\u6765\u590d\u8bfb\u90a3\u5957\u8bdd\u672f',
+      '\u5ddd\u5efa\u56fd\uff1a\u62a5\u544a\u7ec4\u7ec7\uff01\u53c8\u6765\u590d\u8bfb\u90a3\u5957\u8bdd\u672f',
       '\u522b\u53ea\u8bf4\u53ea\u53ef\u610f\u4f1a\uff0c\u8bc1\u636e\u548c\u903b\u8f91\u5462',
       '\u4f60\u4e0d\u4f1a\u81ea\u5df1\u53bb\u641c\u5417\uff0c\u522b\u95ee\u6211',
       '\u8c22\u8c22\u4f60\u7528\u9633\u5bff\u6362\u6765\u7684\u62bd\u5361\u7ecf\u9a8c\uff0c\u6211\u660e\u767d\u4e86',

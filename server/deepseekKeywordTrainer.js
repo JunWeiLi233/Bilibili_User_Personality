@@ -1119,6 +1119,25 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const standaloneReferenceContext = /^(?:\u5077\u5077\u544a\u8bc9\u4f60\u4eec)?\u56de\u5b57\u6709\u56db\u79cd\u5199\u6cd5$/u.test(cleanSample);
     if (standaloneReferenceContext) return true;
   }
+  if (term === '\u7ef7\u4e0d\u4f4f\u4e86' && family === 'attack') {
+    const looseReactionContext = /(?:\u6ca1\u7ef7\u4f4f|\u7ef7\u4e0d\u4f4f\u4e86)/u.test(cleanSample)
+      && /(?:\u54c8+|\u7b11|\u8001\u5a46|\u5144\u5f1f\u8dd1|\u534a\u4eba\u9a6c|\u7b2c\u4e00\u53e5\u8bdd|\u8bed\u6c14|\u8fd9\u4e2a\u6ca1\u7ef7\u4f4f)/u.test(cleanSample);
+    const targetedMockContext = /(?:\u4f60|\u4f60\u8fd9|\u4ed6|\u5979|\u56de\u5e94|\u4ed6\u8bf4|\u6ca1\u7528|\u540e\u8def|\u60f9\u4e86\u4e00\u8eab\u9a9a|\u8fd9\u5f20\u56fe).{0,30}(?:\u6ca1\u7ef7\u4f4f|\u7ef7\u4e0d\u4f4f)|(?:\u6ca1\u7ef7\u4f4f|\u7ef7\u4e0d\u4f4f).{0,30}(?:\u4f60|\u4f60\u8fd9|\u4ed6|\u5979|\u56de\u5e94|\u4ed6\u8bf4|\u6ca1\u7528|\u540e\u8def|\u60f9\u4e86\u4e00\u8eab\u9a9a|\u8fd9\u5f20\u56fe)/iu.test(cleanSample);
+    if (looseReactionContext && !targetedMockContext) return true;
+  }
+  if (term === '\u5ddd\u5efa\u56fd' && family === 'attack') {
+    const rawSample = String(sample || '');
+    const usernameMentionOnlyContext = /@\S*(?:\u5ddd\u666e|\u5ddd\u5efa\u56fd)\S*/u.test(rawSample)
+      && !rawSample.replace(/@\S+/gu, '').includes('\u5ddd\u5efa\u56fd')
+      && !rawSample.replace(/@\S+/gu, '').includes('\u5ddd\u666e');
+    const metaNameDiscussionContext = /(?:\u5efa\u8bbe\u56fd\u5bb6\u7684\u610f\u601d|\u4ec0\u4e48\u610f\u601d|\u4e3a\u6570\u4e0d\u591a\u7684\u641c\u5230|\u641c\u5230\u5ddd\u5efa\u56fd|\u53eb\u5ddd\u5efa\u56fd)/u.test(cleanSample);
+    const creatorTrafficContext = /(?:up\u4e3b|\bup\b|\u6da8\u4e86|\u6da8\u7c89|\u7c89).{0,18}(?:\u5ddd\u666e|\u5ddd\u5efa\u56fd)|(?:\u5ddd\u666e|\u5ddd\u5efa\u56fd).{0,18}(?:up\u4e3b|\bup\b|\u5fc3\u5c16\u5ba0|\u6da8\u4e86|\u6da8\u7c89|\u7c89)/iu.test(cleanSample);
+    const neutralTrumpAliasContext = cleanSample.includes('\u5ddd\u666e')
+      && !cleanSample.includes('\u5ddd\u5efa\u56fd')
+      && /(?:\u4fdd\u62a4\u6211\u65b9|\u6210\u529f|\u81ea\u4fe1|\u4ece\u5c0f\u5230\u5927)/u.test(cleanSample);
+    const satireContext = /(?:\u62a5\u544a\u7ec4\u7ec7|\u6253\u51fb\u5b8c\u6bd5|\u5fc3\u91cc\u6ca1\u70b9b\u6570|\u6cbb\u4e0d\u4e86|\u602a\u6e38\u620f|\u9b3c\u755c\u4e4b\u738b|\u7279\u6717\u666e).{0,24}(?:\u5ddd\u5efa\u56fd|\u5ddd\u666e)|(?:\u5ddd\u5efa\u56fd|\u5ddd\u666e).{0,24}(?:\u62a5\u544a\u7ec4\u7ec7|\u6253\u51fb\u5b8c\u6bd5|\u5fc3\u91cc\u6ca1\u70b9b\u6570|\u6cbb\u4e0d\u4e86|\u602a\u6e38\u620f|\u9b3c\u755c\u4e4b\u738b|\u7279\u6717\u666e)/iu.test(cleanSample);
+    if ((usernameMentionOnlyContext || metaNameDiscussionContext || creatorTrafficContext || neutralTrumpAliasContext) && !satireContext) return true;
+  }
   if (term === '\u55d1\u74dc\u5b50' && family === 'evasion') {
     const rawSample = String(sample || '').trim();
     const emoteSuffixContext = /\[\u55d1\u74dc\u5b50\]/u.test(rawSample) && !rawSample.replace(/\[[^\]]+\]/g, '').includes('\u55d1\u74dc\u5b50');
