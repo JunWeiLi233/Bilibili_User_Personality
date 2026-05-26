@@ -4766,6 +4766,28 @@ test('findDictionaryEntriesWithTextEvidence rejects homophone typo game-location
   assert.deepEqual(entries.map((entry) => entry.term), []);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal self gacha context for gambler-mentality attack terms', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u8d4c\u5f92\u5fc3\u7406', family: 'attack', meaning: '\u6307\u8d23\u5bf9\u65b9\u7528\u8d4c\u5f92\u5fc3\u6001\u8fa9\u62a4\u6216\u505a\u5224\u65ad' },
+    ],
+  };
+
+  const literalMatches = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    '\u8d4c\u5f92\u5fc3\u7406\u548b\u90a3\u4e48\u50cf\u6211\u62bd\u5361\u65f6\u5019\u7684\u611f\u89c9\uff0c\u603b\u89c9\u5f97\u4e0b\u4e00\u53d1\u5fc5\u51fa\uff0c\u7ed3\u679c\u2026',
+    { source: 'Bilibili public video comment scan', uid: 'BVliteral' },
+  );
+  const hostileMatches = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    '\u8fd9\u5c31\u662f\u5178\u578b\u8d4c\u5f92\u5fc3\u7406\uff0c\u8f93\u4e86\u8fd8\u62ff\u8fd9\u5957\u903b\u8f91\u6d17\u5730\u3002',
+    { source: 'Bilibili public video comment scan', uid: 'BVhostile' },
+  );
+
+  assert.deepEqual(literalMatches.map((entry) => entry.term), []);
+  assert.deepEqual(hostileMatches.map((entry) => entry.term), ['\u8d4c\u5f92\u5fc3\u7406']);
+});
+
 test('trainKeywordDictionary updates evidence for existing terms found in crawled comments', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-train-existing-evidence-'));
   const dictionaryPath = join(dir, 'dictionary.json');

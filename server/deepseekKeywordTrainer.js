@@ -1275,6 +1275,11 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const attackContext = /(?:\u771f\u8001\u516d|\u53c8\u8001\u516d|\u9634\u4eba|\u5077\u88ad|\u8e72\u8349|\u8e72\u5751|\u5751\u4eba|\u641e\u5077\u88ad|\u80cc\u523a|\u6076\u5fc3|\u6025|\u7834\u9632|\u641e\u5fc3\u6001)/u.test(cleanSample);
     return benignTitleOrPraiseContext && !attackContext;
   }
+  if (term === '\u8d4c\u5f92\u5fc3\u7406' && family === 'attack') {
+    const selfGachaContext = /(?:\u6211|\u81ea\u5df1).{0,12}(?:\u62bd\u5361|\u62bd|card|gacha)|(?:\u62bd\u5361|\u4e0b\u4e00\u53d1|\u5fc5\u51fa|\u51fa\u8d27|\u4fdd\u5e95)/iu.test(cleanSample);
+    const hostileReasoningContext = /(?:\u5178\u578b|\u8fd9\u5c31\u662f|\u4f60|\u4f60\u4eec|\u4ed6|\u5979|\u4ed6\u4eec|\u5979\u4eec|\u6d17\u5730|\u903b\u8f91|\u5f3a\u76d7|\u72e1\u8fa9|\u8fa9\u62a4|\u53cd\u566c|\u5c48\u670d|\u8f93\u4e86|\u8d62\u4e86).{0,16}\u8d4c\u5f92\u5fc3\u7406|\u8d4c\u5f92\u5fc3\u7406.{0,20}(?:\u6d17\u5730|\u903b\u8f91|\u5f3a\u76d7|\u72e1\u8fa9|\u8fa9\u62a4|\u53cd\u566c|\u5c48\u670d|\u8f93\u4e86|\u8d62\u4e86)/u.test(cleanSample);
+    return selfGachaContext && !hostileReasoningContext;
+  }
   if (term === '\u5f3a\u56fd' && family === 'attack') {
     const literalPowerhouseContext = /(?:\u9009\u7f8e\u5f3a\u56fd|\u4f53\u80b2\u5f3a\u56fd|\u79d1\u6280\u5f3a\u56fd|\u5236\u9020\u5f3a\u56fd|\u5de5\u4e1a\u5f3a\u56fd|\u519b\u4e8b\u5f3a\u56fd|\u88ab\u89c6\u4e3a|\u66fe\u56db\u6b21|\u51a0\u519b|\u73af\u7403\u5c0f\u59d0)/u.test(cleanSample);
     const attackContext = /(?:\u68d2\u5b50|\u4e16\u754c\u7b2c\u4e00|\u8df3\u51fa\u6765|\u4f60\u4eec|\u5439|\u6025|\u7834\u9632|\u5c31\u8fd9|\u4e0d\u4f1a\u5427|\u7b11\u6b7b|\u8d62\u9ebb)/u.test(cleanSample);
