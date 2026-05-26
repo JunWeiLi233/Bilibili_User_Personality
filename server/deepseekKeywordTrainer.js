@@ -775,6 +775,11 @@ function countNonOverlappingNeedleOccurrences(haystack, needles = []) {
 
 function isAmbiguousBenignEvidenceSample(term, family, sample) {
   const cleanSample = cleanEvidenceText(sample);
+  if (term === '\u522e\u75e7' && family === 'attack') {
+    const therapyContext = /(?:\u6881\u5bb6\u8f89|\u513f\u5b50|\u5916\u56fd\u4eba|\u8650\u5f85\u513f\u7ae5|\u6cd5\u5b98|\u4e2d\u56fd\u7597\u6cd5|\u7597\u6cd5|\u4e2d\u533b|\u7406\u7597|\u517b\u751f|\u8212\u670d|\u522e\u75e7\u677f|\u62d4\u7f50|\u7ecf\u7edc|\u53bb\u6e7f|\u80a9\u9888|\u63a8\u62ff)/u.test(cleanSample);
+    const attackContext = /(?:\u6253\u7684|\u6253\u5f97|\u4f24\u5bb3|\u8f93\u51fa|\u7834\u9632|\u6389\u8840|\u8840\u6761|\u4f4e\u4f24|\u96be\u6253|\u6253\u4e0d\u52a8|\u5e08\u5085\u522b\u522e|\u8ddf\u522e\u75e7\u4e00\u6837|\u50cf\u522e\u75e7|\u6307\u4f24\u5bb3)/u.test(cleanSample);
+    return therapyContext && !attackContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }

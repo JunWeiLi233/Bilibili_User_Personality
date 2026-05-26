@@ -1458,6 +1458,28 @@ test('findDictionaryEntriesWithTextEvidence rejects ambiguous food-context evide
   assert.deepEqual(entries[0].evidenceSamples, ['\u8638\u996d\uff01\u8150\u4e73\uff01\u53db\u5f92\uff01\u51fa\u5217']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal gua sha therapy evidence for attack terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [{ term: '\u522e\u75e7', family: 'attack', meaning: '\u6e38\u620f\u6216\u4e89\u8bae\u8bed\u5883\u91cc\u6307\u4f4e\u4f24\u5bb3\u6216\u65e0\u6548\u8f93\u51fa', evidenceCount: 0 }],
+    },
+    [
+      '\u6240\u4ee5\u600e\u4e48\u6253\u5440\uff0c\u621120\u7ea7\uff0c\u98de\u9f99\u5251\uff0c\u96be\u5ea60\uff0c\u6253\u7684\u8ddf\u522e\u75e7\u4e00\u6837',
+      '\u8fd8\u8bb0\u5f97\u6881\u5bb6\u8f89\u6709\u4e2a\u7535\u5f71\u662f\u513f\u5b50\u522e\u75e7\uff0c\u7136\u540e\u88ab\u5916\u56fd\u4eba\u544a\u8650\u5f85\u513f\u7ae5\u3002\u3002\u3002\u3002',
+      '\u6700\u540e\u8fd8\u662f\u6881\u5bb6\u8f89\u7684\u5916\u56fd\u8001\u677f\u4eb2\u81ea\u53bb\u522e\u75e7\u5411\u6cd5\u5b98\u8bc1\u660e\u8fd9\u662f\u4e2d\u56fd\u7597\u6cd5\uff0c\u800c\u4e14\u5f88\u8212\u670d',
+      '\u522e\u75e7\uff08\u6307\u4f24\u5bb3\uff09',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-guasha-context/', uid: 'BV-guasha-context' },
+  );
+
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].evidenceCount, 2);
+  assert.deepEqual(entries[0].evidenceSamples, [
+    '\u6240\u4ee5\u600e\u4e48\u6253\u5440\uff0c\u621120\u7ea7\uff0c\u98de\u9f99\u5251\uff0c\u96be\u5ea60\uff0c\u6253\u7684\u8ddf\u522e\u75e7\u4e00\u6837',
+    '\u522e\u75e7\uff08\u6307\u4f24\u5bb3\uff09',
+  ]);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
