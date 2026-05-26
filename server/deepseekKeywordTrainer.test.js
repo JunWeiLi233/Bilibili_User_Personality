@@ -1751,6 +1751,36 @@ test('findDictionaryEntriesWithTextEvidence rejects hot-word spam, title mention
   assert.deepEqual(entries[2].evidenceSamples, ['\u8fd9\u6ce2\u88ab\u56f4\u4e86\uff0c\u771f\u7684\u543e\u547d\u4f11\u77e3[\u7b11\u54ed]']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal covering-mouth, proper-name sigma, and merchant-name evidence', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u6342\u5634', family: 'attack', meaning: '\u6307\u538b\u5236\u8a00\u8bba\u6216\u4e0d\u8ba9\u6279\u8bc4\u53d1\u58f0', evidenceCount: 0 },
+        { term: '\u897f\u683c\u739b', family: 'cooperation', meaning: 'sigma male\u7684\u8c10\u97f3\uff0c\u8868\u793a\u72ec\u7acb\u4e0d\u8fce\u5408', evidenceCount: 0 },
+        { term: '\u5c0f\u998b\u732b', family: 'attack', meaning: '\u8c03\u4f83\u5bf9\u65b9\u8d2a\u5fc3\u6216\u60f3\u5360\u4fbf\u5b9c', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u6234\u7740\u6bdb\u7ebf\u5e3d\u6342\u5634\u90a3\u4e00\u5e55\u662f\u5728\u5267\u91cc\u8fb9\u7684\u561b?\u54ea\u4e2a\u6765\u7740\u554a',
+      '\u6562\u5728\u73a9\u5bb6\u706b\u6c14\u6700\u5927\u7684\u65f6\u5019\u6342\u5634\uff0c\u9b54\u65b9\u6361\u5230\u9b3c\u624d\u516c\u5173\u4e86\u554a',
+      '\u786e\u5b9e\u6311\u6218\u4e86\uff0c\u897f\u683c\u739b\u540e\u9762\u7528\u59cb\u7687\u5e1d\u7684\u5f29\u628a\u4f0a\u4ec0\u5854\u5c14\u5c04\u4e0b\u6765\u4e86',
+      '\u674e\u54e5\u4f9d\u65e7\u897f\u683c\u739b',
+      '\u56de\u590d @\u90a3\u9875\u7684\u538b\u82b1 :\u5c0f\u998b\u732b\u548c\u8c22\u5b9d\u6797\u4e24\u5bb6\u5728\u4ed6\u76f4\u64ad\u95f4\u5237\u793c\u7269\u8ba9\u5e2e\u7740\u5ba3\u4f20',
+      '\u201c\u5c0f\u998b\u732b\u201d',
+      '\u56de\u590d @\u963f\u5c0f\u67ef101 :\u5c0f\u998b\u732b\uff0c\u4ec0\u4e48\u90fd\u60f3\u5403\u53ea\u4f1a\u4e0d\u8fc7\u5ba1[doge]',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-literal-mouth-sigma-merchant/', uid: 'BV-literal-mouth-sigma-merchant' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u6342\u5634', '\u897f\u683c\u739b', '\u5c0f\u998b\u732b']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u6562\u5728\u73a9\u5bb6\u706b\u6c14\u6700\u5927\u7684\u65f6\u5019\u6342\u5634\uff0c\u9b54\u65b9\u6361\u5230\u9b3c\u624d\u516c\u5173\u4e86\u554a']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u674e\u54e5\u4f9d\u65e7\u897f\u683c\u739b']);
+  assert.equal(entries[2].evidenceCount, 1);
+  assert.deepEqual(entries[2].evidenceSamples, ['\u56de\u590d @\u963f\u5c0f\u67ef101 :\u5c0f\u998b\u732b\uff0c\u4ec0\u4e48\u90fd\u60f3\u5403\u53ea\u4f1a\u4e0d\u8fc7\u5ba1[doge]']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

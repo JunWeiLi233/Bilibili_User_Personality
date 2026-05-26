@@ -900,6 +900,21 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const despairContext = /(?:\u88ab\u56f4|\u771f\u7684\u543e\u547d\u4f11\u77e3|\u5b8c\u4e86|\u8981\u6b7b|\u6253\u4e0d\u8fc7|\u6551\u547d|\u4f11\u77e3[\u7b11\u54ed\[])/u.test(cleanSample);
     return gameLocationContext && !despairContext;
   }
+  if (term === '\u6342\u5634' && family === 'attack') {
+    const literalGestureContext = /(?:\u6234\u7740|\u6bdb\u7ebf\u5e3d|\u6342\u5634\u90a3\u4e00\u5e55|\u5267\u91cc|\u54ea\u4e2a\u6765\u7740|\u753b\u9762|\u955c\u5934|\u624b\u6342\u5634|\u7b11\u5230\u6342\u5634)/u.test(cleanSample);
+    const censorshipContext = /(?:\u73a9\u5bb6|\u706b\u6c14|\u516c\u5173|\u4e0d\u8ba9\u8bf4|\u5220\u8bc4|\u7981\u8a00|\u538b\u8bc4|\u58f0\u660e|\u8a00\u8bba|\u6279\u8bc4|\u9a82\u591f)/u.test(cleanSample);
+    return literalGestureContext && !censorshipContext;
+  }
+  if (term === '\u897f\u683c\u739b' && family === 'cooperation') {
+    const properNameOrCharacterContext = /(?:\u59cb\u7687\u5e1d|\u4f0a\u4ec0\u5854\u5c14|\u7528.*\u5f29|\u5c04\u4e0b\u6765|\u89d2\u8272|\u540e\u9762\u7528)/u.test(cleanSample);
+    const sigmaPraiseContext = /(?:\u4f9d\u65e7\u897f\u683c\u739b|\u771f\u897f\u683c\u739b|\u5f88\u897f\u683c\u739b|\u72ec\u7acb|\u4e0d\u8fce\u5408|\u7537\u4eba|\u5f3a\u8005|\u54e5)/u.test(cleanSample);
+    return properNameOrCharacterContext && !sigmaPraiseContext;
+  }
+  if (term === '\u5c0f\u998b\u732b' && family === 'attack') {
+    const merchantOrQuotedContext = cleanSample === '\u5c0f\u998b\u732b' || /(?:\u5c0f\u998b\u732b\u548c\u8c22\u5b9d\u6797|\u76f4\u64ad\u95f4\u5237\u793c\u7269|\u5e2e\u7740\u5ba3\u4f20|\u5c0f\u998b\u732b\u7b2c\u4e00|\u201c\u5c0f\u998b\u732b\u201d|"\u5c0f\u998b\u732b"|\u5916\u5356|\u70e4\u80a0)/u.test(cleanSample);
+    const greedyTeaseContext = /(?:\u4ec0\u4e48\u90fd\u60f3\u5403|\u5168\u90fd\u7ed9\u4f60|\u60f3\u5403|\u8d2a\u5fc3|\u4e0d\u8fc7\u5ba1)/u.test(cleanSample);
+    return merchantOrQuotedContext && !greedyTeaseContext;
+  }
   if (term === '腐乳' && family === 'attack') {
     return /(?:潮汕|大排档|豆酱|通菜|炒|好吃|美味|蘸料|调味|下饭|白粥|酱|菜)/u.test(cleanSample) && !/(?:叛徒|出列|黑|喷|骂|攻击|孝|急|破防)/u.test(cleanSample);
   }
