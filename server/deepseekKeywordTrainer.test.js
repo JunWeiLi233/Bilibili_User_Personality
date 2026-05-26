@@ -5209,6 +5209,132 @@ test('mergeEntriesIntoDictionary prunes persisted literal metallurgy and negated
   }
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects latest harvested substring and loose alias false positives', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u6b7b\u62ff', family: 'absolutes', meaning: 'rigidly clutching one point as absolute' },
+      { term: '\u53ef\u4ee5\u8d34', family: 'cooperation', meaning: 'ask another user to post evidence or context' },
+      { term: '\u524d\u9762\u8bf4\u91cd\u4e86', family: 'correction', meaning: 'soften or retract an earlier overstatement' },
+      { term: '\u8bf4\u9519\u4e86', family: 'correction', meaning: 'admit a prior statement was wrong' },
+      { term: '\u6211\u7684\u95ee\u9898', family: 'correction', meaning: 'admit a mistake or oversight' },
+      { term: '\u6b63\u9053\u7684\u5149', family: 'attack', meaning: 'mock self-righteous framing' },
+      { term: '\u90fd\u662f\u5bb6\u4eba', family: 'cooperation', meaning: 'de-escalating shared-community framing' },
+      { term: '\u8c01\u61c2', family: 'evasion', meaning: 'appeal to shared feeling instead of explaining' },
+    ],
+  };
+  const falsePositiveText = [
+    '\u81ea\u5df1\u4f5c\u6b7b\u62ff\u5200\u662f\u8fd9\u6837\u7684\uff0c\u8fd1\u8ddd\u79bb\u5c0f\u5200\u80fd\u5355\u6740\u6267\u6cd5\u4e86',
+    '\u53ef\u4ee5\u53d1\u5956',
+    '\u5f53\u5e74\u56e0\u4e3a\u8fd9\u4e8b\u5f88\u591a\u4eba\u603c\u4ed6\uff0c\u4f46\u6211\u89c9\u5f97\u4ed6\u6ca1\u6709\u4e00\u4e2a\u5b57\u8bf4\u9519\u4e86',
+    '\u6211\u8f6c\u5934\u95ee\u4e86\u4e00\u4e0b\u6211\u5973\u670b\u53cb\u7684\u611f\u53d7',
+    '\u4f60\u770b\u672c\u5730\u4eba\u591a\u4e56 \u77e5\u9053\u8bf4\u9519\u8bdd\u7684\u540e\u679c',
+    '\u4eba\u7d27\u5f20\u7684\u65f6\u5019\u662f\u5bb9\u6613\u8ba4\u9519\u4eba\uff0c\u4e00\u7d27\u5f20\u5c31\u8ba4\u9519\u4eba\u8bf4\u9519\u8bdd',
+    '\u6b63\u9053\u7684\u5149\u3002\u3002\u3002',
+    '\u5b5d\u4e0d\u6d3b\u4e86\u5bb6\u4eba\u4eec',
+    '\u5bb6\u4eba\u4eec\u6211\u542c\u534a\u5e74\u7684\u6b4c',
+    '\u554a\u554a\u554a\u554a\u554a\u554a\u554a\u554a\uff0c\u8c01\u61c2\u554a\uff0c\u6211\u54ed\u6b7b',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u4f60\u522b\u6b7b\u62ff\u4e00\u4e2a\u4f8b\u5b50\u5f53\u7edd\u5bf9\u8bc1\u636e',
+      '\u4f60\u628a\u8bc1\u636e\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
+      '\u524d\u9762\u8bf4\u91cd\u4e86\uff0c\u6211\u6536\u56de\u521a\u624d\u90a3\u53e5',
+      '\u6211\u8bf4\u9519\u4e86\uff0c\u8fd9\u91cc\u5e94\u8be5\u6539\u4e00\u4e0b',
+      '\u6211\u7684\u95ee\u9898\uff0c\u521a\u624d\u770b\u9519\u4e86',
+      '\u522b\u628a\u81ea\u5df1\u5305\u88c5\u6210\u6b63\u9053\u7684\u5149\u6765\u6263\u5e3d\u5b50',
+      '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8ba8\u8bba',
+      '\u522b\u53ea\u8bf4\u8c01\u61c2\uff0c\u8bc1\u636e\u8d34\u51fa\u6765',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u6b7b\u62ff',
+    '\u53ef\u4ee5\u8d34',
+    '\u524d\u9762\u8bf4\u91cd\u4e86',
+    '\u8bf4\u9519\u4e86',
+    '\u6211\u7684\u95ee\u9898',
+    '\u6b63\u9053\u7684\u5149',
+    '\u90fd\u662f\u5bb6\u4eba',
+    '\u8c01\u61c2',
+  ]);
+});
+
+test('mergeEntriesIntoDictionary prunes latest harvested loose alias false positives', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-loose-aliases-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u6b7b\u62ff',
+            family: 'absolutes',
+            meaning: 'rigidly clutching one point as absolute',
+            evidenceCount: 1,
+            evidenceSamples: ['\u81ea\u5df1\u4f5c\u6b7b\u62ff\u5200\u662f\u8fd9\u6837\u7684\uff0c\u8fd1\u8ddd\u79bb\u5c0f\u5200\u80fd\u5355\u6740\u6267\u6cd5\u4e86'],
+          },
+          {
+            term: '\u53ef\u4ee5\u8d34',
+            family: 'cooperation',
+            meaning: 'ask another user to post evidence or context',
+            evidenceCount: 1,
+            evidenceSamples: ['\u53ef\u4ee5\u53d1\u5956'],
+          },
+          {
+            term: '\u524d\u9762\u8bf4\u91cd\u4e86',
+            family: 'correction',
+            meaning: 'soften or retract an earlier overstatement',
+            evidenceCount: 1,
+            evidenceSamples: ['\u5f53\u5e74\u56e0\u4e3a\u8fd9\u4e8b\u5f88\u591a\u4eba\u603c\u4ed6\uff0c\u4f46\u6211\u89c9\u5f97\u4ed6\u6ca1\u6709\u4e00\u4e2a\u5b57\u8bf4\u9519\u4e86'],
+          },
+          {
+            term: '\u6211\u7684\u95ee\u9898',
+            family: 'correction',
+            meaning: 'admit a mistake or oversight',
+            evidenceCount: 1,
+            evidenceSamples: ['\u6211\u8f6c\u5934\u95ee\u4e86\u4e00\u4e0b\u6211\u5973\u670b\u53cb\u7684\u611f\u53d7'],
+          },
+          {
+            term: '\u8bf4\u9519\u4e86',
+            family: 'correction',
+            meaning: 'admit a prior statement was wrong',
+            evidenceCount: 1,
+            evidenceSamples: ['\u4f60\u770b\u672c\u5730\u4eba\u591a\u4e56 \u77e5\u9053\u8bf4\u9519\u8bdd\u7684\u540e\u679c'],
+          },
+          {
+            term: '\u90fd\u662f\u5bb6\u4eba',
+            family: 'cooperation',
+            meaning: 'de-escalating shared-community framing',
+            evidenceCount: 1,
+            evidenceSamples: ['\u5bb6\u4eba\u4eec\u6211\u542c\u534a\u5e74\u7684\u6b4c'],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+
+    assert.equal(dictionary.entries.find((item) => item.term === '\u6b7b\u62ff').evidenceCount, 0);
+    assert.equal(dictionary.entries.find((item) => item.term === '\u53ef\u4ee5\u8d34').evidenceCount, 0);
+    assert.equal(dictionary.entries.find((item) => item.term === '\u524d\u9762\u8bf4\u91cd\u4e86').evidenceCount, 0);
+    assert.equal(dictionary.entries.find((item) => item.term === '\u6211\u7684\u95ee\u9898').evidenceCount, 0);
+    assert.equal(dictionary.entries.find((item) => item.term === '\u8bf4\u9519\u4e86').evidenceCount, 0);
+    assert.equal(dictionary.entries.find((item) => item.term === '\u90fd\u662f\u5bb6\u4eba').evidenceCount, 0);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('normalizeKeywordEntries prunes persisted literal traditional-character samples for video-language attack terms', () => {
   const entries = normalizeKeywordEntries([
     {
