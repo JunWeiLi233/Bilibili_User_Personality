@@ -1931,6 +1931,33 @@ test('findDictionaryEntriesWithTextEvidence rejects source-meme insults and lite
   assert.deepEqual(entries[1].evidenceSamples, ['\u4f60\u8fd9\u865a\u5047\u5ba3\u4f20\u518d\u4e0d\u6539\uff0c\u6211\u5c31\u5de5\u4fe1\u90e8\u6295\u8bc9\u4e86']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects song-title evidence for metaphor terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u5b64\u52c7\u8005', family: 'cooperation', meaning: '\u79f0\u8d5e\u6562\u4e8e\u5bf9\u6297\u7f51\u7edc\u66b4\u529b\u7684\u4e2a\u4eba\uff0c\u5e26\u6709\u6b63\u9762\u8272\u5f69', evidenceCount: 0 },
+        { term: '\u5c81\u6708\u795e\u5077', family: 'attack', meaning: '\u5316\u7528\u7535\u5f71\u540d\uff0c\u6307\u67d0\u4eba\u901a\u8fc7\u4e0d\u6b63\u5f53\u624b\u6bb5\u7a83\u53d6\u4ed6\u4eba\u6210\u5c31\u6216\u673a\u4f1a', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u5b64\u52c7\u8005\u5176\u5b9e\u771f\u8fd8\u884c',
+      '\u5347\u8c03\u7684\u5b64\u52c7\u8005\u914d\u751c\u871c\u871c\u6b4c\u8bcd\u65e2\u7136\u6709\u70b9\u751c',
+      '\u5728\u8fd9\u79cd\u7f51\u66b4\u91cc\u8fd8\u613f\u610f\u53d1\u58f0\uff0c\u4ed6\u624d\u662f\u771f\u6b63\u7684\u5b64\u52c7\u8005',
+      '\u3010\u300e\u65e0\u635f\u300f\u300a\u5c81\u6708\u795e\u5077\u300b\uff08demo\uff09\u91d1\u73df\u5c90\uff08\u9644\u4e0b\u8f7d\u94fe\u63a5\uff09-\u54d4\u54e9\u54d4\u54e9\u3011 https://b23.tv/dgGg3Gk[\u5403\u74dc]',
+      '\u300a\u5c81\u6708\u795e\u5077\u300b\u80fd\u591f\u63e1\u7d27\u7684\u5c31\u522b\u653e\u4e86\u80fd\u591f\u62e5\u62b1\u7684\u5c31\u522b\u62c9\u626f',
+      '\u5c81\u6708\u795e\u5077',
+      '\u4ed6\u628a\u522b\u4eba\u7684\u673a\u4f1a\u90fd\u62a2\u8d70\u4e86\uff0c\u8fd9\u624d\u662f\u771f\u6b63\u7684\u5c81\u6708\u795e\u5077',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-song-metaphor/', uid: 'BV-song-metaphor' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u5b64\u52c7\u8005', '\u5c81\u6708\u795e\u5077']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u5728\u8fd9\u79cd\u7f51\u66b4\u91cc\u8fd8\u613f\u610f\u53d1\u58f0\uff0c\u4ed6\u624d\u662f\u771f\u6b63\u7684\u5b64\u52c7\u8005']);
+  assert.equal(entries[1].evidenceCount, 1);
+  assert.deepEqual(entries[1].evidenceSamples, ['\u4ed6\u628a\u522b\u4eba\u7684\u673a\u4f1a\u90fd\u62a2\u8d70\u4e86\uff0c\u8fd9\u624d\u662f\u771f\u6b63\u7684\u5c81\u6708\u795e\u5077']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

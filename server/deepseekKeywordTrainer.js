@@ -970,6 +970,16 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const threatContext = /(?:\u4f60|\u4f60\u4eec|\u518d\u4e0d|\u4e0d\u6539|\u865a\u5047\u5ba3\u4f20|\u6211\u5c31|\u7acb\u9a6c|\u76f4\u63a5|\u7b49\u7740|\u53bb\u6295\u8bc9\u4f60)/u.test(cleanSample);
     return literalConsumerRightsContext && !threatContext;
   }
+  if (term === '\u5b64\u52c7\u8005' && family === 'cooperation') {
+    const songOrPerformanceContext = /(?:\u6b4c\u8bcd|\u5347\u8c03|\u9648\u5955\u8fc5|\u6f14\u5531|\u7ffb\u5531|\u539f\u5531|\u4f34\u594f|\u7248\u672c|\u914d.*\u6b4c|\u914d\u751c\u871c\u871c|\u771f\u8fd8\u884c|\u597d\u542c|\u96be\u542c|\u8dd1\u8c03|\u7834\u97f3|\u821e\u53f0|\u6f14\u51fa)/u.test(cleanSample);
+    const praiseCourageContext = /(?:\u7f51\u66b4|\u53d1\u58f0|\u6562\u4e8e|\u7ad9\u51fa\u6765|\u5bf9\u6297|\u6b63\u4e49|\u4e0d\u6015|\u771f\u6b63\u7684\u5b64\u52c7\u8005|\u4ed6\u624d\u662f|\u5979\u624d\u662f)/u.test(cleanSample);
+    return songOrPerformanceContext && !praiseCourageContext;
+  }
+  if (term === '\u5c81\u6708\u795e\u5077' && family === 'attack') {
+    const songOrTitleContext = cleanSample === '\u5c81\u6708\u795e\u5077' || /(?:\u300a\u5c81\u6708\u795e\u5077\u300b|\u65e0\u635f|\u91d1\u73df\u5c90|\u4e0b\u8f7d\u94fe\u63a5|b23tv|\u54d4\u54e9\u54d4\u54e9|\u80fd\u591f\u63e1\u7d27\u7684\u5c31\u522b\u653e\u4e86|\u80fd\u591f\u62e5\u62b1\u7684\u5c31\u522b\u62c9\u626f|\u65f6\u95f4\u7740\u6025\u7684\u51b2\u5237|\u6b4c\u8bcd|\u7ffb\u5531|\u539f\u5531|\u6f14\u5531)/u.test(cleanSample);
+    const theftMetaphorContext = /(?:\u62a2\u8d70|\u7a83\u53d6|\u522b\u4eba\u7684\u673a\u4f1a|\u522b\u4eba\u7684\u6210\u5c31|\u4e0d\u6b63\u5f53|\u88ab\u62a2|\u62a2\u529f)/u.test(cleanSample);
+    return songOrTitleContext && !theftMetaphorContext;
+  }
   return false;
 }
 
