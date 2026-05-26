@@ -4086,6 +4086,95 @@ test('normalizeKeywordEntries prunes standalone logic-gift labels without a targ
   assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u903b\u8f91\u9b3c\u624d\uff0c\u524d\u540e\u77db\u76fe\u8fd8\u8bf4\u81ea\u5df1\u6709\u8bc1\u636e']);
 });
 
+test('normalizeKeywordEntries prunes latest loose harvested cooperation and attack evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u4e38\u4e86',
+      family: 'cooperation',
+      meaning: 'homophone of finished, used for self-deprecating concession',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5510\u4e38\u4e86',
+        '\u540e\u9762\u4e3b\u89d2\u600e\u4e48\u53d8\u9b54\u4e38\u4e86\uff0c\u90a3\u58f0man\u7b11\u6b7b\u6211\u4e86\ud83d\ude02',
+        '\u54c8\u54c8\u54c8\uff0c\u6211\u98ce\u70ed\u5feb\u597d\u53c8\u6d17\u4e86\u4e2a\u6fa1\uff0c\u4e38\u4e86',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5510\u4e38\u4e86' },
+        { source: 'Bilibili public video comment scan', sample: '\u540e\u9762\u4e3b\u89d2\u600e\u4e48\u53d8\u9b54\u4e38\u4e86\uff0c\u90a3\u58f0man\u7b11\u6b7b\u6211\u4e86\ud83d\ude02' },
+        { source: 'Bilibili public video comment scan', sample: '\u54c8\u54c8\u54c8\uff0c\u6211\u98ce\u70ed\u5feb\u597d\u53c8\u6d17\u4e86\u4e2a\u6fa1\uff0c\u4e38\u4e86' },
+      ],
+    },
+    {
+      term: '\u9488\u4e0d\u6233',
+      family: 'attack',
+      meaning: 'homophone of really good used sarcastically',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u771f\u4e0d\u9519\uff0c\u8fd9\u4e2a\u89c6\u9891\u9488\u4e0d\u6233\uff0c\u5443\u554a\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8[\u6b6a\u5634][\u6b6a\u5634]',
+        'up\u5beb\u7684\u5f88\u4e0d\u932f[\u4ee5\u95ea\u4eae\u4e4b\u540d_\u9488\u4e0d\u6233]\u4e0d\u904e\u6709\u5e7e\u500b\u5730\u65b9\u9084\u662f\u6709\u51fa\u5165\u7684[\u7b11\u54ed]',
+        '\u660e\u5929\u8003\u8bd5\u9488\u4e0d\u6233',
+        '\u4f60\u8fd9\u9634\u9633\u602a\u6c14\u9488\u4e0d\u6233\uff0c\u8bc1\u636e\u5462',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u771f\u4e0d\u9519\uff0c\u8fd9\u4e2a\u89c6\u9891\u9488\u4e0d\u6233\uff0c\u5443\u554a\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8\u54c8[\u6b6a\u5634][\u6b6a\u5634]' },
+        { source: 'Bilibili public video comment scan', sample: 'up\u5beb\u7684\u5f88\u4e0d\u932f[\u4ee5\u95ea\u4eae\u4e4b\u540d_\u9488\u4e0d\u6233]\u4e0d\u904e\u6709\u5e7e\u500b\u5730\u65b9\u9084\u662f\u6709\u51fa\u5165\u7684[\u7b11\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u660e\u5929\u8003\u8bd5\u9488\u4e0d\u6233' },
+        { source: 'Bilibili public video comment scan', sample: '\u4f60\u8fd9\u9634\u9633\u602a\u6c14\u9488\u4e0d\u6233\uff0c\u8bc1\u636e\u5462' },
+      ],
+    },
+    {
+      term: '\u4e0a\u7535\u89c6',
+      family: 'cooperation',
+      meaning: 'asks to surface a comment or item for visibility',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u6211\u4e5f\u4e0a\u7535\u89c6\u4e86',
+        '\u4e3b\u5305\u80fd\u4e0d\u80fd\u628a\u8fd9\u6761\u8bc1\u636e\u4e0a\u7535\u89c6',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u4e5f\u4e0a\u7535\u89c6\u4e86' },
+        { source: 'Bilibili public video comment scan', sample: '\u4e3b\u5305\u80fd\u4e0d\u80fd\u628a\u8fd9\u6761\u8bc1\u636e\u4e0a\u7535\u89c6' },
+      ],
+    },
+    {
+      term: '\u6807\u51c6\u7ed3\u5c40',
+      family: 'cooperation',
+      meaning: 'summarizes an expected standard ending',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u56de\u590d @\u9f9f\u901f\u4e4b\u738b-\u901a\u53e4\u9b3c\u65af :[\u70ed\u8bcd\u7cfb\u5217_\u6807\u51c6\u7ed3\u5c40]',
+        '\u4ed6\u5148\u9053\u6b49\u518d\u6539\u53e3\uff0c\u8fd9\u624d\u662f\u6807\u51c6\u7ed3\u5c40',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u56de\u590d @\u9f9f\u901f\u4e4b\u738b-\u901a\u53e4\u9b3c\u65af :[\u70ed\u8bcd\u7cfb\u5217_\u6807\u51c6\u7ed3\u5c40]' },
+        { source: 'Bilibili public video comment scan', sample: '\u4ed6\u5148\u9053\u6b49\u518d\u6539\u53e3\uff0c\u8fd9\u624d\u662f\u6807\u51c6\u7ed3\u5c40' },
+      ],
+    },
+    {
+      term: '\u5168\u662f\u7c89\u4e1d',
+      family: 'attack',
+      meaning: 'accuses the other side of being only fans',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5168\u662f\u7c89\u4e1d',
+        '\u8bc4\u8bba\u533a\u5168\u662f\u7c89\u4e1d\u63a7\u8bc4\uff0c\u6839\u672c\u4e0d\u770b\u8bc1\u636e',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5168\u662f\u7c89\u4e1d' },
+        { source: 'Bilibili public video comment scan', sample: '\u8bc4\u8bba\u533a\u5168\u662f\u7c89\u4e1d\u63a7\u8bc4\uff0c\u6839\u672c\u4e0d\u770b\u8bc1\u636e' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u4e38\u4e86', ['\u54c8\u54c8\u54c8\uff0c\u6211\u98ce\u70ed\u5feb\u597d\u53c8\u6d17\u4e86\u4e2a\u6fa1\uff0c\u4e38\u4e86']],
+    ['\u9488\u4e0d\u6233', ['\u4f60\u8fd9\u9634\u9633\u602a\u6c14\u9488\u4e0d\u6233\uff0c\u8bc1\u636e\u5462']],
+    ['\u4e0a\u7535\u89c6', ['\u4e3b\u5305\u80fd\u4e0d\u80fd\u628a\u8fd9\u6761\u8bc1\u636e\u4e0a\u7535\u89c6']],
+    ['\u6807\u51c6\u7ed3\u5c40', ['\u4ed6\u5148\u9053\u6b49\u518d\u6539\u53e3\uff0c\u8fd9\u624d\u662f\u6807\u51c6\u7ed3\u5c40']],
+    ['\u5168\u662f\u7c89\u4e1d', ['\u8bc4\u8bba\u533a\u5168\u662f\u7c89\u4e1d\u63a7\u8bc4\uff0c\u6839\u672c\u4e0d\u770b\u8bc1\u636e']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes trump username mention evidence for chuan-jianguo attack term', () => {
   const entries = normalizeKeywordEntries([
     {
