@@ -1781,6 +1781,26 @@ test('findDictionaryEntriesWithTextEvidence rejects literal covering-mouth, prop
   assert.deepEqual(entries[2].evidenceSamples, ['\u56de\u590d @\u963f\u5c0f\u67ef101 :\u5c0f\u998b\u732b\uff0c\u4ec0\u4e48\u90fd\u60f3\u5403\u53ea\u4f1a\u4e0d\u8fc7\u5ba1[doge]']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal yang-qi health evidence for attack terms', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u9633\u6c14\u4e0d\u8db3', family: 'attack', meaning: '\u9634\u9633\u602a\u6c14\u5730\u5632\u8bbd\u5bf9\u65b9\u4f53\u865a\u6216\u7cbe\u795e\u72b6\u6001\u4e0d\u4f73', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u89c6\u9891\u8bb2\u89e3\u4e86\u9633\u6c14\u4e0d\u8db3\u7684\u4e03\u4e2a\u5e38\u89c1\u8868\u73b0\uff0c\u5e2e\u52a9\u5927\u5bb6\u81ea\u6211\u8bca\u65ad\u662f\u5426\u9633\u865a\u3002',
+      '\u6478\u809a\u8110\u6e29\u5dee\u611f\u53d7\u9633\u865a\uff0c\u624b\u811a\u51b0\u51c9\u63d0\u793a\u9633\u6c14\u4e0d\u8db3\uff0c\u6015\u51b7\u6015\u98ce\u6301\u7eed\u65f6\u95f4\u957f\uff0c\u9891\u7e41\u611f\u5192\u54b3\u55fd\u75c7\u72b6\u8f7b\uff0c\u8fc7\u654f\u6027\u9f3b\u708e\u5bd2\u90aa\u4fb5\u88ad\uff0c\u80c3\u5bd2\u8179\u6cfb\u813e\u9633\u4e0d\u8db3\uff0c\u591c\u5c3f\u591a\u80be\u9633\u865a\u8868\u73b0\uff0c\u517b\u6210\u597d\u4e60\u60ef\u9632\u9633\u865a',
+      '\u4f60\u8fd9\u6837\u9a82\u4eba\u662f\u9633\u6c14\u4e0d\u8db3\u5427\uff0c\u522b\u592a\u865a\u4e86',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-yang-qi-literal/', uid: 'BV-yang-qi-literal' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u9633\u6c14\u4e0d\u8db3']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u6837\u9a82\u4eba\u662f\u9633\u6c14\u4e0d\u8db3\u5427\uff0c\u522b\u592a\u865a\u4e86']);
+});
+
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {

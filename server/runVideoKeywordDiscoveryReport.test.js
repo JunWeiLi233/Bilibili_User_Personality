@@ -62,3 +62,55 @@ test('serializeVideoKeywordDiscoveryReport keeps per-query diagnostics for harve
     },
   ]);
 });
+
+test('serializeVideoKeywordDiscoveryReport counts accepted evidence by unique comment samples', () => {
+  const report = serializeVideoKeywordDiscoveryReport(
+    {
+      requestedRounds: 1,
+      growth: { before: 1, after: 1 },
+      coverage: { coverageRatio: 0.5 },
+      coverageActions: [],
+      state: {},
+      rounds: [
+        {
+          queries: ['sampleTerm comment'],
+          candidateQueries: ['sampleTerm comment'],
+          growth: { before: 1, after: 1 },
+          coverage: { evidenceDeficit: 1 },
+          coverageProgress: { evidenceGained: 1 },
+          termAttemptSummary: {},
+          warnings: [],
+          trainingDiagnostics: {},
+          queryDiagnostics: [],
+          results: [
+            {
+              query: 'sampleTerm comment',
+              result: {
+                ok: true,
+                videos: [],
+                comments: [{ rpid: 1 }, { rpid: 2 }],
+                keywordTraining: { dictionaryEvidenceEntries: [] },
+                entries: [
+                  {
+                    term: 'sampleTerm',
+                    family: 'attack',
+                    evidenceCount: 4,
+                    evidenceSamples: ['sampleTerm first comment', 'sampleTerm second comment'],
+                    evidenceSources: [
+                      { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV1111111111/', uid: 'BV1111111111', sample: 'sampleTerm first comment' },
+                      { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV1111111111/', uid: 'BV1111111111', sample: 'sampleTerm second comment' },
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ],
+    },
+    'state.json',
+    'report.json',
+  );
+
+  assert.equal(report.rounds[0].results[0].acceptedEvidenceCount, 2);
+});

@@ -1,3 +1,5 @@
+import { countAcceptedEvidenceHits } from './keywordHarvest.js';
+
 export function serializeVideoKeywordDiscoveryReport(result, statePath, reportPath) {
   return {
     generatedAt: new Date().toISOString(),
@@ -31,7 +33,7 @@ export function serializeVideoKeywordDiscoveryReport(result, statePath, reportPa
         comments: item.result?.comments?.length || 0,
         evidenceRejected: item.result?.keywordTraining?.evidenceRejected || 0,
         existingDictionaryEvidence: item.result?.keywordTraining?.dictionaryEvidenceEntries || [],
-        acceptedEvidenceCount: (item.result?.entries || []).reduce((sum, entry) => sum + (Number(entry.evidenceCount) || 0), 0),
+        acceptedEvidenceCount: countAcceptedEvidenceHits(item.result?.entries || []),
         controversialPopularQueries: item.result?.controversialPopularQueries || [],
         controversialPopularSearchOrder: item.result?.controversialPopularSearchOrder || null,
         plan: round.plan?.find((planItem) => planItem.query === item.query) || null,
