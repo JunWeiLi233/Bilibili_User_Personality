@@ -2427,6 +2427,46 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested literal food and d
   assert.deepEqual(realEntries.map((entry) => entry.term), ['\u624b\u6495', '\u53ef\u4ee5\u8d34']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects harvested numeric count, literal belief, and standalone reaction evidence', () => {
+  const dictionary = {
+    entries: [
+      { term: '0\u4eba', family: 'attack', meaning: 'mocking no-one count' },
+      { term: '\u4fe1\u4ef0', family: 'attack', meaning: 'mocking ideological belief' },
+      { term: '\u88c5\u5230', family: 'attack', meaning: 'accuse someone of posturing' },
+      { term: '\u516d\u516d\u516d', family: 'attack', meaning: 'sarcastic praise' },
+      { term: '\u6ca1\u60f3\u5230\u5427', family: 'attack', meaning: 'sarcastic reveal' },
+      { term: '\u6ca1\u4eba\u5728\u4e4e', family: 'cooperation', meaning: 'deescalating by noting low stakes' },
+      { term: '\u57c3\u53ca\u5427', family: 'evasion', meaning: 'avoid answering by sending someone elsewhere' },
+    ],
+  };
+  const text = [
+    '\u73b0\u5728\u51cc\u6668\u4e09\u70b9\uff0c1000+\u4eba',
+    '2000\u4eba',
+    '\u5176\u5b9e\u5f88\u65e9\u524d\u5c31\u6709\u6697\u793a\u4e86\uff0c\u59ae\u9732\u4fe1\u4ef0\u82b1\u795e\uff0c\u6563\u5175\u4e13\u6b66\u5c31\u6765\u6e90\u745c\u82b1\u795e',
+    '\u56fd\u670d\uff08\u817e\u8baf\uff09\u662f\u8fd9\u6837\u7684\u5566\u3002\u770b\u770b\u5251\u7075\u3002\u6c38\u4e45\u7684\u526f\u672c\u65f6\u88c5\u5230\u56fd\u670d\u53d8\u621030\u5929\u3002',
+    '\u516d\u516d\u516d',
+    '\u6211\u4ee5\u4e3a\u662f\u60ac\u7591\u7247\u2026\u2026\u6ca1\u60f3\u5230\u4e0d\u662f\u554a\u2026\u2026',
+    '\u524d\u9762\u7684\uff0c\u6ca1\u4eba\u5728\u4e4e\u4f60',
+    '\u722c\u5427\u6ca1\u4eba\u5728\u4e4e\u7684',
+    '\u57c3\u53ca\u5427\u56de\u4e0d\u56de\u5f52\uff0c\u6709\u9aa8\u6c14\u5c31\u522b\u56de\u5f52',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u771f\u6ca1\u60f3\u5230\u5427\uff0c\u4f60\u524d\u9762\u8bf4\u7684\u8bc1\u636e\u5168\u90fd\u88ab\u53cd\u9a73\u4e86',
+      '\u4ed6\u62ff\u4fe1\u4ef0\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u5c31\u662f\u4e0d\u56de\u5e94\u95ee\u9898',
+      '\u4e0d\u8981\u518d\u88c5\u5230\u81ea\u5df1\u5f88\u61c2\u4e86',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u4fe1\u4ef0', '\u88c5\u5230', '\u6ca1\u60f3\u5230\u5427']);
+});
+
 test('normalizeKeywordEntries drops passive publish source evidence for request-to-post terms', () => {
   const entries = normalizeKeywordEntries([
     {
