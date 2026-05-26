@@ -1588,6 +1588,72 @@ test('searchVideoKeywords keeps controversial popular videos first during existi
   assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1hotPolitics', 'BV1politics1', 'BV1dictionary']);
 });
 
+test('searchVideoKeywords can prefer broad controversy pools for strict comment-backed refreshes', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u523b\u8fdbdna \u8bc4\u8bba\u533a',
+      controversyQueries: ['politics debate'],
+      discoveryMode: 'controversial',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['\u523b\u8fdbdna', '\u62c9\u8de8'],
+      includeVideoContext: false,
+      includeVideoObjectEvidence: false,
+      allowFilteredDiscoveryFallback: true,
+      preferFilteredDiscoveryFallback: true,
+    },
+    {
+      discoverVideosByKeyword: async (query, _limit, options = {}) => {
+        if (query === '\u523b\u8fdbdna \u8bc4\u8bba\u533a') {
+          return [
+            {
+              bvid: 'BVsong1',
+              title: '\u523b\u8fdbDNA\u7684\u6b4c\u66f2\u4e32\u70e7',
+              sourceUrl: 'https://www.bilibili.com/video/BVsong1/',
+            },
+          ];
+        }
+        if (options.searchOrder === 'click') {
+          return [
+            {
+              bvid: 'BVhotPolitics',
+              title: '\u56fd\u9645\u653f\u6cbb\u4e89\u8bae\u70ed\u8bc4',
+              sourceUrl: 'https://www.bilibili.com/video/BVhotPolitics/',
+            },
+          ];
+        }
+        return [
+          {
+            bvid: 'BVpolitics1',
+            title: '\u793e\u4f1a\u4e89\u8bae\u8bc4\u8bba\u533a',
+            sourceUrl: 'https://www.bilibili.com/video/BVpolitics1/',
+          },
+        ];
+      },
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.deepEqual(result.discoveredVideos.map((video) => video.bvid), ['BVhotPolitics', 'BVpolitics1']);
+  assert.equal(result.discoveredVideos.map((video) => video.bvid).includes('BVsong1'), false);
+});
+
 test('default controversy seed list includes debate-heavy Bilibili topics', () => {
   const seeds = DEFAULT_CONTROVERSY_SEARCH_QUERIES.split('\n');
   assert.equal(seeds.some((seed) => seed.includes('\u65f6\u653f')), true);

@@ -5531,6 +5531,7 @@ test('harvestKeywordDictionary enables filtered discovery fallback for strict co
     assert.equal(payloads[0].includeVideoContext, false);
     assert.equal(payloads[0].includeVideoObjectEvidence, false);
     assert.equal(payloads[0].allowFilteredDiscoveryFallback, true);
+    assert.equal(payloads[0].preferFilteredDiscoveryFallback, true);
     assert.deepEqual(payloads[0].targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd']);
   } finally {
     await rm(dir, { recursive: true, force: true });

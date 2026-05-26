@@ -525,6 +525,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     deps.includeGenericPopular === true ||
     envFlag(process.env.BILIBILI_CONTROVERSIAL_INCLUDE_GENERIC_POPULAR, false);
   const allowFilteredDiscoveryFallback = payload.allowFilteredDiscoveryFallback === true || deps.allowFilteredDiscoveryFallback === true;
+  const preferFilteredDiscoveryFallback = payload.preferFilteredDiscoveryFallback === true || deps.preferFilteredDiscoveryFallback === true;
   const discoveryWarnings = [];
   let discoveredVideos = [];
   let discoveryContextVideos = [];
@@ -615,6 +616,16 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       targetExistingTerms.length > 0
         ? rankedDiscoveryGroups.map((group) => filterRelevantVideos(group, searchQueries, targetExistingTerms))
         : rankedDiscoveryGroups;
+    if (
+      targetExistingTerms.length > 0 &&
+      includeVideoContext === false &&
+      allowFilteredDiscoveryFallback &&
+      preferFilteredDiscoveryFallback &&
+      !targetsAskBaiduTerm(targetExistingTerms) &&
+      !targetsRequireStrictRelevance(targetExistingTerms)
+    ) {
+      eligibleDiscoveryGroups = rankedDiscoveryGroups.map((group) => group.slice(0, discoveryLimit));
+    }
     if (
       targetExistingTerms.length > 0 &&
       includeVideoContext === false &&
