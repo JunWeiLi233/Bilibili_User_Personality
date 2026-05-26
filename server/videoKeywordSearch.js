@@ -339,6 +339,56 @@ function buildTargetVideoObjectEvidenceText(videos = [], searchQueries = [], tar
     .join('\n');
 }
 
+function targetEvidenceCount(entry = {}) {
+  const numeric = Number(entry.evidenceCount ?? entry.coverageEvidenceCount ?? entry.evidence?.length ?? 0);
+  return Number.isFinite(numeric) ? Math.max(0, numeric) : 0;
+}
+
+function dictionaryEntryNeedles(entry = {}) {
+  return uniqueByKey(
+    [
+      entry.term,
+      ...(Array.isArray(entry.aliases) ? entry.aliases : []),
+      ...(Array.isArray(entry.examples) ? entry.examples : []),
+    ]
+      .map(cleanSearchText)
+      .filter((item) => item.length >= 2),
+    (item) => item,
+  );
+}
+
+async function expandTargetTermsFromCommentHits({
+  commentText = '',
+  existingTermsOnly = false,
+  targetExistingTerms = [],
+  targetEvidence = 3,
+  limit = 48,
+  deps = {},
+  warnings = [],
+}) {
+  const targets = uniqueByKey(targetExistingTerms.map((term) => String(term || '').trim()).filter(Boolean), (term) => term);
+  if (!existingTermsOnly || !commentText.trim() || limit <= targets.length) return targets;
+  const normalizedCommentText = cleanSearchText(commentText);
+  if (!normalizedCommentText) return targets;
+  const targetSet = new Set(targets);
+  try {
+    const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
+    const dictionary = await readKeywordDictionary();
+    for (const entry of dictionary.entries || []) {
+      const term = String(entry?.term || '').trim();
+      if (!term || targetSet.has(term) || targetEvidenceCount(entry) >= targetEvidence) continue;
+      const needles = dictionaryEntryNeedles(entry);
+      if (!needles.some((needle) => normalizedCommentText.includes(needle))) continue;
+      targetSet.add(term);
+      targets.push(term);
+      if (targets.length >= limit) break;
+    }
+  } catch (error) {
+    warnings.push(`comment target expansion: ${error.message}`);
+  }
+  return targets;
+}
+
 function videoContextSources(videos = [], discoveredVideos = []) {
   return uniqueByKey(
     [...videos, ...discoveredVideos].filter(Boolean),
@@ -806,6 +856,18 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       ? ''
       : buildTargetVideoObjectEvidenceText(contextVideos, searchQueries, targetExistingTerms);
   const trainingText = [commentText, videoObjectEvidenceText, videoContextText].filter((item) => item.trim()).join('\n');
+  const effectiveTargetExistingTerms =
+    payload.expandTargetsFromComments === true || deps.expandTargetsFromComments === true
+      ? await expandTargetTermsFromCommentHits({
+          commentText,
+          existingTermsOnly,
+          targetExistingTerms,
+          targetEvidence: boundedInt(payload.targetEvidence ?? deps.targetEvidence ?? process.env.BILIBILI_COVERAGE_TARGET_EVIDENCE ?? 3, 3, 1, 20),
+          limit: boundedInt(payload.commentHitTargetLimit ?? deps.commentHitTargetLimit ?? process.env.BILIBILI_COMMENT_HIT_TARGET_LIMIT ?? 48, 48, 1, 200),
+          deps,
+          warnings,
+        })
+      : targetExistingTerms;
   const primaryVideo = videos[0];
   const mergedScan = {
     ok: true,
@@ -851,7 +913,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
         videos,
         comments,
         trainingText,
-        targetExistingTerms,
+        targetExistingTerms: effectiveTargetExistingTerms,
       }),
     };
   }
@@ -864,7 +926,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       text: trainingText,
       source: `${mergedScan.source}${videoObjectEvidenceText ? ' plus video object evidence' : ''}${videoContextText ? ' plus video context' : ''}: ${contextSourceUrls.join(', ')}`,
       existingTermsOnly,
-      ...(targetExistingTerms.length ? { targetExistingTerms } : {}),
+      ...(effectiveTargetExistingTerms.length ? { targetExistingTerms: effectiveTargetExistingTerms } : {}),
     },
     payload.abortSignal ? { signal: payload.abortSignal } : {},
   );
@@ -880,7 +942,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       videos,
       comments,
       trainingText,
-      targetExistingTerms,
+      targetExistingTerms: effectiveTargetExistingTerms,
       keywordTraining,
     }),
   };

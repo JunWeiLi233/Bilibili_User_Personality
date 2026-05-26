@@ -2013,6 +2013,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         searchPayload.evidenceSourceVideoFallback = options.existingTermsOnly === true;
         searchPayload.allowFilteredDiscoveryFallback = options.allowFilteredDiscoveryFallback !== false;
         searchPayload.preferFilteredDiscoveryFallback = options.preferFilteredDiscoveryFallback !== false;
+        searchPayload.expandTargetsFromComments = options.expandTargetsFromComments !== false;
       }
       if (options.controversialPopularQueryLimit !== undefined) {
         searchPayload.controversialPopularQueryLimit = options.controversialPopularQueryLimit;

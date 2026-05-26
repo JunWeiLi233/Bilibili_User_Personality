@@ -1947,6 +1947,66 @@ test('searchVideoKeywords forwards target existing terms to dictionary training'
   assert.deepEqual(trainedPayloads[0].targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd']);
 });
 
+test('searchVideoKeywords expands existing-only targets from collected comment dictionary hits', async () => {
+  const trainedPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      videoLink: 'https://www.bilibili.com/video/BV19yGa61Ee6/',
+      pages: 1,
+      existingTermsOnly: true,
+      includeVideoContext: false,
+      expandTargetsFromComments: true,
+      targetExistingTerms: ['\u76ee\u6807\u5f31\u8bcd'],
+    },
+    {
+      fetchJson: async (url) => {
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: 'target video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 1,
+                mid: 100,
+                member: { mid: '100', uname: 'alice' },
+                content: { message: '\u8fd9\u53e5\u8bc4\u8bba\u547d\u4e2d\u4e86\u610f\u5916\u5f31\u8bcd\uff0c\u5e94\u8be5\u4e00\u8d77\u9001\u53bb\u8865\u8bc1\u636e' },
+                like: 1,
+                ctime: 1710000000,
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      readKeywordDictionary: async () => ({
+        entries: [
+          { term: '\u76ee\u6807\u5f31\u8bcd', evidenceCount: 1, aliases: [] },
+          { term: '\u610f\u5916\u5f31\u8bcd', evidenceCount: 1, aliases: ['\u610f\u5916\u547d\u4e2d'] },
+          { term: '\u8bc1\u636e\u5df2\u8db3\u8bcd', evidenceCount: 3, aliases: ['\u8865\u8bc1\u636e'] },
+        ],
+      }),
+      trainKeywordDictionary: async (payload) => {
+        trainedPayloads.push(payload);
+        return { ok: true, entries: [], dictionary: { entries: [] } };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(trainedPayloads[0].targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd', '\u610f\u5916\u5f31\u8bcd']);
+  assert.deepEqual(result.collectionDiagnostics.targetExistingTerms, ['\u76ee\u6807\u5f31\u8bcd', '\u610f\u5916\u5f31\u8bcd']);
+});
+
 test('searchVideoKeywords can train existing terms from video context when comments are empty', async () => {
   const trainedPayloads = [];
   const result = await searchVideoKeywords(
