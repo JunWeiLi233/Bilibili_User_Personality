@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { withFileLock } from './fileLock.js';
@@ -1611,15 +1611,31 @@ export function findDictionaryEntriesWithTextEvidence(dictionary, text = '', opt
 
 async function readDictionary(dictionaryPath) {
   try {
-    const current = JSON.parse(await readFile(dictionaryPath, 'utf8'));
+    const raw = await readFile(dictionaryPath, 'utf8');
+    const current = JSON.parse(raw);
     return {
       version: current.version || 1,
       updatedAt: current.updatedAt || null,
       entries: Array.isArray(current.entries) ? current.entries : [],
       families: current.families || {},
     };
-  } catch {
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw new Error(`Could not read keyword dictionary ${dictionaryPath}: ${error.message}`);
+    }
     return { version: 1, updatedAt: null, entries: [], families: {} };
+  }
+}
+
+export async function writeJsonFileAtomic(filePath, value) {
+  await mkdir(dirname(filePath), { recursive: true });
+  const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    await writeFile(tempPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+    await rename(tempPath, filePath);
+  } catch (error) {
+    await rm(tempPath, { force: true }).catch(() => {});
+    throw error;
   }
 }
 
@@ -1684,8 +1700,7 @@ export async function mergeEntriesIntoDictionary(entries, options = {}) {
       entries: allEntries,
       families,
     };
-    await mkdir(dirname(dictionaryPath), { recursive: true });
-    await writeFile(dictionaryPath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+    await writeJsonFileAtomic(dictionaryPath, next);
     return next;
   });
 }

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -16,6 +16,7 @@ import {
   normalizeKeywordEntries,
   readKeywordDictionary,
   trainKeywordDictionary,
+  writeJsonFileAtomic,
 } from './deepseekKeywordTrainer.js';
 
 test('selects configured DeepSeek V4 model when the key is present', async () => {
@@ -1022,6 +1023,21 @@ test('readKeywordDictionary returns the normalized canonical dictionary view', a
     assert.equal(dictionary.entries[0].evidenceCount, 2);
     assert.deepEqual(dictionary.families.cooperation, ['doge']);
     assert.deepEqual(dictionary.families.absolutes, []);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('readKeywordDictionary rejects corrupt dictionary JSON instead of treating it as empty', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-read-corrupt-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(dictionaryPath, '{ "version": 1, "entries": [', 'utf8');
+
+    await assert.rejects(
+      () => readKeywordDictionary({ dictionaryPath }),
+      /Could not read keyword dictionary/,
+    );
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -4739,6 +4755,25 @@ test('mergeEntriesIntoDictionary respects the dictionary write lock', async () =
       /Another Bilibili dictionary job is already running/,
     );
     await release();
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('writeJsonFileAtomic leaves a complete JSON file and removes sibling temp files', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'dict-atomic-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeJsonFileAtomic(dictionaryPath, {
+      version: 1,
+      entries: [{ term: '\u5b8c\u6574\u5199\u5165', family: 'cooperation' }],
+    });
+
+    const parsed = JSON.parse(await readFile(dictionaryPath, 'utf8'));
+    const files = await readdir(dir);
+
+    assert.equal(parsed.entries[0].term, '\u5b8c\u6574\u5199\u5165');
+    assert.deepEqual(files, ['dictionary.json']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
