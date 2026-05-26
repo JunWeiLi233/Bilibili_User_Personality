@@ -4230,6 +4230,28 @@ test('normalizeKeywordEntries prunes literal america-name evidence for ameilika 
   assert.deepEqual(entries[0].evidenceSamples, ['\u963f\u7f8e\u554a\uff0c\u4f60\u592a\u8352\u8c2c\u52d2\uff0c\u8fd9\u6837\u771f\u7684\u4f1a\u5f88\u597d\u7b11']);
 });
 
+test('normalizeKeywordEntries prunes literal pig-nose fetish evidence for pig-nose attack term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u732a\u9f3b',
+      family: 'attack',
+      meaning: 'criticizes someone as acting dumb or making a stupid move',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u732a\u9f3b\u5b50\u662f\u4ec0\u4e48\u6027\u7656[\u7b11\u54ed]',
+        '\u4f60\u8fd9\u64cd\u4f5c\u771f\u732a\u9f3b\uff0c\u521a\u624d\u90a3\u6ce2\u5c31\u662f\u5728\u72af\u8822',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u732a\u9f3b\u5b50\u662f\u4ec0\u4e48\u6027\u7656[\u7b11\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u4f60\u8fd9\u64cd\u4f5c\u771f\u732a\u9f3b\uff0c\u521a\u624d\u90a3\u6ce2\u5c31\u662f\u5728\u72af\u8822' },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u64cd\u4f5c\u771f\u732a\u9f3b\uff0c\u521a\u624d\u90a3\u6ce2\u5c31\u662f\u5728\u72af\u8822']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
