@@ -1291,6 +1291,62 @@ test('mergeEntriesIntoDictionary keeps fresh comment evidence when context sampl
   }
 });
 
+test('mergeEntriesIntoDictionary does not reintroduce ambiguous alias evidence during prune', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'deepseek-prune-ambiguous-alias-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    await writeFile(
+      dictionaryPath,
+      JSON.stringify({
+        version: 1,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+        entries: [
+          {
+            term: '\u5bb6\u4eba',
+            family: 'cooperation',
+            meaning: 'solidarity or friendly in-group address',
+            evidenceCount: 2,
+            evidenceSamples: [
+              '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u522b\u5435\u4e86\u597d\u597d\u8ba8\u8bba',
+              '\u76f4\u64ad\u95f4\u4e00\u53e3\u4e00\u4e2a\u5bb6\u4eba\u4eec\u5e26\u504f\uff0c\u4f60\u771f\u7684\u9700\u8981\u8fd9\u4e9b\u5417',
+            ],
+            evidenceSources: [
+              { source: 'test', uid: '1', sample: '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u522b\u5435\u4e86\u597d\u597d\u8ba8\u8bba' },
+              { source: 'test', uid: '2', sample: '\u5e26\u7740\u5168\u5bb6\u4eba\u548c\u6559\u6388\u4e00\u8d77\u5728\u6bd5\u8bbe\u524d\u5408\u5f71' },
+              { source: 'test', uid: '3', sample: '\u8ddf\u5bb6\u4eba\u548c\u6743\u5a01\u7684\u4eba\u7684\u5173\u7cfb\uff0c\u53ef\u80fd\u4f1a\u6709\u51b2\u7a81' },
+            ],
+          },
+          {
+            term: '\u90fd\u662f\u5bb6\u4eba',
+            family: 'cooperation',
+            meaning: 'solidarity or friendly in-group address',
+            evidenceCount: 2,
+            evidenceSamples: [
+              '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u522b\u5435\u4e86\u597d\u597d\u8ba8\u8bba',
+              '\u76f4\u64ad\u95f4\u4e00\u53e3\u4e00\u4e2a\u5bb6\u4eba\u4eec\u5e26\u504f\uff0c\u4f60\u771f\u7684\u9700\u8981\u8fd9\u4e9b\u5417',
+            ],
+            evidenceSources: [
+              { source: 'test', uid: '1', sample: '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u522b\u5435\u4e86\u597d\u597d\u8ba8\u8bba' },
+              { source: 'test', uid: '2', sample: '\u5e26\u7740\u5168\u5bb6\u4eba\u548c\u6559\u6388\u4e00\u8d77\u5728\u6bd5\u8bbe\u524d\u5408\u5f71' },
+              { source: 'test', uid: '3', sample: '\u8ddf\u5bb6\u4eba\u548c\u6743\u5a01\u7684\u4eba\u7684\u5173\u7cfb\uff0c\u53ef\u80fd\u4f1a\u6709\u51b2\u7a81' },
+            ],
+          },
+        ],
+      }),
+      'utf8',
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+    const entry = dictionary.entries.find((item) => item.term === '\u90fd\u662f\u5bb6\u4eba');
+
+    assert.deepEqual(entry.evidenceSamples, ['\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u522b\u5435\u4e86\u597d\u597d\u8ba8\u8bba']);
+    assert.deepEqual(entry.evidenceSources.map((source) => source.sample), ['\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u522b\u5435\u4e86\u597d\u597d\u8ba8\u8bba']);
+    assert.equal(entry.evidenceCount, 1);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('mergeEntriesIntoDictionary lets fresh comments replace capped public video title samples', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'deepseek-comment-replaces-title-context-'));
   const dictionaryPath = join(dir, 'dictionary.json');
@@ -2748,6 +2804,45 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested username-only ASCI
   );
 
   assert.deepEqual(realEntries.map((entry) => entry.term), ['lsp', '\u7a7a\u964d']);
+});
+
+test('findDictionaryEntriesWithTextEvidence rejects harvested name, defense, title, and self-reaction evidence', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u963f\u7f8e\u8389\u5361', family: 'attack', meaning: 'sarcastic nickname for America' },
+      { term: '\u8c01\u5bb6\u5c0f\u5b69', family: 'attack', meaning: 'mock someone as childish' },
+      { term: '\u7ec6\u8282\u53e5\u53f7', family: 'attack', meaning: 'mock nitpicking punctuation details' },
+      { term: '\u6211\u6d3b\u5230\u5934\u4e86', family: 'cooperation', meaning: 'self-deprecating concession or despair' },
+    ],
+  };
+  const text = [
+    '\u54c8\u54c8\u50cf\u963f\u7f8e\u5a5a\u540e\u751f\u6d3b',
+    '\u8bf4\u5b69\u5b50\u8eab\u4e0a\u592a\u8fc7\u5206\u4e86\u5427\uff0c\u8c01\u5bb6\u5c0f\u5b69\u4e0d\u662f\u5b9d\uff1f\uff08',
+    '\u7b2c\u56db\u5173\uff1a\u7ec6\u8282\u53e5\u53f7',
+    '\u6211\u6d3b\u5230\u5934\u4e86',
+    '\uff1f\u6211\u6d3b\u5230\u5934\u4e86\uff1f',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u963f\u7f8e\u8389\u5361\u554a\uff0c\u4f60\u8fd8\u662f\u592a\u5e74\u8f7b',
+      '\u8fd9\u8c01\u5bb6\u5c0f\u5b69\uff0c\u53c9\u51fa\u53bb',
+      '\u56de\u590d @\u674e\u58a8\u5927\u5e08 :\u7ec6\u8282\u53e5\u53f7\uff0c\u7ec6\u8282\u5934\u50cf\u86cb\u4ed4',
+      '\u4f60\u8bf4\u5f97\u5bf9\uff0c\u6211\u6d3b\u5230\u5934\u4e86\uff0c\u8fd9\u70b9\u6211\u6536\u56de',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), [
+    '\u963f\u7f8e\u8389\u5361',
+    '\u8c01\u5bb6\u5c0f\u5b69',
+    '\u7ec6\u8282\u53e5\u53f7',
+    '\u6211\u6d3b\u5230\u5934\u4e86',
+  ]);
 });
 
 test('findDictionaryEntriesWithTextEvidence can match stable internet aliases', () => {

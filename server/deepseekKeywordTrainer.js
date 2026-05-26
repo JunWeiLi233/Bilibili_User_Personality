@@ -458,17 +458,29 @@ function mergeKeywordEntry(existing, incoming, now) {
   const shouldReplaceDetails = shouldReplaceFamily || existing.family === incoming.family || !existing.meaning;
   const base = shouldReplaceFamily ? incoming : existing;
   const details = shouldReplaceDetails ? incoming : {};
-  const evidenceSamples = unique([...(existing.evidenceSamples || []), ...(incoming.evidenceSamples || [])])
+  const targetFamily = shouldReplaceFamily ? incoming.family : existing.family;
+  const mergedEvidenceSamples = unique([...(existing.evidenceSamples || []), ...(incoming.evidenceSamples || [])]);
+  const evidenceSamples = mergedEvidenceSamples
+    .filter((sample) => !isAmbiguousBenignEvidenceSample(incoming.term, targetFamily, sample))
     .sort((a, b) => evidenceSampleSortKey(a) - evidenceSampleSortKey(b))
     .slice(0, 5);
+  const mergedEvidenceSources = uniqueBy(
+    [...(existing.evidenceSources || []), ...(incoming.evidenceSources || [])].sort(
+      (a, b) => evidenceSourceSortKey(a) - evidenceSourceSortKey(b),
+    ),
+    (item) => `${item.source || ''}\n${item.uid || ''}\n${item.sample || ''}`,
+  );
   const evidenceSources = uniqueBy(
     [...(existing.evidenceSources || []), ...(incoming.evidenceSources || [])].sort(
       (a, b) => evidenceSourceSortKey(a) - evidenceSourceSortKey(b),
     ),
     (item) => `${item.source || ''}\n${item.uid || ''}\n${item.sample || ''}`,
-  ).slice(0, 8);
+  )
+    .filter((source) => !isAmbiguousBenignEvidenceSample(incoming.term, targetFamily, source.sample))
+    .slice(0, 8);
   const existingEvidenceCount = Math.max(0, Number(existing.evidenceCount) || 0);
   const incomingEvidenceCount = Math.max(0, Number(incoming.evidenceCount) || 0);
+  const ambiguousEvidenceWasFiltered = evidenceSamples.length < Math.min(mergedEvidenceSamples.length, 5) || evidenceSources.length < Math.min(mergedEvidenceSources.length, 8);
 
   return {
     ...base,
@@ -478,8 +490,9 @@ function mergeKeywordEntry(existing, incoming, now) {
     meaning: details.meaning || existing.meaning || incoming.meaning,
     risk: details.risk || existing.risk || incoming.risk,
     confidence: Math.max(existingConfidence, incomingConfidence),
-    evidenceCount:
-      evidenceSamples.length > 0 && evidenceSamples.length < existingEvidenceCount + incomingEvidenceCount
+    evidenceCount: ambiguousEvidenceWasFiltered
+      ? Math.max(evidenceSamples.length, evidenceSources.length)
+      : evidenceSamples.length > 0 && evidenceSamples.length < existingEvidenceCount + incomingEvidenceCount
         ? Math.max(existingEvidenceCount, incomingEvidenceCount)
         : existingEvidenceCount + incomingEvidenceCount,
     evidenceSamples,
@@ -904,7 +917,7 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     return substringNegationContext && !overbroadClaimContext;
   }
   if (term === '\u90fd\u662f\u5bb6\u4eba' && family === 'cooperation') {
-    const genericAddressContext = /(?:\u5bb6\u4eba\u4eec|\u5bb6\u4eba).*(?:\u6c42\u6c42|\u63a8\u8350|\u5e2e\u5fd9|\u770b\u770b|\u8c01\u77e5\u9053|\u5c5e\u5b9e|\u65e0\u8bed|\u5e26\u504f|\u9700\u8981)|(?:\u4e00\u53e3\u4e00\u4e2a\u5bb6\u4eba\u4eec|\u4e0d\u662f\u4f60\u4e00\u4e2a\u4eba.*\u4f60\u4e00\u5bb6\u4eba)/u.test(cleanSample);
+    const genericAddressContext = /(?:\u5bb6\u4eba\u4eec|\u5bb6\u4eba).*(?:\u6c42\u6c42|\u63a8\u8350|\u5e2e\u5fd9|\u770b\u770b|\u8c01\u77e5\u9053|\u5c5e\u5b9e|\u65e0\u8bed|\u5e26\u504f|\u9700\u8981)|(?:\u4e00\u53e3\u4e00\u4e2a\u5bb6\u4eba\u4eec|\u4e0d\u662f\u4f60\u4e00\u4e2a\u4eba.*\u4f60\u4e00\u5bb6\u4eba|\u5168\u5bb6\u4eba.*\u5408\u5f71|\u8ddf\u5bb6\u4eba.*\u5173\u7cfb|\u5bb6\u4eba\u7684\u671f\u5f85)/u.test(cleanSample);
     const solidarityContext = /(?:\u90fd\u662f\u5bb6\u4eba|\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba).*(?:\u522b\u5435|\u597d\u597d\u8bf4|\u4e92\u76f8|\u8ba8\u8bba)/u.test(cleanSample);
     return genericAddressContext && !solidarityContext;
   }
@@ -970,6 +983,26 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const usernameOnlyContext = /^(?:\u56de\u590d)?lsp(?:\u7684|[a-z0-9]+).*?(?:\u55f7\u55f7|\u597d\u7684|\u8c22\u8c22|\u6536\u5230)?$/iu.test(cleanSample);
     const directedInsultContext = /(?:\u4f60|\u8fd9\u4e2a|\u522b|lsp.*(?:\u522b|\u6076\u5fc3|\u5237))/iu.test(cleanSample);
     return usernameOnlyContext && !directedInsultContext;
+  }
+  if (term === '\u963f\u7f8e\u8389\u5361' && family === 'attack') {
+    const personalNameContext = /\u963f\u7f8e(?:\u5a5a\u540e|\u751f\u6d3b|\u8001\u5e08|\u540c\u5b66|\u59d0|\u54e5)/u.test(cleanSample);
+    const americaContext = /(?:\u963f\u7f8e\u8389\u5361|\u7f8e\u56fd|\u7f8e\u5229\u575a|\u7f8e\u8054\u90a6|\u8d44\u672c\u4e3b\u4e49|\u6b27\u7f57\u5df4)/u.test(cleanSample);
+    return personalNameContext && !americaContext;
+  }
+  if (term === '\u8c01\u5bb6\u5c0f\u5b69' && family === 'attack') {
+    const childDefenseContext = /(?:\u8bf4\u5b69\u5b50.*\u592a\u8fc7\u5206|\u8c01\u5bb6\u5c0f\u5b69\u4e0d\u662f\u5b9d|\u5c0f\u5b69\u4e0d\u662f\u5b9d)/u.test(cleanSample);
+    const mockChildishContext = /(?:\u8fd9|\u4f60|\u53c9\u51fa\u53bb|\u5e7c\u7a1a|\u5c0f\u5b66\u751f).*\u8c01\u5bb6\u5c0f\u5b69|\u8c01\u5bb6\u5c0f\u5b69.*(?:\u53c9\u51fa\u53bb|\u5e7c\u7a1a|\u5c0f\u5b66\u751f)/u.test(cleanSample);
+    return childDefenseContext && !mockChildishContext;
+  }
+  if (term === '\u7ec6\u8282\u53e5\u53f7' && family === 'attack') {
+    const levelTitleContext = /^(?:\u7b2c[一二三四五六七八九十\d]+\u5173|\u5173\u5361|\u6807\u9898).*\u7ec6\u8282\u53e5\u53f7/u.test(cleanSample);
+    const nitpickContext = /(?:\u56de\u590d|@|\u4f60|\u7ec6\u8282\u5934\u50cf|\u7ec6\u8282).*\u7ec6\u8282\u53e5\u53f7|\u7ec6\u8282\u53e5\u53f7.*(?:\u5934\u50cf|\u86cb\u4ed4|\u6293\u7ec6\u8282)/u.test(cleanSample);
+    return levelTitleContext && !nitpickContext;
+  }
+  if (term === '\u6211\u6d3b\u5230\u5934\u4e86' && family === 'cooperation') {
+    const standaloneReactionContext = /^(?:\uff1f)?\u6211\u6d3b\u5230\u5934\u4e86(?:\uff1f)?$/u.test(cleanSample);
+    const concessionContext = /(?:\u4f60\u8bf4\u5f97\u5bf9|\u6211\u6536\u56de|\u8fd9\u70b9|\u627f\u8ba4|\u9519\u4e86).*\u6211\u6d3b\u5230\u5934\u4e86|\u6211\u6d3b\u5230\u5934\u4e86.*(?:\u6211\u6536\u56de|\u627f\u8ba4|\u9519\u4e86|\u8fd9\u70b9)/u.test(cleanSample);
+    return standaloneReactionContext && !concessionContext;
   }
   if (term === '\u56e2\u706d\u590d\u4ec7\u8005\u8054\u76df' && family === 'cooperation') {
     const plotSummaryContext = /(?:\u590d\u4ec7\u8005|\u7f8e\u961f|\u5b9d\u77f3|\u6b63\u7247|\u5267\u60c5|\u4e3b\u8981\u539f\u56e0|\u8d2a\u4e8e\u4eab\u4e50|\u77e5\u9053\u81ea\u5df1\u8fd9\u8fb9\u7684\u60c5\u51b5)/u.test(cleanSample);
