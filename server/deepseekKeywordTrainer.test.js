@@ -3367,6 +3367,36 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested standalone reactio
   ]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects harvested terse label markers for summary terms', () => {
+  const dictionary = {
+    entries: [
+      { term: '\u7701\u6d41', family: 'cooperation', meaning: 'summarize content for readers' },
+      { term: '\u7701\u6d41\u4fa0', family: 'cooperation', meaning: 'commenter who summarizes content for readers' },
+      { term: '\u8bf4\u767d\u4e86', family: 'cooperation', meaning: 'clarify the core point in plain terms' },
+    ],
+  };
+  const text = [
+    '\u7701\u6d41\u4fa0\u00d7',
+    '\u7701\u6d41\u4fa0\uff1a',
+    '\u7701\u6d41',
+  ].join('\n');
+
+  const entries = findDictionaryEntriesWithTextEvidence(dictionary, text);
+
+  assert.deepEqual(entries.map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    [
+      '\u7701\u6d41\u4fa0\u6765\u4e86\uff1a\u524d\u4e09\u5206\u949f\u90fd\u662f\u94fa\u57ab\uff0c\u76f4\u63a5\u770b\u7ed3\u5c3e\u5c31\u884c',
+      '\u7701\u6d41\uff1a\u8fd9\u6bb5\u89c6\u9891\u7684\u7ed3\u8bba\u662f\u4e0d\u5efa\u8bae\u8ddf\u98ce',
+      '\u8bf4\u767d\u4e86\uff0c\u4ed6\u5c31\u662f\u5728\u628a\u7ed3\u8bba\u8bf4\u7ed9\u8def\u4eba\u542c',
+    ].join('\n'),
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u7701\u6d41', '\u7701\u6d41\u4fa0', '\u8bf4\u767d\u4e86']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {

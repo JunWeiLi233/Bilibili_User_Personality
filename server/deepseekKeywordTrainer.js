@@ -860,6 +860,12 @@ function countNonOverlappingNeedleOccurrences(haystack, needles = []) {
 
 function isAmbiguousBenignEvidenceSample(term, family, sample) {
   const cleanSample = cleanEvidenceText(sample);
+  if (['\u7701\u6d41', '\u7701\u6d41\u4fa0'].includes(term) && family === 'cooperation') {
+    const rawSample = String(sample || '').trim();
+    const terseMarkerContext = /^(?:\u7701\u6d41|\u7701\u6d41\u4fa0)(?:[\s:：,，.。!！?？~\-_\u00d7xX√✓]*)$/u.test(rawSample);
+    const summaryContext = /(?:\u7701\u6d41(?:\u4fa0)?(?:\u6765\u4e86)?[:：]\S{6,}|\u76f4\u63a5\u770b|\u7ed3\u8bba\u662f|\u603b\u7ed3|tl;?dr)/iu.test(rawSample);
+    return terseMarkerContext && !summaryContext;
+  }
   if (term === '0\u4eba' && family === 'attack') {
     const numericAudienceContext = /(?:\d+\+?\u4eba|[一二三四五六七八九十百千万]+(?:\u4e2a)?\u4eba|\u51cc\u6668|\u5728\u7ebf|\u89c2\u770b|\u76f4\u64ad\u95f4|\u6392\u961f)/u.test(cleanSample);
     const zeroPersonMockContext = /(?:0\u4eba\u652f\u6301|0\u4eba\u7406\u4f60|0\u4eba\u5728\u4e4e|0\u4eba\u8ba4\u540c|\u6ca1\u4eba\u652f\u6301|\u6ca1\u4eba\u7406)/u.test(cleanSample);

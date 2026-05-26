@@ -14,6 +14,8 @@ function runScript(args = []) {
         '@echo off',
         'echo REQUIRE_COMMENTS=%BILIBILI_COVERAGE_AUDIT_REQUIRE_COMMENTS%',
         'echo RETRY_BEFORE_UNATTEMPTED=%BILIBILI_HARVEST_RETRY_BEFORE_UNATTEMPTED_LIMIT%',
+        'echo BLOCK_COOLDOWN=%BILIBILI_CRAWLER_BLOCK_COOLDOWN_MS%',
+        'echo REQUEST_TIMEOUT=%BILIBILI_CRAWLER_REQUEST_TIMEOUT_MS%',
       ].join('\r\n'),
     );
     const result = spawnSync(
@@ -58,4 +60,16 @@ test('run-bilibili-video.ps1 keeps explicit strict comment retry override', (t) 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /REQUIRE_COMMENTS=1/);
   assert.match(result.stdout, /RETRY_BEFORE_UNATTEMPTED=4/);
+});
+
+test('run-bilibili-video.ps1 caps crawler block cooldown for quick strict comment harvests', (t) => {
+  const result = runScript(['-RequireCommentEvidence', '-ExistingTermsOnly', '-QueryTimeoutMs', '25000']);
+  if (!result) {
+    t.skip('PowerShell is unavailable in this environment');
+    return;
+  }
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /BLOCK_COOLDOWN=2500/);
+  assert.match(result.stdout, /REQUEST_TIMEOUT=12500/);
 });

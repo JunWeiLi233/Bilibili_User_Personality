@@ -98,6 +98,14 @@ $env:BILIBILI_HARVEST_STALE_MISSED_DISCOVERY_LIMIT = [string]$StaleMissedDiscove
 $env:BILIBILI_HARVEST_STALE_MISSED_COMMENT_PAGES = [string]$StaleMissedCommentPages
 $env:BILIBILI_HARVEST_TARGET_EVIDENCE = [string]$TargetEvidence
 $env:BILIBILI_HARVEST_QUERY_TIMEOUT_MS = [string]$QueryTimeoutMs
+if ($RequireCommentEvidence -and $ExistingTermsOnly -and -not $env:BILIBILI_CRAWLER_BLOCK_COOLDOWN_MS) {
+  $strictCooldownMs = [Math]::Max(1000, [Math]::Floor($QueryTimeoutMs / 10))
+  $env:BILIBILI_CRAWLER_BLOCK_COOLDOWN_MS = [string]$strictCooldownMs
+}
+if ($RequireCommentEvidence -and $ExistingTermsOnly -and -not $env:BILIBILI_CRAWLER_REQUEST_TIMEOUT_MS) {
+  $strictRequestTimeoutMs = [Math]::Max(5000, [Math]::Floor($QueryTimeoutMs / 2))
+  $env:BILIBILI_CRAWLER_REQUEST_TIMEOUT_MS = [string]$strictRequestTimeoutMs
+}
 $env:BILIBILI_HARVEST_ROUNDS = [string]$Rounds
 $env:BILIBILI_HARVEST_COVERAGE_MODE = $CoverageMode
 $env:BILIBILI_VIDEO_DISCOVERY_MODE = $DiscoveryMode
