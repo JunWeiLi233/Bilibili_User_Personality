@@ -1905,6 +1905,26 @@ test('findDictionaryEntriesWithTextEvidence rejects retirement-dance and standal
   assert.deepEqual(entries[1].evidenceSamples, ['\u7ed9\u5976\u8336\u6362\u4e2a\u5973\u88c5\u4e5f\u6beb\u65e0\u8fdd\u548c\u611f\u4e86\u73b0\u5728[doge-\u5723\u8bde]']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects standalone dumpling insult evidence without a target', () => {
+  const entries = findDictionaryEntriesWithTextEvidence(
+    {
+      entries: [
+        { term: '\u997a\u5b50\u8001\u516b', family: 'attack', meaning: '\u7528\u738b\u516b\u4fae\u8fb1\u5bf9\u65b9\uff0c\u7ed3\u5408\u997a\u5b50\u6897\u7684\u653b\u51fb\u6027\u8868\u8fbe', evidenceCount: 0 },
+      ],
+    },
+    [
+      '\u997a\u5b50\u8001\u516b\u3002[doge][doge]',
+      '\u997a\u5b50\u8001\u516b[doge]',
+      '\u4f60\u8fd9\u79cd\u6d17\u767d\u8bdd\u672f\u5c31\u662f\u997a\u5b50\u8001\u516b\uff0c\u522b\u88c5\u4e86',
+    ].join('\n'),
+    { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-dumpling-insult/', uid: 'BV-dumpling-insult' },
+  );
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u997a\u5b50\u8001\u516b']);
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u79cd\u6d17\u767d\u8bdd\u672f\u5c31\u662f\u997a\u5b50\u8001\u516b\uff0c\u522b\u88c5\u4e86']);
+});
+
 test('findDictionaryEntriesWithTextEvidence rejects source-meme insults and literal complaint evidence', () => {
   const entries = findDictionaryEntriesWithTextEvidence(
     {
