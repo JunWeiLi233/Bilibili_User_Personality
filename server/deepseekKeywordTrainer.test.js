@@ -4649,6 +4649,18 @@ test('normalizeKeywordEntries prunes latest harvested literal system, game affec
       evidenceSources: [],
     },
     {
+      term: '\u786c\u64e6',
+      family: 'attack',
+      meaning: 'accuses someone of forcing a weak explanation',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u770b\u7684\u6211\u7b11\u51fa\u58f0\uff0c\u4e0d\u4f1a\u64e6\u786c\u64e6\u54c8\u54c8\u54c8[\u5403\u74dc]',
+        '\u8bf7\u95ee\u63a8\u5149\u6f06\u548c\u786c\u64e6\u6f06\u76f8\u5bf9\u800c\u8a00\u662f\u4e0d\u662f\u66f4\u5bb9\u6613\u7559\u4e0b\u957f\u65f6\u95f4\u5f39\u7434\u540e\u7559\u4e0b\u5f26\u8def\u5462\uff1f\u4e5f\u5c31\u662f\u8bf4\u786c\u64e6\u6f06\u66f4\u8010\u78e8\uff1f',
+        '\u63a8\u5149\u6f06\u7434\u5927\u90e8\u5206\u505a\u7684\u662f\u955c\u9762\u6548\u679c\uff0c\u56e0\u6b64\u6709\u5212\u75d5\u66f4\u4e3a\u660e\u663e\uff0c\u4f46\u786c\u64e6\u6f06\u4e5f\u4e0d\u662f\u4e00\u70b9\u6ca1\u6709\uff0c\u53ea\u662f\u76f8\u5bf9\u6765\u8bf4\u54d1\u5149\u6548\u679c\u4e0b\uff0c\u8089\u773c\u4e0d\u89c9\u5f97\u5f88\u660e\u663e',
+      ],
+      evidenceSources: [],
+    },
+    {
       term: '\u6211\u7684\u95ee\u9898',
       family: 'correction',
       meaning: 'accepts responsibility or corrects oneself',
@@ -4664,6 +4676,7 @@ test('normalizeKeywordEntries prunes latest harvested literal system, game affec
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
     ['\u5b9e\u540d\u5236', ['\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790']],
     ['\u5237\u597d\u611f', ['\u8fd8\u662f\u611f\u89c9\u5728\u5237\u597d\u611f[\u5403\u74dc]']],
+    ['\u786c\u64e6', ['\u770b\u7684\u6211\u7b11\u51fa\u58f0\uff0c\u4e0d\u4f1a\u64e6\u786c\u64e6\u54c8\u54c8\u54c8[\u5403\u74dc]']],
     ['\u6211\u7684\u95ee\u9898', ['\u53ef\u80fd\u662f\u6211\u7684\u95ee\u9898\uff0c\u6211\u628a\u524d\u9762\u7684\u8bf4\u6cd5\u6536\u56de']],
   ]);
 });
