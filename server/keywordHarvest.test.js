@@ -512,6 +512,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for current co
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for next comment-backed weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u95ed\u7740\u773c\u775b\u4ed8\u94b1', family: 'attack', evidenceCount: 1 },
+        { term: '\u907f\u91cd\u5c31\u8f7b', family: 'evasion', evidenceCount: 1 },
+        { term: '\u51b0\u6cb3\u65f6\u4ee3', family: 'attack', evidenceCount: 1 },
+        { term: '\u75c5\u5927\u90ce', family: 'attack', evidenceCount: 1 },
+        { term: '\u8865\u836f\u554a', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u4e0d\u5e26\u8111\u5b50', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u5f97\u4e0d\u5c1d', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u548c\u5356\u7684\u73a9', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u7edd\u5bf9\u4f46\u97e9\u56fd\u4e0d\u5c11', family: 'absolutes', evidenceCount: 1 },
+        { term: '\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u5982ravenfiled', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u8bd7\u4eba', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u95ed\u7740\u773c\u775b\u4ed8\u94b1 \u70ed\u8bc4',
+    '\u907f\u91cd\u5c31\u8f7b \u70ed\u8bc4',
+    '\u51b0\u6cb3\u65f6\u4ee3 \u70ed\u8bc4',
+    '\u75c5\u5927\u90ce \u70ed\u8bc4',
+    '\u8865\u836f\u554a \u70ed\u8bc4',
+    '\u4e0d\u5e26\u8111\u5b50 \u70ed\u8bc4',
+    '\u4e0d\u5f97\u4e0d\u5c1d \u70ed\u8bc4',
+    '\u4e0d\u548c\u5356\u7684\u73a9 \u70ed\u8bc4',
+    '\u4e0d\u7edd\u5bf9\u4f46\u97e9\u56fd\u4e0d\u5c11 \u70ed\u8bc4',
+    '\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba \u70ed\u8bc4',
+    '\u4e0d\u5982ravenfiled \u70ed\u8bc4',
+    '\u4e0d\u8bd7\u4eba \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-evidence queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
