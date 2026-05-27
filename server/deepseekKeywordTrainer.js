@@ -987,6 +987,12 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const forcedRhetoricContext = /(?:\u4e0d\u4f1a|\u6ca1\u6d3b|\u6ca1\u7406|\u8f93\u4e86|\u6d17|\u5706|\u5c2c).{0,12}\u786c\u64e6|\u786c\u64e6.{0,12}(?:\u54c8|\u5c2c|\u6d17|\u5706|\u7406\u7531|\u903b\u8f91|\u8bf4\u6cd5)/u.test(cleanSample);
     if (literalLacquerContext && !forcedRhetoricContext) return true;
   }
+  if (term === '3pp\u5927\u795e' && family === 'attack') {
+    const literalGameSettingContext = /(?:\u6697\u9ed12|\u6697\u9ed1\u7834\u574f\u795e|\u56fd\u670d|\u6389\u843d|\u7b26\u6587|\u8d85\u5e02|1pp|3pp|5pp|8pp).{0,24}3pp|3pp.{0,24}(?:\u6697\u9ed12|\u6697\u9ed1\u7834\u574f\u795e|\u56fd\u670d|\u6389\u843d|\u7b26\u6587|\u8d85\u5e02|1pp|5pp|8pp|\u6548\u7387)/iu.test(cleanSample);
+    const fanPraiseContext = /3pp\u5927\u795e.{0,12}(?:\u90fd\u6765\u4e86|\u6765\u4e86|\u661f\u661f\u773c|\u725b|\u592a\u5f3a|\u5389\u5bb3)|(?:\u661f\u661f\u773c|\u725b|\u592a\u5f3a|\u5389\u5bb3).{0,12}3pp\u5927\u795e/iu.test(cleanSample);
+    const hostileContext = /(?:\u5c0f\u4e11|\u4e0d\u914d|\u83dc|\u5c2c|\u9ed1|\u522b\u5439|\u6eda).{0,16}3pp\u5927\u795e|3pp\u5927\u795e.{0,16}(?:\u5c0f\u4e11|\u4e0d\u914d|\u83dc|\u5c2c|\u9ed1|\u522b\u5439|\u6eda)/u.test(cleanSample);
+    if ((literalGameSettingContext || fanPraiseContext) && !hostileContext) return true;
+  }
   if (term === '\u6307\u8def' && family === 'cooperation') {
     const emptySignpostContext = /\u6307\u8def[:\uff1a]?\s*$/u.test(cleanSample);
     const literalNavigationContext = /(?:\u5317\u65b9\u4eba|\u5317\u4eac|\u8def\u4e0a|\u6307\u8def\u724c|\u4e1c\u5357\u897f\u5317|\u8def\u724c).{0,24}\u6307\u8def|\u6307\u8def.{0,24}(?:\u4e1c\u5357\u897f\u5317|\u6307\u8def\u724c|\u8001\u4e00\u8f88|\u8def\u4e0a|\u5317\u4eac)/u.test(cleanSample);
