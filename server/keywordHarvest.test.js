@@ -38,7 +38,7 @@ test('buildKeywordHarvestQueries prioritizes weak-evidence dictionary terms by f
   assert.deepEqual(queries, [
     'seed topic',
     '典中典 套路 评论区 热评',
-    '典中典 评论',
+    '典中典起手 评论区 热评',
     '懂的都懂 回复 评论区 热评',
     'dddd 回复 评论区 热评',
     'yygq 评论区 梗 热评',
@@ -7715,6 +7715,61 @@ test('buildDictionaryCoverageAudit keeps priority aliases after filtered misses 
   );
 
   assert.equal(audit.nextActions[0].nextQuery, '\u5927\u75c5\u4eba \u7cbe\u795e\u72b6\u6001 \u8bc4\u8bba\u533a \u70ed\u8bc4');
+});
+
+test('buildDictionaryCoverageAudit keeps high-signal follow-up priority aliases after first priority misses', () => {
+  const cases = [
+    {
+      term: '\u5927\u75c5\u4eba',
+      family: 'attack',
+      triedQuery: '\u5927\u75c5\u4eba \u7cbe\u795e\u72b6\u6001 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: 'kpk \u5927\u75c5\u4eba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5178\u4e2d\u5178',
+      family: 'attack',
+      triedQuery: '\u5178\u4e2d\u5178 \u5957\u8def \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u5178\u4e2d\u5178\u8d77\u624b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5f73\u4e8e',
+      family: 'cooperation',
+      triedQuery: '\u5f73\u4e8e \u884c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u5f73\u4e8e\u6cd5 \u6559\u5b66 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+  ];
+  const state = { termAttempts: {}, runs: [{ queryDiagnostics: [] }] };
+  const entries = [];
+  for (const item of cases) {
+    entries.push({ term: item.term, family: item.family, evidenceCount: 2 });
+    state.termAttempts[Buffer.from(item.term, 'utf8').toString('base64url')] = {
+      term: item.term,
+      family: item.family,
+      evidenceAtPlanTime: 2,
+      attempts: 1,
+      successfulAttempts: 0,
+      lastEvidenceCount: 0,
+      queries: [{ query: item.triedQuery, strategyVersion: 6, ok: true, hit: false }],
+      lastQuery: item.triedQuery,
+    };
+    state.runs[0].queryDiagnostics.push([
+      {
+        query: item.triedQuery,
+        discoveredVideos: 4,
+        scannedVideos: 4,
+        commentsCollected: 20,
+        trainingTextChars: 500,
+        targetExistingTerms: [item.term],
+        acceptedTerms: [],
+      },
+    ]);
+  }
+
+  const audit = buildDictionaryCoverageAudit({ entries }, state, { targetEvidence: 3, maxActions: 3 });
+  const byTerm = Object.fromEntries(audit.nextActions.map((action) => [action.term, action]));
+  for (const item of cases) {
+    assert.equal(byTerm[item.term].nextQuery, item.nextQuery);
+  }
 });
 
 test('buildDictionaryCoverageAudit tries bare aliases after scaffolded search results filter out', () => {
