@@ -8072,21 +8072,21 @@ test('buildDictionaryCoverageAudit upgrades sparse strict comment retries to com
       family: 'evidence',
       triedQuery: '\u6d4f\u89c8\u5668\u641c \u81ea\u5df1\u641c \u8bc4\u8bba\u533a \u70ed\u8bc4',
       sparseQuery: '\u6d4f\u89c8\u5668\u641c \u8bc4\u8bba',
-      nextQuery: '\u6d4f\u89c8\u5668\u641c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u81ea\u5df1\u6d4f\u89c8\u5668\u641c \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
     {
       term: '\u9f99\u54e5\u7684\u5144\u5f1f',
       family: 'attack',
       triedQuery: '\u9f99\u54e5\u7684\u5144\u5f1f \u62bd\u8c61 \u8bc4\u8bba\u533a \u70ed\u8bc4',
       sparseQuery: '\u9f99\u54e5\u7684\u5144\u5f1f \u8bc4\u8bba',
-      nextQuery: '\u9f99\u54e5\u7684\u5144\u5f1f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u9f99\u54e5\u5144\u5f1f \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
     {
       term: '\u7f57\u9a6c\u5b58\u7591',
       family: 'correction',
       triedQuery: '\u7f57\u9a6c\u5b58\u7591 \u8bc1\u636e \u8bc4\u8bba\u533a \u70ed\u8bc4',
       sparseQuery: '\u7f57\u9a6c\u5b58\u7591 \u8bc4\u8bba',
-      nextQuery: '\u7f57\u9a6c\u5b58\u7591 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u7f57\u9a6c\u4eba\u5b58\u7591 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
   ];
   const state = { termAttempts: {}, runs: [{ queryDiagnostics: [] }] };
@@ -8124,6 +8124,77 @@ test('buildDictionaryCoverageAudit upgrades sparse strict comment retries to com
   for (const item of cases) {
     assert.equal(byTerm[item.term].nextQuery, item.nextQuery);
     assert.notEqual(byTerm[item.term].nextQuery, item.sparseQuery);
+  }
+});
+
+test('buildDictionaryCoverageAudit prefers semantic aliases over generic comment retries after misses', () => {
+  const cases = [
+    {
+      term: '\u6d4f\u89c8\u5668\u641c',
+      family: 'evidence',
+      triedQuery: '\u6d4f\u89c8\u5668\u641c \u81ea\u5df1\u641c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u81ea\u5df1\u6d4f\u89c8\u5668\u641c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u9f99\u54e5\u7684\u5144\u5f1f',
+      family: 'attack',
+      triedQuery: '\u9f99\u54e5\u7684\u5144\u5f1f \u62bd\u8c61 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u9f99\u54e5\u5144\u5f1f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u7f57\u9a6c\u5b58\u7591',
+      family: 'correction',
+      triedQuery: '\u7f57\u9a6c\u5b58\u7591 \u8bc1\u636e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u7f57\u9a6c\u4eba\u5b58\u7591 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u6ca1\u4eba\u5728\u4e4e',
+      family: 'cooperation',
+      triedQuery: '\u6ca1\u4eba\u5728\u4e4e \u53cd\u6b63\u6ca1\u4eba\u5728\u4e4e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u53cd\u6b63\u6ca1\u4eba\u5728\u4e4e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u660e\u5929\u6765\u4e0a\u73ed',
+      family: 'attack',
+      triedQuery: '\u660e\u5929\u6765\u4e0a\u73ed \u7b56\u5212 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u4f60\u660e\u5929\u6765\u4e0a\u73ed \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+  ];
+  const state = { termAttempts: {}, runs: [{ queryDiagnostics: [] }] };
+  const entries = [];
+  for (const item of cases) {
+    entries.push({ term: item.term, family: item.family, evidenceCount: 0 });
+    state.termAttempts[Buffer.from(item.term, 'utf8').toString('base64url')] = {
+      term: item.term,
+      family: item.family,
+      evidenceAtPlanTime: 0,
+      attempts: 1,
+      successfulAttempts: 0,
+      queries: [{ query: item.triedQuery, strategyVersion: 6, ok: true, hit: false, comments: 20 }],
+      lastQuery: item.triedQuery,
+    };
+    state.runs[0].queryDiagnostics.push([
+      {
+        query: item.triedQuery,
+        discoveredVideos: 4,
+        scannedVideos: 4,
+        commentsCollected: 20,
+        trainingTextChars: 500,
+        targetExistingTerms: [item.term],
+        acceptedTerms: [],
+      },
+    ]);
+  }
+
+  const audit = buildDictionaryCoverageAudit(
+    { entries },
+    state,
+    { targetEvidence: 3, maxActions: cases.length, retryBeforeUnattemptedLimit: 1, requireCommentBackedEvidence: true },
+  );
+  const byTerm = Object.fromEntries(audit.nextActions.map((action) => [action.term, action]));
+  for (const item of cases) {
+    assert.equal(byTerm[item.term].nextQuery, item.nextQuery);
+    assert.notEqual(byTerm[item.term].nextQuery, `${item.term} \u8bc4\u8bba\u533a \u70ed\u8bc4`);
   }
 });
 
