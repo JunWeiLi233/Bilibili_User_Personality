@@ -3582,6 +3582,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for identity a
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for mixed ascii meme weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: 'ai\u8bc6\u7247\u9171', family: 'cooperation', evidenceCount: 0 },
+        { term: 'bgm\u5473', family: 'attack', evidenceCount: 0 },
+        { term: 'bonjour\u4ebb\u5c14\u5973\u5b50', family: 'attack', evidenceCount: 0 },
+        { term: 'bug\u8f6c\u6b63', family: 'attack', evidenceCount: 0 },
+        { term: 'catconfuse', family: 'attack', evidenceCount: 0 },
+        { term: 'cd4\u7ec6\u80de', family: 'attack', evidenceCount: 0 },
+        { term: 'cos\u8def\u6613\u5341\u516d', family: 'attack', evidenceCount: 0 },
+        { term: 'cp\u7cae', family: 'cooperation', evidenceCount: 0 },
+        { term: 'doge\u91d1\u7b8d', family: 'attack', evidenceCount: 0 },
+        { term: 'doge\u5723\u8bde', family: 'cooperation', evidenceCount: 0 },
+        { term: 'ip\u53ef\u4fe1', family: 'evidence', evidenceCount: 0 },
+        { term: 'k\u54e5', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    'ai\u8bc6\u7247\u9171 B\u7ad9 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'bgm\u5473 \u97f3\u4e50 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'bonjour\u4ebb\u5c14\u5973\u5b50 \u62bd\u8c61 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'bug\u8f6c\u6b63 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'catconfuse B\u7ad9\u8868\u60c5 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'cd4\u7ec6\u80de \u533b\u5b66 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'cos\u8def\u6613\u5341\u516d \u89d2\u8272 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'cp\u7cae \u4e8c\u521b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'doge\u91d1\u7b8d B\u7ad9\u8868\u60c5 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'doge\u5723\u8bde B\u7ad9\u8868\u60c5 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'ip\u53ef\u4fe1 IP\u5c5e\u5730 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'k\u54e5 \u4e3b\u64ad \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
