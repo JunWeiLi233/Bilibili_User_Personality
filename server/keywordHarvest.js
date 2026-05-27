@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { readKeywordDictionary as defaultReadKeywordDictionary } from './deepseekKeywordTrainer.js';
 import { searchVideoKeywords as defaultSearchVideoKeywords } from './videoKeywordSearch.js';
 
-const HARVEST_STRATEGY_VERSION = 4;
+const HARVEST_STRATEGY_VERSION = 5;
 const DEFAULT_SEED_QUERIES = [
   '\u4e2d\u6587\u4e92\u8054\u7f51 \u6897 \u8bc4\u8bba\u533a',
   '\u8bc4\u8bba\u533a \u70ed\u8bc4 \u6897',
@@ -1479,11 +1479,12 @@ export function summarizeTermAttempts(state = {}, dictionary = {}, options = {})
 
 export function buildCoverageActions(dictionary = {}, state = {}, options = {}) {
   const entries = sortEntriesForCoverage(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
-  const attempts = state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
-  const searchedQueries = new Set(Array.isArray(state.searchedQueries) ? state.searchedQueries : []);
-  const assumeLegacyQueriesCurrent =
+  const stateStrategyIsCurrent =
     !Object.prototype.hasOwnProperty.call(state, 'harvestStrategyVersion') ||
     Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION;
+  const attempts = stateStrategyIsCurrent && state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
+  const searchedQueries = new Set(Array.isArray(state.searchedQueries) ? state.searchedQueries : []);
+  const assumeLegacyQueriesCurrent = stateStrategyIsCurrent;
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
   return entries.map((entry) => {
     const term = String(entry.term || '').trim();
@@ -1850,6 +1851,18 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt, options =
   };
 }
 
+function acceptedResultTerms(result = {}) {
+  return new Set(
+    [
+      ...(Array.isArray(result?.collectionDiagnostics?.acceptedTerms) ? result.collectionDiagnostics.acceptedTerms : []),
+      ...(Array.isArray(result?.entries) ? result.entries.map((entry) => entry?.term) : []),
+      ...(Array.isArray(result?.keywordTraining?.dictionaryEvidenceEntries) ? result.keywordTraining.dictionaryEvidenceEntries.map((entry) => entry?.term) : []),
+    ]
+      .map((term) => String(term || '').trim())
+      .filter(Boolean),
+  );
+}
+
 function updateRelatedTargetTermAttempts(termAttempts, dictionary, planItem, result, finishedAt, options = {}) {
   if (!planItem?.term) return;
   const diagnostics = result?.collectionDiagnostics || {};
@@ -1857,9 +1870,12 @@ function updateRelatedTargetTermAttempts(termAttempts, dictionary, planItem, res
   if (targets.length === 0) return;
   const entries = new Map((Array.isArray(dictionary?.entries) ? dictionary.entries : []).map((entry) => [String(entry?.term || '').trim(), entry]));
   const primaryTerm = String(planItem.term || '').trim();
+  const relatedAttemptTerms = new Set((Array.isArray(options.relatedAttemptTerms) ? options.relatedAttemptTerms : []).map((term) => String(term || '').trim()).filter(Boolean));
+  const acceptedTerms = acceptedResultTerms(result);
   for (const target of targets) {
     const term = String(target || '').trim();
     if (!term || term === primaryTerm) continue;
+    if (relatedAttemptTerms.size > 0 && !relatedAttemptTerms.has(term) && !acceptedTerms.has(term)) continue;
     const entry = entries.get(term);
     updateTermAttempt(
       termAttempts,
@@ -1949,7 +1965,10 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION ? new Set(state.searchedQueries) : new Set();
   const scannedBvidSet = new Set(state.scannedBvids);
   const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
-  const termAttempts = { ...state.termAttempts };
+  const termAttempts =
+    Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION || !Object.prototype.hasOwnProperty.call(state, 'harvestStrategyVersion')
+      ? { ...state.termAttempts }
+      : {};
   const backfilledAttempts = backfillTermAttemptsFromSearchedQueries(termAttempts, before, searchedQuerySet, {
     ...options,
     harvestStrategyVersion: state.harvestStrategyVersion,
@@ -2031,12 +2050,16 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         searchPayload.existingTermsOnly = options.existingTermsOnly;
       }
       if (options.existingTermsOnly === true && planItem.term) {
-        searchPayload.targetExistingTerms = unique([
+        const directTargetExistingTerms = unique([
           ...(Array.isArray(planItem.targetExistingTerms) ? planItem.targetExistingTerms : []),
           planItem.term,
           ...relatedTargetExistingTerms(before, planItem, options),
+        ]);
+        searchPayload.targetExistingTerms = unique([
+          ...directTargetExistingTerms,
           ...commentPoolTargetTerms,
         ]);
+        searchPayload.directTargetExistingTerms = directTargetExistingTerms;
       }
       if (options.requireCommentBackedEvidence === true) {
         searchPayload.includeVideoContext = false;
@@ -2080,7 +2103,10 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       for (const warning of result.warnings || []) warnings.push(`${query}: ${warning}`);
       searchedQuerySet.add(query);
       updateTermAttempt(termAttempts, planItem, result, attemptFinishedAt, options);
-      updateRelatedTargetTermAttempts(termAttempts, before, planItem, result, attemptFinishedAt, options);
+      updateRelatedTargetTermAttempts(termAttempts, before, planItem, result, attemptFinishedAt, {
+        ...options,
+        relatedAttemptTerms: searchPayload.directTargetExistingTerms,
+      });
       for (const video of result.videos || []) {
         if (video.bvid) scannedBvidSet.add(video.bvid);
       }
