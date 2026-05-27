@@ -5543,6 +5543,27 @@ test('normalizeKeywordEntries prunes latest harvested literal mode, commerce, an
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested self-despair evidence for correction terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6ca1\u6551\u4e86',
+      family: 'correction',
+      meaning: 'refuses correction or treats a stance as beyond repair',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '@\u4ebb\u4ee5\u5165 @\u4f0a\u535a\u53c8\u83dc\u53c8\u7231\u73a9 \u6398\u5730\u8005\u6765\u4e86\uff0c\u6211\u4eec\u6ca1\u6551\u4e86\ud83d\ude2d',
+        'A\u80a1\uff1a\u5e02\u573a\u6ca1\u6551\u4e86\uff0c\u80a1\u707e\u5f0f\u66b4\u8dcc\uff01',
+        '\u8fd9\u4e2a\u8bf4\u6cd5\u6ca1\u6551\u4e86\uff0c\u88ab\u6307\u6b63\u4e86\u8fd8\u4e0d\u6539',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u6ca1\u6551\u4e86', ['\u8fd9\u4e2a\u8bf4\u6cd5\u6ca1\u6551\u4e86\uff0c\u88ab\u6307\u6b63\u4e86\u8fd8\u4e0d\u6539']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes latest harvested bare slogan, school identity, and tool-help evidence', () => {
   const entries = normalizeKeywordEntries([
     {
