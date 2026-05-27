@@ -6278,6 +6278,32 @@ test('normalizeKeywordEntries prunes naixiong resource and literal cute evidence
   ]);
 });
 
+test('normalizeKeywordEntries prunes niesao fandom drama evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u634f\u5ac2',
+      family: 'cooperation',
+      meaning: '\u8868\u793a\u652f\u6301\u3001\u8865\u5145\u6216\u8f7b\u677e\u4e92\u52a8',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u4ece\u8def\u4eba\u89d2\u5ea6\u770b\u8fd9\u6b21\u4e8b\u4ef6\u662f\u7c89\u4e1d\u7684\u5fc3\u788e\u548c\u9ed1\u5b50\u7684\u72c2\u6b22\uff0c\u8fd8\u6709\u634f\u5ac2\u5728\u62db\u9b42',
+        '\u6211\u4e0d\u662f\u7ed9487\u6d17\uff0c\u4e5f\u4e0d\u662f\u634f\u5ac2\uff0c\u8fd9\u4e2a\u74dc\u8ddf\u4ed6\u6ca1\u5173\u7cfb',
+        '\u6211\u4e0d\u884c\u4e86\u5fc5\u987b\u7d20\u6750\u4e00\u628a\u634f\u5ac2[\u7b11\u54ed]',
+        '\u634f\u5ac2\u80fd\u4e0d\u80fd\u8865\u5145\u4e00\u4e0b\u8fd9\u4e2a\u8bf4\u6cd5\u7684\u6765\u6e90',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u4ece\u8def\u4eba\u89d2\u5ea6\u770b\u8fd9\u6b21\u4e8b\u4ef6\u662f\u7c89\u4e1d\u7684\u5fc3\u788e\u548c\u9ed1\u5b50\u7684\u72c2\u6b22\uff0c\u8fd8\u6709\u634f\u5ac2\u5728\u62db\u9b42' },
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u4e0d\u662f\u7ed9487\u6d17\uff0c\u4e5f\u4e0d\u662f\u634f\u5ac2\uff0c\u8fd9\u4e2a\u74dc\u8ddf\u4ed6\u6ca1\u5173\u7cfb' },
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u4e0d\u884c\u4e86\u5fc5\u987b\u7d20\u6750\u4e00\u628a\u634f\u5ac2[\u7b11\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u634f\u5ac2\u80fd\u4e0d\u80fd\u8865\u5145\u4e00\u4e0b\u8fd9\u4e2a\u8bf4\u6cd5\u7684\u6765\u6e90' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries[0].evidenceSamples, ['\u634f\u5ac2\u80fd\u4e0d\u80fd\u8865\u5145\u4e00\u4e0b\u8fd9\u4e2a\u8bf4\u6cd5\u7684\u6765\u6e90']);
+  assert.equal(entries[0].evidenceCount, 1);
+});
+
 test('normalizeKeywordEntries prunes meta classic compilation evidence for dianzhongdian', () => {
   const entries = normalizeKeywordEntries([
     {
