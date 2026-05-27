@@ -4614,7 +4614,7 @@ test('buildKeywordHarvestQueries starts with priority weak action aliases', () =
     {
       term: '\u53c2\u8003\u6587\u732e',
       family: 'attack',
-      expectedAliasQuery: '\u8fd9\u4e0d\u6284\u7684\u5417 \u53c2\u8003\u6587\u732e \u8bc4\u8bba\u533a',
+      expectedAliasQuery: '\u6284\u88ad \u53c2\u8003\u6587\u732e\u90fd\u4e0d\u653e \u8bc4\u8bba\u533a',
     },
     {
       term: '\u5e03\u4ec0\u6208\u95e8',
