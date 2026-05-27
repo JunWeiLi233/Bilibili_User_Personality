@@ -2054,9 +2054,10 @@ function actionSortRank(action, options = {}) {
     action?.action === 'retry_with_new_variant' &&
     currentCommentMisses > 0 &&
     evidence > 0 &&
+    successfulAttempts === 0 &&
     options.requireCommentBackedEvidence === true
   ) {
-    return coverageActionRank('retry_with_new_variant') + 0.5 + priorityPenalty;
+    return coverageActionRank('harvest_more_evidence') + 0.25 + priorityPenalty;
   }
   if (options.prioritizeSourceGaps === true && action?.action === 'refresh_source_metadata') {
     if (currentCommentMisses > 0) {
@@ -3184,9 +3185,11 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
           planItem.term,
           ...relatedTargetExistingTerms(before, planItem, options),
         ]);
+        const poolTargetTermsForPlan =
+          planItem.source === 'priority' && options.priorityCommentPoolTargets !== true ? [] : commentPoolTargetTerms;
         searchPayload.targetExistingTerms = unique([
           ...directTargetExistingTerms,
-          ...commentPoolTargetTerms,
+          ...poolTargetTermsForPlan,
         ]);
         searchPayload.directTargetExistingTerms = directTargetExistingTerms;
       }

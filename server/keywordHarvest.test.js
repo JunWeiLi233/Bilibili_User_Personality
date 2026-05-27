@@ -6153,6 +6153,52 @@ test('buildDictionaryCoverageAudit defers backed strict comment misses after rep
   assert.deepEqual(audit.nextActions.map((item) => item.term), ['freshStrictWeak', 'backedCommentMissed']);
 });
 
+test('buildDictionaryCoverageAudit rotates backed strict comment misses after one current scan miss', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: 'partialHit', family: 'attack', evidenceCount: 2 },
+        {
+          term: 'backedOnceMissed',
+          family: 'attack',
+          evidenceCount: 2,
+          evidenceSources: [
+            { source: 'Bilibili public video comment scan', uid: 'BVbacked1', sample: 'backedOnceMissed sample 1' },
+            { source: 'Bilibili public video comment scan', uid: 'BVbacked2', sample: 'backedOnceMissed sample 2' },
+          ],
+        },
+        { term: 'freshStrictWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      termAttempts: {
+        partialHit: {
+          term: 'partialHit',
+          family: 'attack',
+          evidenceAtPlanTime: 2,
+          attempts: 1,
+          successfulAttempts: 1,
+          lastEvidenceCount: 2,
+          queries: [{ query: 'partialHit \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: true, comments: 80 }],
+        },
+        backedOnceMissed: {
+          term: 'backedOnceMissed',
+          family: 'attack',
+          evidenceAtPlanTime: 2,
+          attempts: 1,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [{ query: 'backedOnceMissed \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, comments: 64 }],
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 3, requireCommentBackedEvidence: true },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['freshStrictWeak', 'partialHit']);
+  assert.equal(audit.nextActions.some((item) => item.term === 'backedOnceMissed'), false);
+});
+
 test('buildDictionaryCoverageAudit lets zero-evidence retries pass already-backed comment misses', () => {
   const audit = buildDictionaryCoverageAudit(
     {
@@ -10681,6 +10727,51 @@ test('harvestKeywordDictionary sends a weak-term batch to strict comment-pool re
     assert.equal(payloads[0].targetExistingTerms.includes('\u4e00\u53f7\u5f31\u8bcd'), true);
     assert.equal(payloads[0].targetExistingTerms.includes('\u4e8c\u53f7\u5f31\u8bcd'), true);
     assert.equal(payloads[0].targetExistingTerms.includes('\u4e09\u53f7\u5f31\u8bcd'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary keeps strict priority action targets out of the comment pool by default', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-priority-no-pool-targets-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        requireCommentBackedEvidence: true,
+        discoveryMode: 'controversial',
+        discoveryLimit: 1,
+        pages: 1,
+        priorityQueries: [{ term: 'priorityWeak', family: 'attack', nextQuery: 'priorityWeak \u8bc4\u8bba\u533a \u70ed\u8bc4' }],
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: 'priorityWeak', family: 'attack', evidenceCount: 1 },
+            { term: 'poolWeakA', family: 'attack', evidenceCount: 1 },
+            { term: 'poolWeakB', family: 'cooperation', evidenceCount: 1 },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BVpriority11' }],
+            comments: [{ message: 'poolWeakA unrelated evidence', rpid: '1' }],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(payloads[0].targetExistingTerms, ['priorityWeak']);
+    assert.deepEqual(payloads[0].directTargetExistingTerms, ['priorityWeak']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
