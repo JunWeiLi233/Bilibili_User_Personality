@@ -948,6 +948,11 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const hostileExplanationContext = /(?:\u9ed1\u79f0|\u9a82\u4eba|\u653b\u51fb|\u522b\u62ff|\u522b\u590d\u8bfb|\u522b\u4e71\u7528)/u.test(contextSample);
     if (glossaryQuestionContext && !hostileExplanationContext) return true;
   }
+  if (term === '\u732a\u9f3b' && family === 'attack') {
+    const literalAnimalContext = /(?:\u732a\u9f3b(?:\u9f9f|\u86c7)|(?:\u517b|\u80b2|\u722c\u5ba0|\u6c34\u65cf|\u7f38|\u9972\u6599|\u96be\u517b|\u4e3a\u4ec0\u4e48\u96be\u517b).{0,18}\u732a\u9f3b|\u732a\u9f3b.{0,18}(?:\u9f9f|\u86c7|\u722c\u5ba0|\u6c34\u65cf|\u7f38|\u9972\u6599|\u96be\u517b|\u80b2\u5f52))/u.test(cleanSample);
+    const hostilePigNoseContext = /(?:\u4f60|\u4ed6|\u5979|\u8fd9\u4eba|\u7c89\u4e1d|\u64cd\u4f5c|\u53d1\u8a00|\u73a9\u6cd5|\u8b66|\u961f\u53cb).{0,18}\u732a\u9f3b|\u732a\u9f3b.{0,18}(?:\u64cd\u4f5c|\u53d1\u8a00|\u73a9\u6cd5|\u771f\u6076\u5fc3|\u592a\u8822|\u50cf\u4e2a|\u8b66|\u961f\u53cb|\u7c89\u4e1d)/u.test(cleanSample);
+    if (literalAnimalContext && !hostilePigNoseContext) return true;
+  }
   if (term === '\u4e3a\u53d1\u70e7\u800c\u751f' && family === 'cooperation') {
     const bareSloganContext = cleanSample === '\u4e3a\u53d1\u70e7\u800c\u751f';
     const usefulDesignContext = /\u4e3a\u53d1\u70e7\u800c\u751f.{0,24}(?:\u8bbe\u8ba1|\u601d\u8def|\u8bb2\u5f97|\u5206\u6790|\u4f18\u5316)|(?:\u8bbe\u8ba1|\u601d\u8def|\u8bb2\u5f97|\u5206\u6790|\u4f18\u5316).{0,24}\u4e3a\u53d1\u70e7\u800c\u751f/u.test(cleanSample);

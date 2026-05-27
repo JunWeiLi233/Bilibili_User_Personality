@@ -6007,10 +6007,12 @@ test('normalizeKeywordEntries prunes literal pig-nose fetish evidence for pig-no
       evidenceCount: 2,
       evidenceSamples: [
         '\u732a\u9f3b\u5b50\u662f\u4ec0\u4e48\u6027\u7656[\u7b11\u54ed]',
+        '\u770b\u6807\u9898\u732a\u9f3b\u9f9f\u4e3a\u4ec0\u4e48\u96be\u517b\uff0c\u770bup\u80b2\u5f52',
         '\u4f60\u8fd9\u64cd\u4f5c\u771f\u732a\u9f3b\uff0c\u521a\u624d\u90a3\u6ce2\u5c31\u662f\u5728\u72af\u8822',
       ],
       evidenceSources: [
         { source: 'Bilibili public video comment scan', sample: '\u732a\u9f3b\u5b50\u662f\u4ec0\u4e48\u6027\u7656[\u7b11\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u770b\u6807\u9898\u732a\u9f3b\u9f9f\u4e3a\u4ec0\u4e48\u96be\u517b\uff0c\u770bup\u80b2\u5f52' },
         { source: 'Bilibili public video comment scan', sample: '\u4f60\u8fd9\u64cd\u4f5c\u771f\u732a\u9f3b\uff0c\u521a\u624d\u90a3\u6ce2\u5c31\u662f\u5728\u72af\u8822' },
       ],
     },
