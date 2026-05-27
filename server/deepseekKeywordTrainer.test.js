@@ -4660,6 +4660,76 @@ test('normalizeKeywordEntries prunes latest harvested literal system, game affec
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested loose publish, understand, and title evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u53ef\u4ee5\u8d34',
+      family: 'cooperation',
+      meaning: 'ask another user to post evidence or context',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u5176\u5b9e\u4f60\u73a9\u7684\u65f6\u5019\u6211\u8fd8\u5728\u8c03\u8bd5\uff0c\u7ed3\u679c\u83ab\u540d\u5176\u5999\u53d1\u51fa\u6765\u4e86\uff01[\u5927\u54ed]\uff01\u73b0\u5728\u624d\u662f\u5b8c\u6574\u7248\u54ed\u54ed',
+        '\u8fd9\u80fd\u53d1\u51fa\u6765\u5417\uff1f',
+        '\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u4f60\u4eec\u61c2\u5427',
+      family: 'evasion',
+      meaning: 'implies insiders understand without explaining',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5b69\u5b50\u4eec\u4f60\u4eec\u61c28900\u4e2a\u89c6\u9891\u662f\u4ec0\u4e48\u6982\u5ff5\u5417\uff1f',
+        '\u522b\u7ed9\u6211\u4eec\u9ed1\u5ba2\u62db\u9ed1\u4e86\uff01\u6211\u4eec\u5e73\u65f6\u90fd\u7a7f\u8fd0\u52a8\u65b9\u4fbf\u968f\u65f6\u8dd1\u8def\u7684\uff0c\u4e0d\u7136\u88ab\u7ebf\u4e0b\u771f\u5b9e\u6216\u8005\u901a\u7f09\u5c31\u5f88\u2026\u4f60\u4eec\u61c2\u5427',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u626d\u77e9\u4e0d\u8be6\u9047\u5f3a\u5219\u5f3a',
+      family: 'cooperation',
+      meaning: 'praise that a vehicle performs better against stronger opponents',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u626d\u77e9\u4e0d\u8be6\uff0c\u9047\u5f3a\u5219\u5f3a',
+        '\u8fd9\u8f66\u626d\u77e9\u4e0d\u8be6\u9047\u5f3a\u5219\u5f3a\uff0c\u5b9e\u6d4b\u6570\u636e\u53ef\u4ee5\u53c2\u8003',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6548\u679c\u62d4\u7fa4',
+      family: 'cooperation',
+      meaning: 'positive evaluation that an effect works very well',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u8fd9\u662f\u54ea\u4f4dUP\u4e3b\u554a\uff0c\u7a81\u7136\u56de\u5fc6\u8d77\u6709\u6548\u679c\u62d4\u7fa4\u8fd9\u4e2a\u7cfb\u5217\u89c6\u9891\u4e86',
+        '\u56de\u590d @treetree\u4ed4 :\u6548\u679c\u62d4\u7fa4[\u70ed\u8bcd\u7cfb\u5217_\u5999\u554a]',
+        '\u8fd9\u4e2a\u89e3\u6cd5\u6548\u679c\u62d4\u7fa4\uff0c\u5efa\u8bae\u653e\u5230\u7f6e\u9876',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6211\u7684\u95ee\u9898',
+      family: 'correction',
+      meaning: 'accepts responsibility or corrects oneself',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u56de\u590d @RosenBob :\u6211\u4e5f\u4ee5\u4e3a\u662f\u6211\u7684\u95ee\u9898\uff0c\u6211\u53bb\u63a2\u7d22\u5bc6\u5ba4\u90fd\u6328\u4e2a\u70b9\u8721\u70db\u8fc7\u53bb',
+        '\u53ef\u80fd\u662f\u6211\u7684\u95ee\u9898\uff0c\u6211\u628a\u524d\u9762\u7684\u8bf4\u6cd5\u6536\u56de',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u53ef\u4ee5\u8d34', ['\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417']],
+    ['\u4f60\u4eec\u61c2\u5427', ['\u522b\u7ed9\u6211\u4eec\u9ed1\u5ba2\u62db\u9ed1\u4e86\uff01\u6211\u4eec\u5e73\u65f6\u90fd\u7a7f\u8fd0\u52a8\u65b9\u4fbf\u968f\u65f6\u8dd1\u8def\u7684\uff0c\u4e0d\u7136\u88ab\u7ebf\u4e0b\u771f\u5b9e\u6216\u8005\u901a\u7f09\u5c31\u5f88\u2026\u4f60\u4eec\u61c2\u5427']],
+    ['\u626d\u77e9\u4e0d\u8be6\u9047\u5f3a\u5219\u5f3a', ['\u8fd9\u8f66\u626d\u77e9\u4e0d\u8be6\u9047\u5f3a\u5219\u5f3a\uff0c\u5b9e\u6d4b\u6570\u636e\u53ef\u4ee5\u53c2\u8003']],
+    ['\u6548\u679c\u62d4\u7fa4', ['\u8fd9\u4e2a\u89e3\u6cd5\u6548\u679c\u62d4\u7fa4\uff0c\u5efa\u8bae\u653e\u5230\u7f6e\u9876']],
+    ['\u6211\u7684\u95ee\u9898', ['\u53ef\u80fd\u662f\u6211\u7684\u95ee\u9898\uff0c\u6211\u628a\u524d\u9762\u7684\u8bf4\u6cd5\u6536\u56de']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes latest harvested proper-name and literal setup evidence', () => {
   const entries = normalizeKeywordEntries([
     {

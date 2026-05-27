@@ -986,9 +986,10 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   if (term === '\u53ef\u4ee5\u8d34' && family === 'cooperation') {
     const hostileDareContext = /(?:\u8001\u50bb\u5b50|\u6709\u672c\u4e8b).*(?:\u53d1\u51fa\u6765|\u8d34\u51fa\u6765|\u628a.*\u56fe\u7247\u53d1)/u.test(cleanSample);
     const genericDiscoveryContext = !cleanSample.includes('\u53ef\u4ee5\u8d34') && /(?:\u53ef\u4ee5\u53d1\u73b0|\u5c31\u53ef\u4ee5\u53d1\u73b0|\u53ef\u4ee5\u770b\u51fa|\u53ef\u4ee5\u770b\u5230)/u.test(cleanSample);
+    const loosePublishContext = !cleanSample.includes('\u53ef\u4ee5\u8d34') && /(?:\u83ab\u540d\u5176\u5999\u53d1\u51fa\u6765\u4e86|\u73b0\u5728\u624d\u662f\u5b8c\u6574\u7248|\u8fd9\u80fd\u53d1\u51fa\u6765\u5417|\u8c03\u8bd5.{0,18}\u53d1\u51fa\u6765)/u.test(cleanSample);
     const labelAttachmentContext = /\u53ef\u4ee5\u8d34\u4e0a.{0,12}(?:\u5934\u8854|\u6807\u7b7e|\u5e3d\u5b50|\u540d\u53f7)|(?:\u5934\u8854|\u6807\u7b7e|\u5e3d\u5b50|\u540d\u53f7).{0,12}\u53ef\u4ee5\u8d34\u4e0a/u.test(cleanSample);
     const cooperativeSourceContext = /(?:\u53ef\u4ee5\u8d34|\u5efa\u8bae\u8d34|\u9ebb\u70e6\u8d34).*(?:\u6765\u6e90|\u8bc1\u636e|\u622a\u56fe|\u94fe\u63a5|\u5bf9\u7167)/u.test(cleanSample);
-    if ((hostileDareContext || genericDiscoveryContext || labelAttachmentContext) && !cooperativeSourceContext) return true;
+    if ((hostileDareContext || genericDiscoveryContext || loosePublishContext || labelAttachmentContext) && !cooperativeSourceContext) return true;
   }
   if (term === '\u7b11\u70b9\u89e3\u6790' && family === 'cooperation') {
     const weakJokeLabelContext = /^\u7b11\u70b9\u89e3\u6790[:\uff1a]?\s*[a-z0-9!！\s]+$/iu.test(cleanSample)
@@ -1034,8 +1035,19 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   }
   if (term === '\u6211\u7684\u95ee\u9898' && family === 'correction') {
     const gameDeathContext = /(?:\u661f\u7403\u8f70\u70b8|cs\u8f68\u9053|\u98de\u9e70\u98ce\u66b4|\u6253\u6b7b\u6211|\u7838\u6b7b\u6211).{0,36}\u6211\u7684\u95ee\u9898|\u6211\u7684\u95ee\u9898.{0,36}(?:\u661f\u7403\u8f70\u70b8|cs\u8f68\u9053|\u98de\u9e70\u98ce\u66b4|\u6253\u6b7b\u6211|\u7838\u6b7b\u6211)/iu.test(cleanSample);
+    const gameExplorationContext = /(?:\u63a2\u7d22\u5bc6\u5ba4|\u70b9\u8721\u70db|\u6328\u4e2a\u70b9).{0,36}\u6211\u7684\u95ee\u9898|\u6211\u7684\u95ee\u9898.{0,36}(?:\u63a2\u7d22\u5bc6\u5ba4|\u70b9\u8721\u70db|\u6328\u4e2a\u70b9)/u.test(cleanSample);
     const correctionContext = /(?:\u53ef\u80fd\u662f|\u786e\u5b9e\u662f|\u524d\u9762|\u6536\u56de|\u8bf4\u9519|\u6539|\u66f4\u6b63|\u9053\u6b49).{0,18}\u6211\u7684\u95ee\u9898|\u6211\u7684\u95ee\u9898.{0,18}(?:\u6536\u56de|\u66f4\u6b63|\u9053\u6b49|\u6539)/u.test(cleanSample);
-    if (gameDeathContext && !correctionContext) return true;
+    if ((gameDeathContext || gameExplorationContext) && !correctionContext) return true;
+  }
+  if (term === '\u626d\u77e9\u4e0d\u8be6\u9047\u5f3a\u5219\u5f3a' && family === 'cooperation') {
+    const standaloneMemeContext = /^\u626d\u77e9\u4e0d\u8be6[\uff0c,]?\s*\u9047\u5f3a\u5219\u5f3a[.!！。]*$/u.test(cleanSample);
+    const usefulVehicleContext = /(?:\u8f66|\u5b9e\u6d4b|\u6570\u636e|\u53c2\u8003|\u6027\u80fd|\u5bf9\u6bd4).{0,24}(?:\u626d\u77e9\u4e0d\u8be6|\u9047\u5f3a\u5219\u5f3a)|(?:\u626d\u77e9\u4e0d\u8be6|\u9047\u5f3a\u5219\u5f3a).{0,24}(?:\u8f66|\u5b9e\u6d4b|\u6570\u636e|\u53c2\u8003|\u6027\u80fd|\u5bf9\u6bd4)/u.test(cleanSample);
+    if (standaloneMemeContext && !usefulVehicleContext) return true;
+  }
+  if (['\u6548\u679c\u62d4\u7fa4', '\u62d4\u7fa4'].includes(cleanTerm(term)) && family === 'cooperation') {
+    const titleOrEmoteContext = /(?:\u56de\u5fc6\u8d77|\u7cfb\u5217\u89c6\u9891|\u54ea\u4f4dUP\u4e3b).{0,32}\u6548\u679c\u62d4\u7fa4|\u6548\u679c\u62d4\u7fa4.{0,32}(?:\u7cfb\u5217\u89c6\u9891|\u70ed\u8bcd\u7cfb\u5217|\u5999\u554a)/iu.test(contextSample);
+    const usefulEffectContext = /(?:\u89e3\u6cd5|\u65b9\u6cd5|\u5efa\u8bae|\u7f6e\u9876|\u5b9e\u6d4b|\u6709\u7528).{0,24}\u62d4\u7fa4|\u62d4\u7fa4.{0,24}(?:\u89e3\u6cd5|\u65b9\u6cd5|\u5efa\u8bae|\u7f6e\u9876|\u5b9e\u6d4b|\u6709\u7528)/u.test(cleanSample);
+    if (titleOrEmoteContext && !usefulEffectContext) return true;
   }
   if (term === '\u5c0f\u67d0\u4e66' && family === 'evasion') {
     const platformAdOrTipContext = /(?:\u53bb\u5c0f\u67d0\u4e66\u641c|\u5c0f\u67d0\u4e66\u641c).{0,24}(?:\u798f\u5229|\u8bbe\u7f6e|\u53c2\u8003|\u6559\u7a0b|\u540c\u6b3e|\u5b98\u65b9)/u.test(cleanSample);
@@ -2309,8 +2321,9 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   }
   if (term === '\u4f60\u4eec\u61c2\u5427' && family === 'evasion') {
     const insultContext = /\u4f60\u4eec\u61c2\u4e2a\u540a|\u4f60\u4eec\u61c2\u4e2a\u9524|\u4f60\u4eec\u61c2\u4ec0\u4e48/u.test(cleanSample);
+    const literalUnderstandQuestionContext = /\u4f60\u4eec\u61c2.{0,16}(?:\u662f\u4ec0\u4e48\u6982\u5ff5|\u4ec0\u4e48\u6982\u5ff5|\u5417|\uff1f|\?)/u.test(cleanSample) && !cleanSample.includes('\u4f60\u4eec\u61c2\u5427');
     const hintContext = /(?:\u7ec6\u8282|\u539f\u56e0|\u540d\u5b57|\u4e0d\u80fd\u8bf4|\u4e0d\u65b9\u4fbf\u8bf4|\u90fd\u77e5\u9053).*\u4f60\u4eec\u61c2\u5427|\u4f60\u4eec\u61c2\u5427.*(?:\u4e0d\u591a\u8bf4|\u4e0d\u80fd\u8bf4|\u90fd\u77e5\u9053)/u.test(cleanSample);
-    return insultContext && !hintContext;
+    return (insultContext || literalUnderstandQuestionContext) && !hintContext;
   }
   if (term === '\u8e6d\u6982\u5ff5' && family === 'attack') {
     const plainHeatContext = /\u8e6d\u70ed\u5ea6/u.test(cleanSample);
