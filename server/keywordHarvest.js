@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { readKeywordDictionary as defaultReadKeywordDictionary } from './deepseekKeywordTrainer.js';
 import { searchVideoKeywords as defaultSearchVideoKeywords } from './videoKeywordSearch.js';
 
-const HARVEST_STRATEGY_VERSION = 5;
+const HARVEST_STRATEGY_VERSION = 6;
 const DEFAULT_SEED_QUERIES = [
   '\u4e2d\u6587\u4e92\u8054\u7f51 \u6897 \u8bc4\u8bba\u533a',
   '\u8bc4\u8bba\u533a \u70ed\u8bc4 \u6897',
@@ -1965,15 +1965,12 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     requireCommentBackedEvidence: options.requireCommentBackedEvidence === true,
   };
   const beforeCoverage = summarizeEvidenceCoverage(before, coverageOptions);
-  const searchedQuerySet = new Set(state.searchedQueries);
-  const skipSearchedQuerySet =
-    Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION ? new Set(state.searchedQueries) : new Set();
+  const stateStrategyIsCurrent = hasCurrentHarvestStrategyState(state);
+  const searchedQuerySet = new Set(stateStrategyIsCurrent && Array.isArray(state.searchedQueries) ? state.searchedQueries : []);
+  const skipSearchedQuerySet = new Set(searchedQuerySet);
   const scannedBvidSet = new Set(state.scannedBvids);
   const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
-  const termAttempts =
-    Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION || !Object.prototype.hasOwnProperty.call(state, 'harvestStrategyVersion')
-      ? { ...state.termAttempts }
-      : {};
+  const termAttempts = stateStrategyIsCurrent ? { ...state.termAttempts } : {};
   const backfilledAttempts = backfillTermAttemptsFromSearchedQueries(termAttempts, before, searchedQuerySet, {
     ...options,
     harvestStrategyVersion: state.harvestStrategyVersion,
