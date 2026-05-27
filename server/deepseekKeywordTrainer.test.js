@@ -6130,6 +6130,47 @@ test('normalizeKeywordEntries prunes literal tragedy and game heirloom evidence'
   assert.deepEqual(byTerm['\u4f20\u5bb6\u5b9d\u4e86'].evidenceSamples, ['\u8fd9\u7834\u89c4\u5219\u7559\u7740\u5f53\u4f20\u5bb6\u5b9d\u4e86\u662f\u5427\uff0c\u5341\u5e74\u90fd\u4e0d\u6539']);
 });
 
+test('normalizeKeywordEntries prunes proper-name roster and praise evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u75c5\u5f2f\u94a9',
+      family: 'attack',
+      meaning: '\u5bf9\u7279\u5b9a\u4eba\u7269\u7684\u4fae\u8fb1\u6027\u9ed1\u79f0',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u5929\u6deb\u661f \u75c5\u5f2f\u94a9 \u674e\u96ea\u82b1',
+        '\u75c5\u5f2f\u94a9\u8fdf\u56fd\u4eae',
+        '\u8fd9\u4e2a\u75c5\u5f2f\u94a9\u9ed1\u79f0\u4e5f\u592a\u4fae\u8fb1\u4eba\u4e86',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u5929\u6deb\u661f \u75c5\u5f2f\u94a9 \u674e\u96ea\u82b1' },
+        { source: 'Bilibili public video comment scan', sample: '\u75c5\u5f2f\u94a9\u8fdf\u56fd\u4eae' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u4e2a\u75c5\u5f2f\u94a9\u9ed1\u79f0\u4e5f\u592a\u4fae\u8fb1\u4eba\u4e86' },
+      ],
+    },
+    {
+      term: '\u8001\u53ae',
+      family: 'evidence',
+      meaning: '\u8bf7\u6c42\u6216\u6307\u5411\u6765\u6e90\u8bc1\u636e',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u8463\u8001\u53ae\u903b\u8f91\uff0c\u53e3\u624d\u8868\u8fbe\u662f\u771f\u5f3a',
+        '\u8463\u8001\u53ae\u8fd8\u662f\u633a\u4e0d\u9519\u7684',
+        '\u8001\u53ae\u4f60\u8fd9\u4e2a\u8bc1\u636e\u6765\u6e90\u80fd\u4e0d\u80fd\u8d34\u4e00\u4e0b',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u8463\u8001\u53ae\u903b\u8f91\uff0c\u53e3\u624d\u8868\u8fbe\u662f\u771f\u5f3a' },
+        { source: 'Bilibili public video comment scan', sample: '\u8463\u8001\u53ae\u8fd8\u662f\u633a\u4e0d\u9519\u7684' },
+        { source: 'Bilibili public video comment scan', sample: '\u8001\u53ae\u4f60\u8fd9\u4e2a\u8bc1\u636e\u6765\u6e90\u80fd\u4e0d\u80fd\u8d34\u4e00\u4e0b' },
+      ],
+    },
+  ]);
+
+  const byTerm = Object.fromEntries(entries.map((entry) => [entry.term, entry]));
+  assert.deepEqual(byTerm['\u75c5\u5f2f\u94a9'].evidenceSamples, ['\u8fd9\u4e2a\u75c5\u5f2f\u94a9\u9ed1\u79f0\u4e5f\u592a\u4fae\u8fb1\u4eba\u4e86']);
+  assert.deepEqual(byTerm['\u8001\u53ae'].evidenceSamples, ['\u8001\u53ae\u4f60\u8fd9\u4e2a\u8bc1\u636e\u6765\u6e90\u80fd\u4e0d\u80fd\u8d34\u4e00\u4e0b']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
