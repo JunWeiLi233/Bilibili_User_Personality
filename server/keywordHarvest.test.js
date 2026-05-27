@@ -134,6 +134,40 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for next cover
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for follow-up weak actions', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u8001\u56db', family: 'attack', evidenceCount: 2 },
+        { term: '\u8001\u786c\u5e01', family: 'attack', evidenceCount: 2 },
+        { term: '\u8001\u5b50\u53c8\u4e0d\u778e', family: 'attack', evidenceCount: 2 },
+        { term: '\u8138\u76ae\u591f\u539a', family: 'attack', evidenceCount: 2 },
+        { term: '\u826f\u5fc3\u8fa3', family: 'attack', evidenceCount: 2 },
+        { term: '\u4eae\u8840\u6761', family: 'attack', evidenceCount: 2 },
+        { term: '\u9f99\u50b2\u5929', family: 'attack', evidenceCount: 2 },
+        { term: '\u9885\u5185\u9ad8\u6f6e', family: 'attack', evidenceCount: 2 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u52d2\u8001\u56db \u70ed\u8bc4',
+    '\u8001\u786c\u5e01 \u70ed\u8bc4',
+    '\u8001\u5b50\u53c8\u4e0d\u778e \u70ed\u8bc4',
+    '\u8138\u76ae\u591f\u539a \u70ed\u8bc4',
+    '\u592a\u826f\u5fc3\u8fa3 \u70ed\u8bc4',
+    '\u4eae\u8840\u6761\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+    '\u9f99\u50b2\u5929\u5267\u672c \u70ed\u8bc4',
+    '\u9885\u5185\u9ad8\u6f6e \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
