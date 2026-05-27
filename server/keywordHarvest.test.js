@@ -470,6 +470,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for current AS
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for current comment-backed weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u626e\u6f14\u5c0f\u4e11', family: 'attack', evidenceCount: 1 },
+        { term: '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u7206\u7834\u4f60', family: 'attack', evidenceCount: 1 },
+        { term: '\u88ab\u62e7\u75bc\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u5954\u4e0d\u4f4f', family: 'attack', evidenceCount: 1 },
+        { term: '\u903c\u6211\u5403\u4e86\u4e09\u5768\u7fd4', family: 'attack', evidenceCount: 1 },
+        { term: '\u95ed\u7740\u773c\u775b\u4ed8\u94b1', family: 'attack', evidenceCount: 1 },
+        { term: '\u907f\u91cd\u5c31\u8f7b', family: 'evasion', evidenceCount: 1 },
+        { term: '\u51b0\u6cb3\u65f6\u4ee3', family: 'attack', evidenceCount: 1 },
+        { term: '\u75c5\u5927\u90ce', family: 'attack', evidenceCount: 1 },
+        { term: '\u8865\u836f\u554a', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u4e0d\u5e26\u8111\u5b50', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u626e\u6f14\u5c0f\u4e11 \u70ed\u8bc4',
+    '\u7206\u7834\u4f60 \u70ed\u8bc4',
+    '\u88ab\u62e7\u75bc\u4e86 \u70ed\u8bc4',
+    '\u5954\u4e0d\u4f4f \u70ed\u8bc4',
+    '\u903c\u6211\u5403\u4e86\u4e09\u5768\u7fd4 \u70ed\u8bc4',
+    '\u628a\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86 \u70ed\u8bc4',
+    '\u95ed\u7740\u773c\u775b\u4ed8\u94b1 \u70ed\u8bc4',
+    '\u907f\u91cd\u5c31\u8f7b \u70ed\u8bc4',
+    '\u51b0\u6cb3\u65f6\u4ee3 \u70ed\u8bc4',
+    '\u75c5\u5927\u90ce \u70ed\u8bc4',
+    '\u8865\u836f\u554a \u70ed\u8bc4',
+    '\u4e0d\u5e26\u8111\u5b50 \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-evidence queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -1119,7 +1161,7 @@ test('buildKeywordHarvestQueries generates colloquial aliases for weak attack ph
     },
     {
       term: '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
-      expectedAliasQuery: '\u628a\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      expectedAliasQuery: '\u628a\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86 \u70ed\u8bc4',
     },
     {
       term: '\u5403\u4e86\u4e09\u5768\u7fd4',
@@ -1312,7 +1354,7 @@ test('buildKeywordHarvestQueries starts with priority weak action aliases', () =
     {
       term: '\u88ab\u62e7\u75bc\u4e86',
       family: 'attack',
-      expectedAliasQuery: '\u88ab\u62e7\u75bc\u4e86 \u8bc4\u8bba\u533a',
+      expectedAliasQuery: '\u88ab\u62e7\u75bc\u4e86 \u70ed\u8bc4',
     },
     {
       term: '\u611f\u89c9\u81ea\u5df1\u5f88\u5c4c',
