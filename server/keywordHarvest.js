@@ -3142,17 +3142,23 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       options.hardMissedDiscoveryLimit ?? Math.max(Number(options.staleMissedDiscoveryLimit) || 1, (Number(options.discoveryLimit) || 1) * 4);
     const hardMissedDiscoveryPages = options.hardMissedDiscoveryPages ?? Math.max(3, Number(options.discoveryPages) || 1);
     const hardMissedPages = options.hardMissedPages ?? Math.max(Number(options.staleMissedPages) || 1, (Number(options.pages) || 1) + 4);
+    const commentMissedDiscoveryLimit = Math.max(
+      Number(options.staleMissedDiscoveryLimit) || 1,
+      Number(options.discoveryLimit) || 1,
+      (Number(options.discoveryLimit) || 1) * 2,
+    );
+    const commentMissedPages = Math.max(Number(options.staleMissedPages) || 1, Number(options.pages) || 1, (Number(options.pages) || 1) + 2);
     const effectiveDiscoveryLimit =
       hardMissedZeroEvidence
         ? Math.max(Number(options.discoveryLimit) || 1, Number(hardMissedDiscoveryLimit) || 1)
-        : deepenScan && options.staleMissedDiscoveryLimit
-        ? Math.max(Number(options.discoveryLimit) || 1, Number(options.staleMissedDiscoveryLimit) || 1)
+        : deepenScan
+        ? Math.max(Number(options.discoveryLimit) || 1, Number(commentMissedDiscoveryLimit) || 1)
         : options.discoveryLimit;
     const effectivePages =
       hardMissedZeroEvidence
         ? Math.max(Number(options.pages) || 1, Number(hardMissedPages) || 1)
-        : deepenScan && options.staleMissedPages
-        ? Math.max(Number(options.pages) || 1, Number(options.staleMissedPages) || 1)
+        : deepenScan
+        ? Math.max(Number(options.pages) || 1, Number(commentMissedPages) || 1)
         : options.pages;
     try {
       const searchPayload = {

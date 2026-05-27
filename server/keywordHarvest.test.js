@@ -10582,6 +10582,59 @@ test('harvestKeywordDictionary broadens strict comment discovery after a comment
     assert.equal(payloads[0].prioritizeSearchQueries, true);
     assert.equal(payloads[0].targetSearchOnly, false);
     assert.equal(payloads[0].includeDanmaku, true);
+    assert.equal(payloads[0].discoveryLimit, 2);
+    assert.equal(payloads[0].pages, 3);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary still expands strict comment retries when stale limit equals discovery limit', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-comment-expand-stale-floor-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        harvestStrategyVersion: 6,
+        termAttempts: {
+          '\u76ee\u6807\u5f31\u8bcd': {
+            term: '\u76ee\u6807\u5f31\u8bcd',
+            family: 'attack',
+            attempts: 1,
+            successfulAttempts: 0,
+            queries: [{ query: '\u76ee\u6807\u5f31\u8bcd \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, videos: 4, comments: 20 }],
+          },
+        },
+      }),
+    );
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        requireCommentBackedEvidence: true,
+        discoveryMode: 'controversial',
+        discoveryLimit: 4,
+        staleMissedDiscoveryLimit: 4,
+        pages: 2,
+        staleMissedPages: 3,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term: '\u76ee\u6807\u5f31\u8bcd', family: 'attack', evidenceCount: 1 }],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return { ok: true, warnings: [], videos: [], comments: [], entries: [] };
+        },
+      },
+    );
+
+    assert.equal(payloads[0].discoveryLimit, 8);
+    assert.equal(payloads[0].pages, 4);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
