@@ -2284,6 +2284,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for proverb be
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for anime crime and fandom weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u4e00\u773c\u79d1\u6280', family: 'attack', evidenceCount: 1 },
+        { term: '\u4f0a\u8389\u96c5\u6211\u8f6f\u811a\u4e86', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u4f9d\u6258\u5b9e', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e49\u52a1\u6559\u80b2\u6ca1\u4e0a\u5b8c', family: 'attack', evidenceCount: 1 },
+        { term: '\u4ebf\u70b9\u70b9', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u5f02\u98df\u7656', family: 'attack', evidenceCount: 1 },
+        { term: '\u9038\u4e00\u65f6\u8bef\u4e00\u4e16', family: 'evasion', evidenceCount: 1 },
+        { term: '\u61ff\u7c89', family: 'attack', evidenceCount: 1 },
+        { term: '\u9634\u6210\u5565\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u94f6\u624b\u956f', family: 'attack', evidenceCount: 1 },
+        { term: '\u5f15\u86c7\u51fa\u6d1e', family: 'attack', evidenceCount: 1 },
+        { term: '\u9e70\u89d2\u8981\u5012\u4e86', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u4e00\u773c\u79d1\u6280 \u5403\u74dc \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f0a\u8389\u96c5\u6211\u8f6f\u811a\u4e86 Fate \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f9d\u6258\u5b9e \u9760\u5b9e\u529b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4e49\u52a1\u6559\u80b2\u6ca1\u4e0a\u5b8c \u864e\u6251 \u8bc4\u5206 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4ebf\u70b9\u70b9 \u840c\u65b0 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5f02\u98df\u7656 up\u4e3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u9038\u4e00\u65f6\u8bef\u4e00\u4e16 \u9003\u907f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u61ff\u7c89 up\u4e3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u9634\u6210\u5565\u4e86 \u9634\u9633\u602a\u6c14 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u94f6\u624b\u956f \u56e2\u4f19 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5f15\u86c7\u51fa\u6d1e \u4e13\u5bb6 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u9e70\u89d2\u8981\u5012\u4e86 \u660e\u65e5\u65b9\u821f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
