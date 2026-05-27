@@ -6421,6 +6421,53 @@ test('buildDictionaryCoverageAudit rotates hard zero-evidence comment misses beh
   assert.deepEqual(audit.nextActions.map((item) => item.term), ['freshWeak', missed]);
 });
 
+test('buildDictionaryCoverageAudit demotes saturated zero-evidence comment misses behind fresher retries', () => {
+  const saturated = 'saturatedCommentMiss';
+  const fresher = 'fresherCommentMiss';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: saturated, family: 'attack', evidenceCount: 0 },
+        { term: fresher, family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      termAttempts: {
+        [saturated]: {
+          term: saturated,
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 5,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: 'saturatedCommentMiss \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, comments: 80 },
+            { query: 'saturatedCommentMiss \u70ed\u8bc4', strategyVersion: 6, ok: true, hit: false, comments: 90 },
+            { query: 'saturatedCommentMiss \u56de\u590d', strategyVersion: 6, ok: true, hit: false, comments: 70 },
+          ],
+          lastQuery: 'saturatedCommentMiss \u56de\u590d',
+        },
+        [fresher]: {
+          term: fresher,
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 2,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: 'fresherCommentMiss \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, comments: 32 },
+            { query: 'fresherCommentMiss \u70ed\u8bc4', strategyVersion: 6, ok: true, hit: false, comments: 24 },
+          ],
+          lastQuery: 'fresherCommentMiss \u70ed\u8bc4',
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 1, requireCommentBackedEvidence: true },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), [fresher, saturated]);
+});
+
 test('buildDictionaryCoverageAudit treats stale duplicate-evidence successes as misses', () => {
   const audit = buildDictionaryCoverageAudit(
     {

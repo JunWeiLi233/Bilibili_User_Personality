@@ -2039,6 +2039,15 @@ function actionSortRank(action, options = {}) {
     return coverageActionRank('harvest') + 0.75 + priorityPenalty;
   }
   if (
+    action?.action === 'retry_with_new_variant' &&
+    currentCommentMisses >= Math.max(3, retryLimit + 2) &&
+    evidence === 0 &&
+    successfulAttempts === 0 &&
+    options.requireCommentBackedEvidence === true
+  ) {
+    return coverageActionRank('harvest') + 0.75 + priorityPenalty;
+  }
+  if (
     options.prioritizeHardZeroEvidence === true &&
     action?.action === 'retry_with_new_variant' &&
     retryLimit > 0 &&
