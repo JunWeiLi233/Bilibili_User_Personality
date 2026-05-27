@@ -6216,6 +6216,28 @@ test('normalizeKeywordEntries prunes short negated attack mentions while keeping
   assert.equal(entries[0].evidenceCount, 1);
 });
 
+test('normalizeKeywordEntries prunes relationship ambiguity evidence for evasion terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6a21\u68f1\u4e24\u53ef',
+      family: 'evasion',
+      meaning: '\u8ba8\u8bba\u4e2d\u7528\u542b\u7cca\u8868\u8ff0\u56de\u907f\u660e\u786e\u7acb\u573a',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u4f60\u64c5\u957f\u7528\u6a21\u68f1\u4e24\u53ef\u7684\u6001\u5ea6\u56f0\u4f4f\u6211',
+        '\u8fd9\u4e2a\u95ee\u9898\u522b\u518d\u6a21\u68f1\u4e24\u53ef\u4e86\uff0c\u76f4\u63a5\u8bf4\u4f60\u7684\u7acb\u573a',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u4f60\u64c5\u957f\u7528\u6a21\u68f1\u4e24\u53ef\u7684\u6001\u5ea6\u56f0\u4f4f\u6211' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u4e2a\u95ee\u9898\u522b\u518d\u6a21\u68f1\u4e24\u53ef\u4e86\uff0c\u76f4\u63a5\u8bf4\u4f60\u7684\u7acb\u573a' },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u4e2a\u95ee\u9898\u522b\u518d\u6a21\u68f1\u4e24\u53ef\u4e86\uff0c\u76f4\u63a5\u8bf4\u4f60\u7684\u7acb\u573a']);
+  assert.equal(entries[0].evidenceCount, 1);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {

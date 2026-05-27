@@ -2821,10 +2821,12 @@ function hasHarvestEvidenceProgress(results = [], beforeDictionary = {}, options
     if (!result.ok) return false;
     if (countAcceptedEvidenceHits(result.entries || []) > 0) return true;
     if (countAcceptedEvidenceHits(result.keywordTraining?.dictionaryEvidenceEntries || []) > 0) return true;
+    const acceptedTerms = acceptedResultTerms(result);
     const targets = Array.isArray(result.collectionDiagnostics?.targetExistingTerms) ? result.collectionDiagnostics.targetExistingTerms : [];
     return targets.some((target) => {
       const term = String(target || '').trim();
       if (!term) return false;
+      if (!acceptedTerms.has(term)) return false;
       const beforeEntry = beforeEntries.get(term);
       const afterEntry = findResultDictionaryEntry(result, term);
       return coverageEvidenceCount(afterEntry, options) > coverageEvidenceCount(beforeEntry, options);
@@ -2974,13 +2976,14 @@ function updateTermAttempt(termAttempts, planItem, result, finishedAt, options =
   const term = String(planItem.term).trim();
   const key = termAttemptKey(term);
   const current = getTermAttempt(termAttempts, term) || {};
+  const acceptedTerms = acceptedResultTerms(result);
   const evidenceEntry = [...(result?.entries || []), ...(result?.keywordTraining?.dictionaryEvidenceEntries || [])].find((entry) => entry?.term === term);
   const dictionaryEntry = findResultDictionaryEntry(result, term);
   const plannedEvidenceCount = Number(planItem.coverageEvidenceCount ?? planItem.evidenceCount ?? current.evidenceAtPlanTime ?? 0) || 0;
   const evidenceEntryCoverageCount = coverageEvidenceCount(evidenceEntry, options);
   const dictionaryEvidenceCount = coverageEvidenceCount(dictionaryEntry, options);
   const evidenceEntryGained = Boolean(result?.ok) && evidenceEntryCoverageCount > plannedEvidenceCount;
-  const dictionaryEvidenceGained = Boolean(result?.ok) && dictionaryEvidenceCount > plannedEvidenceCount;
+  const dictionaryEvidenceGained = Boolean(result?.ok) && acceptedTerms.has(term) && dictionaryEvidenceCount > plannedEvidenceCount;
   const hit = evidenceEntryGained || dictionaryEvidenceGained;
   const hitEvidenceCount = Math.max(evidenceEntryCoverageCount, dictionaryEvidenceCount);
   const priorSuccessfulAttempts = Math.max(0, Number(current.successfulAttempts) || 0);

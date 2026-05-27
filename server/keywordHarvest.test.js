@@ -11423,7 +11423,7 @@ test('harvestKeywordDictionary records a hit when the returned dictionary gained
           },
           collectionDiagnostics: {
             targetExistingTerms: [term],
-            acceptedTerms: [],
+            acceptedTerms: [term],
           },
         }),
       },
@@ -11436,6 +11436,61 @@ test('harvestKeywordDictionary records a hit when the returned dictionary gained
     assert.equal(attempt.successfulAttempts, 1);
     assert.equal(attempt.lastEvidenceCount, 2);
     assert.equal(attempt.queries[0].hit, true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary ignores unaccepted dictionary deltas when reporting progress', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-unaccepted-delta-'));
+  const statePath = join(dir, 'state.json');
+  const term = '\u672a\u63a5\u53d7\u7684\u540e\u53f0\u5199\u5165';
+  try {
+    const result = await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        coverageMode: 'all-weak',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term, family: 'evasion', evidenceCount: 0 }],
+        }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [{ bvid: 'BV1111111111' }],
+          comments: [],
+          entries: [],
+          keywordTraining: {
+            dictionaryEvidenceEntries: [],
+          },
+          dictionary: {
+            entries: [{ term, family: 'evasion', evidenceCount: 1 }],
+          },
+          collectionDiagnostics: {
+            targetExistingTerms: [term],
+            acceptedTerms: [],
+          },
+        }),
+      },
+    );
+
+    const state = JSON.parse(await readFile(statePath, 'utf8'));
+    const attempt = state.termAttempts[Buffer.from(term, 'utf8').toString('base64url')];
+
+    assert.deepEqual(result.coverageProgress, {
+      weakTermsResolved: 0,
+      zeroEvidenceResolved: 0,
+      evidenceGained: 0,
+      evidenceDeficitReduced: 0,
+    });
+    assert.equal(attempt.successfulAttempts, 0);
+    assert.equal(attempt.queries[0].hit, false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
