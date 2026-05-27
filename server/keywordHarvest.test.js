@@ -68,6 +68,34 @@ test('buildKeywordHarvestQueries can generate several Bilibili-oriented variants
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for noisy weak terms', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u9ed1\u5316\u53cc\u9c7c', family: 'attack', evidenceCount: 2 },
+        { term: '\u5f88\u84dd\u7684\u62c9', family: 'cooperation', evidenceCount: 2 },
+        { term: '\u753b\u997c', family: 'attack', evidenceCount: 2 },
+        { term: '\u8bb0\u9519\u4e86', family: 'correction', evidenceCount: 2 },
+        { term: '\u8282\u594f\u72d7', family: 'attack', evidenceCount: 2 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 5,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u9ed1\u5316\u53cc\u9c7c \u70ed\u8bc4',
+    '\u5f88\u84dd\u7684\u5566 \u70ed\u8bc4',
+    '\u753b\u997c \u70ed\u8bc4',
+    '\u8bb0\u9519\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a',
+    '\u8282\u594f\u72d7 \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
