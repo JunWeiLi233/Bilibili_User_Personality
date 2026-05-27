@@ -2802,7 +2802,7 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for correction
     '\u641e\u9519\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u5de5\u91cd\u53f7 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u8fd9\u516c\u5f0f\u7528\u53cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a \u70ed\u8bc4',
-    '\u5bab\u9888\u7cdc\u70c2 \u79d1\u666e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5bab\u9888\u7cdc\u70c2 \u8bf4\u6cd5 \u66f4\u6b63 \u8bc4\u8bba',
     '\u62ffDNF\u6765\u62d0 \u53cb\u5546 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u602a\u6211\u54af \u9634\u9633\u602a\u6c14 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u53f7\u88ab\u76d7 \u7529\u9505 \u8bc4\u8bba\u533a \u70ed\u8bc4',
@@ -8062,8 +8062,8 @@ test('buildDictionaryCoverageAudit keeps high-signal follow-up aliases for curre
     {
       term: '\u5bab\u9888\u7cdc\u70c2',
       family: 'attack',
-      triedQuery: '\u5bab\u9888\u7cdc\u70c2 \u79d1\u666e \u8bc4\u8bba\u533a \u70ed\u8bc4',
-      nextQuery: '\u5bab\u9888\u7cdc\u70c2\u4e0d\u662f\u75c5 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      triedQuery: '\u5bab\u9888\u7cdc\u70c2 \u8bf4\u6cd5 \u66f4\u6b63 \u8bc4\u8bba',
+      nextQuery: '\u5bab\u9888\u7cdc\u70c2 \u4e0d\u53eb \u8f9f\u8c23 \u8bc4\u8bba\u533a',
     },
     {
       term: '\u62d0\u53cb\u5546',
@@ -8375,6 +8375,17 @@ test('buildDictionaryCoverageAudit avoids definition-only templates in strict co
   assert.equal(nextQuery.includes('B\u7ad9'), false);
   assert.notEqual(nextQuery, term);
   assert.match(nextQuery, /\u8bc4\u8bba|\u70ed\u8bc4|\u56de\u590d|\u5f39\u5e55/u);
+});
+
+test('buildDictionaryCoverageAudit prefers corrective medical context for gongjing milan', () => {
+  const term = '\u5bab\u9888\u7cdc\u70c2';
+  const audit = buildDictionaryCoverageAudit(
+    { entries: [{ term, family: 'correction', evidenceCount: 0 }] },
+    {},
+    { targetEvidence: 3, maxActions: 1, requireCommentBackedEvidence: true },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, '\u5bab\u9888\u7cdc\u70c2 \u8bf4\u6cd5 \u66f4\u6b63 \u8bc4\u8bba');
 });
 
 test('buildDictionaryCoverageAudit prefers semantic aliases over generic comment retries after misses', () => {
