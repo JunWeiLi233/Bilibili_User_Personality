@@ -5356,6 +5356,159 @@ test('normalizeKeywordEntries prunes latest harvested loose restored-metadata ev
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested literal mode, commerce, and bare reaction evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u53ef\u4ee5\u8d34',
+      family: 'cooperation',
+      meaning: 'ask another user to post evidence or context',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5176\u5b9e\u706b\u9505\u5e95\u6599\u5efa\u8bae\u5927\u5bb6\u8fd8\u662f\u8981\u4e0d\u6dfb\u6c34\u7684\u60c5\u51b5\u4e0b\u5148\u7092\u5316\u5f00\uff0c\u518d\u52a0\u70ed\u6c34',
+        '\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6a21\u7ec4',
+      family: 'cooperation',
+      meaning: 'cooperative game mod discussion',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u8fd9\u719f\u6089\u7684\u52a8\u4f5c\u6a21\u7ec4\uff0c\u662f\u4f60Adobe\u7684maximo',
+        '\u8fd9\u4e0d\u662f\u594e\u6258\u65af\u7684\u6218\u6597\u6a21\u7ec4\uff1f',
+        '\u5176\u4ed6\u89d2\u8272\u6ca1\u505a\u5750\u4e0b\u8fd9\u4e2a\u52a8\u4f5c\u6a21\u7ec4',
+        '\u8fd9\u4e2a\u6a21\u7ec4\u94fe\u63a5\u53ef\u4ee5\u5206\u4eab\u4e00\u4e0b\uff0c\u65b9\u4fbf\u5927\u5bb6\u590d\u73b0',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u89c6\u9891\u540c\u6b3e',
+      family: 'cooperation',
+      meaning: 'request or share same item from the video',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u300a\u89c6\u9891\u540c\u6b3e\uff0c\u7acb\u5373\u8d2d\u4e70\u300b',
+        '\u6c42\u89c6\u9891\u540c\u6b3e\u94fe\u63a5\uff0c\u60f3\u5bf9\u7167\u4e00\u4e0b',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u524d\u9762\u8bf4\u91cd\u4e86',
+      family: 'correction',
+      meaning: 'self-correction after overstating',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u4f60\u8fd9\u53e5\u8bdd\u5c31\u8bf4\u9519\u4e86\u5417\uff1f\u600e\u4e48\u4f1a\u6ca1\u6709\u94b1\u554a',
+        '\u4f60\u5f97\u8bf4\u900f\u660e\u70b9\uff0c\u4e0d\u7136\u6211\u4e0d\u597d\u56de\u7b54\u4f60\uff0c\u8bf4\u9519\u4e86\u4f60\u4e0d\u9ad8\u5174\u54e6',
+        'UP\u4e3b\u8bf4\u9519\u4e86\u554a \u73b0\u5728\u66f4\u706b',
+        '\u6211\u524d\u9762\u8bf4\u91cd\u4e86\uff0c\u6536\u56de\u90a3\u53e5',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6b65\u5175',
+      family: 'evasion',
+      meaning: 'hide behind a pawn/infantry excuse',
+      evidenceCount: 2,
+      evidenceSamples: ['\u6c22\u6b65\u5175', '\u522b\u62ff\u6b65\u5175\u5f53\u501f\u53e3\uff0c\u628a\u8bc1\u636e\u8bf4\u6e05\u695a'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6389\u5c0f\u73cd\u73e0',
+      family: 'attack',
+      meaning: 'mock someone crying',
+      evidenceCount: 2,
+      evidenceSamples: ['\u6389\u5c0f\u73cd\u73e0\u4e86\uff0c\u545c\u545c', '\u8fd9\u4e2a\u4e0d\u884c\uff0c\u7a7f\u51fa\u6765\u6389\u5c0f\u73cd\u73e0\u7684[tv_\u96be\u8fc7]', '\u4f60\u8fd9\u5c31\u6389\u5c0f\u73cd\u73e0\u4e86\uff0c\u8bc1\u636e\u5462'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u5927\u9b54\u6cd5\u5e08',
+      family: 'attack',
+      meaning: 'mocking celibate wizard label',
+      evidenceCount: 2,
+      evidenceSamples: ['\u9b54\u6cd5\u5e08\u6218\u888d\uff1f', '\u8fd8\u5dee2\u4e2a\u6708\u5c31\u5927\u9b54\u6cd5\u5e08\u4e86[\u8131\u5355doge]', '\u8868\u9762\u4e0a\u662f\u9b54\u6cd5\u5e08\uff0c\u5b9e\u5730\u5374\u662f\u4e2a\u5c0f\u53d7', '\u4f60\u90fd\u8fd9\u6837\u4e86\u8fd8\u81ea\u79f0\u5927\u9b54\u6cd5\u5e08'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u4fe1\u4ef0',
+      family: 'attack',
+      meaning: 'belief used as shield',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u90a3\u65f6\u5019\u7f51\u7edc\u5e76\u4e0d\u53d1\u8fbe\uff0c\u8fd9\u4e5f\u662f\u79cd\u4fe1\u4ef0\u5427\uff0c\u73a9\u7684\u771f\u7684\u5f88\u5f00\u5fc3',
+        '\u4ed6\u62ff\u4fe1\u4ef0\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u5c31\u662f\u4e0d\u56de\u5e94\u95ee\u9898',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u5976\u51f6',
+      family: 'cooperation',
+      meaning: 'cute fierce tone',
+      evidenceCount: 2,
+      evidenceSamples: ['\u57fa\u672c\u4fe1\u606f\u5976\u51f6\u5976\u51f6\u90a3\u5730\u65b9\u7c73\u591a\u9762\u591a\u6469\u767b\u5e74\u4ee3\u5982', '\u8fd9\u53e5\u56de\u590d\u5976\u51f6\u5976\u51f6\u7684\uff0c\u6c14\u6c1b\u7f13\u548c\u4e86'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u90fd\u662f\u5bb6\u4eba',
+      family: 'cooperation',
+      meaning: 'solidarity framing',
+      evidenceCount: 2,
+      evidenceSamples: ['\u7206\u7b11\u4e86\u5bb6\u4eba\u4eec', '\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8bf4'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u4e0d\u53ef\u62b5\u6297\u529b',
+      family: 'attack',
+      meaning: 'mocking unavoidable-force excuse',
+      evidenceCount: 2,
+      evidenceSamples: ['\u4e0d\u53ef\u6297\u529b\u56e0\u7d20', '\u522b\u628a\u6240\u6709\u5931\u8bef\u90fd\u53eb\u4e0d\u53ef\u62b5\u6297\u529b'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u795e\u795e',
+      family: 'attack',
+      meaning: 'hostile ideological label',
+      evidenceCount: 2,
+      evidenceSamples: ['\u795e\u795e\u795e', '\u8fd9\u7fa4\u795e\u795e\u53c8\u6765\u6263\u5e3d\u5b50'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u7b11\u9ebb\u4e86',
+      family: 'attack',
+      meaning: 'mocking laughter',
+      evidenceCount: 2,
+      evidenceSamples: ['\u7b11\u9ebb\u4e86', '\u7b11\u9ebb\u4e86\uff0c\u5c31\u8fd9\u64cd\u4f5c\u8fd8\u5439\u6709\u8bc1\u636e'],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6781\u9650\u6a21\u5f0f',
+      family: 'cooperation',
+      meaning: 'metaphorical hard-mode framing',
+      evidenceCount: 2,
+      evidenceSamples: ['\u6211\u628a\u5ca9\u6d46\u4e0a\u7684\u65b9\u5757\u6316\u4e86\uff0c\u76f4\u63a5\u6b7b\u4e86\uff0c\u6781\u9650\u6a21\u5f0f', '\u8fd9\u4e2a\u9879\u76ee\u5de5\u671f\u5c31\u662f\u6781\u9650\u6a21\u5f0f\uff0c\u5efa\u8bae\u5148\u62c6\u4efb\u52a1'],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u53ef\u4ee5\u8d34', ['\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417']],
+    ['\u6a21\u7ec4', ['\u8fd9\u4e2a\u6a21\u7ec4\u94fe\u63a5\u53ef\u4ee5\u5206\u4eab\u4e00\u4e0b\uff0c\u65b9\u4fbf\u5927\u5bb6\u590d\u73b0']],
+    ['\u89c6\u9891\u540c\u6b3e', ['\u6c42\u89c6\u9891\u540c\u6b3e\u94fe\u63a5\uff0c\u60f3\u5bf9\u7167\u4e00\u4e0b']],
+    ['\u524d\u9762\u8bf4\u91cd\u4e86', ['\u6211\u524d\u9762\u8bf4\u91cd\u4e86\uff0c\u6536\u56de\u90a3\u53e5']],
+    ['\u6b65\u5175', ['\u522b\u62ff\u6b65\u5175\u5f53\u501f\u53e3\uff0c\u628a\u8bc1\u636e\u8bf4\u6e05\u695a']],
+    ['\u6389\u5c0f\u73cd\u73e0', ['\u4f60\u8fd9\u5c31\u6389\u5c0f\u73cd\u73e0\u4e86\uff0c\u8bc1\u636e\u5462']],
+    ['\u5927\u9b54\u6cd5\u5e08', ['\u4f60\u90fd\u8fd9\u6837\u4e86\u8fd8\u81ea\u79f0\u5927\u9b54\u6cd5\u5e08']],
+    ['\u4fe1\u4ef0', ['\u4ed6\u62ff\u4fe1\u4ef0\u5f53\u514d\u6b7b\u91d1\u724c\uff0c\u5c31\u662f\u4e0d\u56de\u5e94\u95ee\u9898']],
+    ['\u5976\u51f6', ['\u8fd9\u53e5\u56de\u590d\u5976\u51f6\u5976\u51f6\u7684\uff0c\u6c14\u6c1b\u7f13\u548c\u4e86']],
+    ['\u90fd\u662f\u5bb6\u4eba', ['\u5927\u5bb6\u90fd\u662f\u5bb6\u4eba\uff0c\u5148\u522b\u5435\u597d\u597d\u8bf4']],
+    ['\u4e0d\u53ef\u62b5\u6297\u529b', ['\u522b\u628a\u6240\u6709\u5931\u8bef\u90fd\u53eb\u4e0d\u53ef\u62b5\u6297\u529b']],
+    ['\u795e\u795e', ['\u8fd9\u7fa4\u795e\u795e\u53c8\u6765\u6263\u5e3d\u5b50']],
+    ['\u7b11\u9ebb\u4e86', ['\u7b11\u9ebb\u4e86\uff0c\u5c31\u8fd9\u64cd\u4f5c\u8fd8\u5439\u6709\u8bc1\u636e']],
+    ['\u6781\u9650\u6a21\u5f0f', ['\u8fd9\u4e2a\u9879\u76ee\u5de5\u671f\u5c31\u662f\u6781\u9650\u6a21\u5f0f\uff0c\u5efa\u8bae\u5148\u62c6\u4efb\u52a1']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes weak literal ear-misheard notes without request context', () => {
   const entries = normalizeKeywordEntries([
     {
