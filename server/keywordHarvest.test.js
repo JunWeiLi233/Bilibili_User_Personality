@@ -2746,6 +2746,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for watch and 
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for correction and account weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u61c2\u4e86\u5427', family: 'evasion', evidenceCount: 0 },
+        { term: '\u8be5\u9a82\u5c31\u9a82', family: 'attack', evidenceCount: 0 },
+        { term: '\u611f\u8c22\u6307\u6b63', family: 'correction', evidenceCount: 0 },
+        { term: '\u641e\u9519\u4e86', family: 'correction', evidenceCount: 0 },
+        { term: '\u5de5\u91cdhao', family: 'cooperation', evidenceCount: 0 },
+        { term: '\u516c\u5f0f\u5957\u53cd\u4e86', family: 'correction', evidenceCount: 0 },
+        { term: '\u5bab\u9888\u7cdc\u70c2', family: 'attack', evidenceCount: 0 },
+        { term: '\u62d0\u53cb\u5546', family: 'attack', evidenceCount: 0 },
+        { term: '\u602a\u6211\u54af', family: 'evasion', evidenceCount: 0 },
+        { term: '\u53f7\u88ab\u76d7', family: 'evasion', evidenceCount: 0 },
+        { term: '\u53f7\u88ab\u76d7\u4e86', family: 'evasion', evidenceCount: 0 },
+        { term: '\u8352\u91ce\u5927\u8fea\u5ba2', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u61c2\u4e86\u5427 \u8c1c\u8bed\u4eba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u8be5\u9a82\u5c31\u9a82 \u7406\u6027\u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u611f\u8c22\u6307\u6b63 \u66f4\u6b63 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u641e\u9519\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5de5\u91cd\u53f7 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u8fd9\u516c\u5f0f\u7528\u53cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5bab\u9888\u7cdc\u70c2 \u79d1\u666e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u62ffDNF\u6765\u62d0 \u53cb\u5546 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u602a\u6211\u54af \u9634\u9633\u602a\u6c14 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u53f7\u88ab\u76d7 \u7529\u9505 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u53f7\u88ab\u76d7\u4e86 \u7529\u9505 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u8352\u91ce\u5927\u8fea\u5ba2 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -3099,7 +3141,7 @@ test('buildKeywordHarvestQueries uses follow-up weak aliases before exact stale 
     {
       term: '\u8be5\u9a82\u5c31\u9a82',
       family: 'evasion',
-      expectedAliasQuery: '\u8be5\u9a82\u9a82 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      expectedAliasQuery: '\u8be5\u9a82\u5c31\u9a82 \u7406\u6027\u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
     {
       term: '\u76d6\u4e16\u592a\u4fdd',
@@ -3114,7 +3156,7 @@ test('buildKeywordHarvestQueries uses follow-up weak aliases before exact stale 
     {
       term: '\u611f\u8c22\u6307\u6b63',
       family: 'correction',
-      expectedAliasQuery: '\u611f\u8c22\u6307\u51fa \u66f4\u6b63 \u8bc4\u8bba\u533a',
+      expectedAliasQuery: '\u611f\u8c22\u6307\u6b63 \u66f4\u6b63 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
     {
       term: '\u5e72\u5d29\u963f',
@@ -3861,7 +3903,7 @@ test('buildKeywordHarvestQueries avoids noisy literal searches for obfuscated an
     {
       term: '\u516c\u5f0f\u5957\u53cd\u4e86',
       family: 'correction',
-      expectedAliasQuery: '\u8fd9\u516c\u5f0f\u7528\u53cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a',
+      expectedAliasQuery: '\u8fd9\u516c\u5f0f\u7528\u53cd\u4e86 \u66f4\u6b63 \u8bc4\u8bba\u533a \u70ed\u8bc4',
       noisyFragment: '\u5b89\u5168\u5957',
     },
     {
@@ -3897,7 +3939,7 @@ test('buildKeywordHarvestQueries avoids noisy literal searches for obfuscated an
     {
       term: '\u62d0\u53cb\u5546',
       family: 'evasion',
-      expectedAliasQuery: '\u62ffDNF\u6765\u62d0 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      expectedAliasQuery: '\u62ffDNF\u6765\u62d0 \u53cb\u5546 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
       noisyFragment: '\u62d0\u53cb\u5546',
     },
     {
