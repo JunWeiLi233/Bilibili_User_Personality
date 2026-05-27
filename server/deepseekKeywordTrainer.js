@@ -976,8 +976,9 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   }
   if (term === '\u4f20\u5bb6\u5b9d\u4e86' && family === 'absolutes') {
     const literalGameHeirloomContext = /(?:apex|Apex|\u91cd\u751f|\u73a9\u5bb6|\u901a\u4f20|\u4e13\u4f20|\u5200\u76ae|\u722a\u5200|\u68c0\u89c6|\u82f1\u96c4|\u8d5b\u5b63|\u67aa|\u989c\u8272|\u534a\u4ef7\u81ea\u9009|\u5708\u94b1|\u6d88\u8d39\u9677\u9631|\u76ae\u80a4|\u89d2\u8272|\u4f20\u5bb6\u5b9d.{0,16}(?:\u4ea7\u91cf|\u8bbe\u8ba1|\u5267\u60c5|\u52a8\u4f5c|\u68c0\u89c6|\u8d28\u611f|\u989c\u8272|\u81ea\u9009)|(?:\u4ea7\u91cf|\u8bbe\u8ba1|\u5267\u60c5|\u52a8\u4f5c|\u68c0\u89c6|\u8d28\u611f|\u989c\u8272|\u81ea\u9009).{0,16}\u4f20\u5bb6\u5b9d)/iu.test(cleanSample);
+    const misreadOrProperNounContext = /(?:\u770b\u6210|\u770b\u9519|\u8ba4\u6210).{0,18}\u4f20\u5bb6\u5b9d|\u9ad8\u96c4\u4f20\u5bb6\u5b9d/u.test(cleanSample);
     const metaphorContext = /(?:\u5f53|\u7559\u7740|\u85cf\u7740|\u7956\u4f20|\u6c38\u4e45|\u5341\u5e74|\u4e00\u8f88\u5b50|\u4e0d\u6539|\u4e0d\u7528).{0,12}\u4f20\u5bb6\u5b9d\u4e86|\u4f20\u5bb6\u5b9d\u4e86.{0,12}(?:\u662f\u5427|\u4e0d\u6539|\u4e0d\u7528|\u7559\u7740)/u.test(cleanSample);
-    if ((cleanSample === '\u4f20\u5bb6\u5b9d\u4e86' || literalGameHeirloomContext) && !metaphorContext) return true;
+    if ((cleanSample === '\u4f20\u5bb6\u5b9d\u4e86' || literalGameHeirloomContext || misreadOrProperNounContext) && !metaphorContext) return true;
   }
   if (term === '\u4e3a\u53d1\u70e7\u800c\u751f' && family === 'cooperation') {
     const bareSloganContext = cleanSample === '\u4e3a\u53d1\u70e7\u800c\u751f';
