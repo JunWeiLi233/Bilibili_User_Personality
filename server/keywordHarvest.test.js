@@ -758,6 +758,40 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for next furth
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for following weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u7535\u952fpro', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u9876\u4f60\u7684\u80ba', family: 'attack', evidenceCount: 1 },
+        { term: '\u5b9a\u53eb\u4f60\u597d\u8bc4\u5982\u6f6e', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e1c\u6d77\u6bcf\u6b21\u540c\u6846\u7edd\u5bf9\u6709\u7b11\u70b9', family: 'absolutes', evidenceCount: 1 },
+        { term: '\u4e1c\u6237\u897f\u751c', family: 'attack', evidenceCount: 1 },
+        { term: '\u61c2\u7684\u90fd\u61c2', family: 'evasion', evidenceCount: 1 },
+        { term: '\u90fd\u8ba9\u4f60\u9ad8\u5b8c\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u90fd\u662f\u4eba\u673a\u81ea\u52a8\u53d1\u7684', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u7535\u952fpro max \u70ed\u8bc4',
+    '\u9876\u4f60\u7684\u80ba \u70ed\u8bc4',
+    '\u5b9a\u53eb\u4f60\u597d\u8bc4\u5982\u6f6e \u70ed\u8bc4',
+    '\u590f\u4e1c\u6d77 \u540c\u6846 \u7b11\u70b9 \u70ed\u8bc4',
+    '\u4e1c\u6237\u897f\u751c \u70ed\u8bc4',
+    '\u61c2\u7684\u90fd\u61c2 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u90fd\u8ba9\u4f60\u9ad8\u5b8c\u4e86 \u70ed\u8bc4',
+    '\u90fd\u662f\u4eba\u673a\u81ea\u52a8\u53d1\u7684 \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-evidence queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -789,6 +823,28 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-
     '\u7231\u6765\u81ea \u70ed\u8bc4',
     '\u7231\u6765\u81ea\u997a\u5b50 \u70ed\u8bc4',
     '\u6697\u95e8\u5b50 \u70ed\u8bc4',
+  ]);
+});
+
+test('buildKeywordHarvestQueries uses high-signal comment queries for follow-up zero-evidence queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u7231\u548b\u548b\u7684', family: 'evasion', evidenceCount: 0 },
+        { term: '\u62d4\u7fa4', family: 'cooperation', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 2,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u7231\u548b\u548b\u7684 \u70ed\u8bc4',
+    '\u6548\u679c\u62d4\u7fa4 \u70ed\u8bc4',
   ]);
 });
 
