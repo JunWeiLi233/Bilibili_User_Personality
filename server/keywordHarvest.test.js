@@ -2326,6 +2326,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for anime crim
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for sports game platform weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u8d62\u4e00\u573a\u5439\u4e00\u573a', family: 'attack', evidenceCount: 1 },
+        { term: '\u8d62\u8005\u504f\u5dee', family: 'evidence', evidenceCount: 1 },
+        { term: '\u5f71\u54cd\u5230\u5356\u4e86\u662f\u5427', family: 'attack', evidenceCount: 1 },
+        { term: '\u786c\u64e6', family: 'attack', evidenceCount: 1 },
+        { term: '\u6c38\u4e0d\u53d6\u5173', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u6c38\u4e0d\u8da3\u5173', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u7528\u6237\u81ea\u9002\u5e94', family: 'evasion', evidenceCount: 1 },
+        { term: '\u4f18\u96c5', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u5e7d\u9ed8\u4f18\u5316', family: 'attack', evidenceCount: 1 },
+        { term: '\u6cb9\u7ba1', family: 'evidence', evidenceCount: 1 },
+        { term: '\u6709\u516c\u5f0f\u5957\u5c31\u662f\u5feb', family: 'attack', evidenceCount: 1 },
+        { term: '\u6709\u4f55\u8bf4\u6cd5', family: 'evidence', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u8d62\u4e00\u573a\u5439\u4e00\u573a \u7403\u8ff7 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u8d62\u8005\u504f\u5dee \u6295\u8d44 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5f71\u54cd\u5230\u5356\u4e86\u662f\u5427 \u5e26\u8d27 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u786c\u64e6 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6c38\u4e0d\u53d6\u5173 up\u4e3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6c38\u4e0d\u8da3\u5173 \u5f39\u5e55 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u7528\u6237\u81ea\u9002\u5e94 \u6e38\u620f\u7b56\u5212 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f18\u96c5 \u64cd\u4f5c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5e7d\u9ed8\u4f18\u5316 \u6e38\u620f\u66f4\u65b0 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6cb9\u7ba1 \u642c\u8fd0 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6709\u516c\u5f0f\u5957\u5c31\u662f\u5feb \u89e3\u9898 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6709\u4f55\u8bf4\u6cd5 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
