@@ -1808,10 +1808,16 @@ function isCommentEvidenceQuery(query) {
   return /评论|热评|回复|互动|控评|节奏|粉丝|弹幕/.test(String(query || ''));
 }
 
-function commentScopeMissedRetryVariant(variant, triedQueries = new Set(), options = {}, attemptsCount = 0, successfulAttempts = 0) {
-  if (!variant || options.requireCommentBackedEvidence !== true || attemptsCount <= 0 || successfulAttempts > 0) return variant;
+function commentScopeMissedRetryVariant(variant, triedQueries = new Set(), options = {}, attemptsCount = 0, successfulAttempts = 0, needsSourceRefresh = false) {
+  if (!variant || options.requireCommentBackedEvidence !== true || attemptsCount <= 0 || successfulAttempts > 0 || needsSourceRefresh) return variant;
   const query = normalizeQueryText(variant.query);
-  if (!query || isCommentEvidenceQuery(query)) return variant;
+  if (!query) return variant;
+  const sparseCommentMatch = query.match(/^(.+)\s+(?:\u8bc4\u8bba|\u70ed\u8bc4|\u56de\u590d)$/);
+  if (sparseCommentMatch) {
+    const scopedQuery = normalizeQueryText(`${sparseCommentMatch[1]} \u8bc4\u8bba\u533a \u70ed\u8bc4`);
+    if (scopedQuery && !triedQueries.has(scopedQuery)) return { ...variant, query: scopedQuery, builtIn: false };
+  }
+  if (isCommentEvidenceQuery(query)) return variant;
   const scopedQuery = normalizeQueryText(`${query} \u8bc4\u8bba\u533a \u70ed\u8bc4`);
   if (!scopedQuery || triedQueries.has(scopedQuery)) return variant;
   return { ...variant, query: scopedQuery, builtIn: false };
@@ -2569,7 +2575,7 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
         ? null
         : availableVariants.find((variant) => !triedQueries.has(variant.query))) ||
       null;
-    nextVariant = commentScopeMissedRetryVariant(nextVariant, triedQueries, options, attemptsCount, successfulAttempts);
+    nextVariant = commentScopeMissedRetryVariant(nextVariant, triedQueries, options, attemptsCount, successfulAttempts, needsSourceRefresh);
     let status = 'covered';
     let action = 'none';
     if (needsSourceRefresh) {

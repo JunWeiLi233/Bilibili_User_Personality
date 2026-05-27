@@ -8065,6 +8065,68 @@ test('buildDictionaryCoverageAudit keeps strict comment retries comment-scoped a
   assert.equal(audit.nextActions[0].nextQuery, '\u4eca\u65e5\u9996\u7ef7\u4e86 \u8bc4\u8bba\u533a \u70ed\u8bc4');
 });
 
+test('buildDictionaryCoverageAudit upgrades sparse strict comment retries to comment-area hot-comment queries', () => {
+  const cases = [
+    {
+      term: '\u6d4f\u89c8\u5668\u641c',
+      family: 'evidence',
+      triedQuery: '\u6d4f\u89c8\u5668\u641c \u81ea\u5df1\u641c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      sparseQuery: '\u6d4f\u89c8\u5668\u641c \u8bc4\u8bba',
+      nextQuery: '\u6d4f\u89c8\u5668\u641c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u9f99\u54e5\u7684\u5144\u5f1f',
+      family: 'attack',
+      triedQuery: '\u9f99\u54e5\u7684\u5144\u5f1f \u62bd\u8c61 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      sparseQuery: '\u9f99\u54e5\u7684\u5144\u5f1f \u8bc4\u8bba',
+      nextQuery: '\u9f99\u54e5\u7684\u5144\u5f1f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u7f57\u9a6c\u5b58\u7591',
+      family: 'correction',
+      triedQuery: '\u7f57\u9a6c\u5b58\u7591 \u8bc1\u636e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      sparseQuery: '\u7f57\u9a6c\u5b58\u7591 \u8bc4\u8bba',
+      nextQuery: '\u7f57\u9a6c\u5b58\u7591 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+  ];
+  const state = { termAttempts: {}, runs: [{ queryDiagnostics: [] }] };
+  const entries = [];
+  for (const item of cases) {
+    entries.push({ term: item.term, family: item.family, evidenceCount: 0 });
+    state.termAttempts[Buffer.from(item.term, 'utf8').toString('base64url')] = {
+      term: item.term,
+      family: item.family,
+      evidenceAtPlanTime: 0,
+      attempts: 1,
+      successfulAttempts: 0,
+      queries: [{ query: item.triedQuery, strategyVersion: 6, ok: true, hit: false, comments: 20 }],
+      lastQuery: item.triedQuery,
+    };
+    state.runs[0].queryDiagnostics.push([
+      {
+        query: item.triedQuery,
+        discoveredVideos: 4,
+        scannedVideos: 4,
+        commentsCollected: 20,
+        trainingTextChars: 500,
+        targetExistingTerms: [item.term],
+        acceptedTerms: [],
+      },
+    ]);
+  }
+
+  const audit = buildDictionaryCoverageAudit(
+    { entries },
+    state,
+    { targetEvidence: 3, maxActions: cases.length, retryBeforeUnattemptedLimit: 1, requireCommentBackedEvidence: true },
+  );
+  const byTerm = Object.fromEntries(audit.nextActions.map((action) => [action.term, action]));
+  for (const item of cases) {
+    assert.equal(byTerm[item.term].nextQuery, item.nextQuery);
+    assert.notEqual(byTerm[item.term].nextQuery, item.sparseQuery);
+  }
+});
+
 test('buildDictionaryCoverageAudit tries bare aliases after scaffolded search results filter out', () => {
   const term = '\u4f60\u88c5\u4ec0\u4e48';
   const audit = buildDictionaryCoverageAudit(
