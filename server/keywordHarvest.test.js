@@ -2452,6 +2452,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for referee br
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for justice actor and zhubi weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u6b63\u786e\u4e2a\u53fc', family: 'attack', evidenceCount: 1 },
+        { term: '\u6b63\u4e49\u4e4b\u58eb', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u652f\u6301\u4e00\u4e0bup', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u77e5\u5c0f\u793c\u800c\u65e0\u5927\u4e49', family: 'attack', evidenceCount: 1 },
+        { term: '\u503c\u4eba', family: 'attack', evidenceCount: 1 },
+        { term: '\u804c\u4e1a\u6f14\u5458', family: 'attack', evidenceCount: 1 },
+        { term: '\u7ec8\u8f93\u795e\u7ecf\u7cfb\u7edf\u53d1\u529b\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u8098\u904d\u5168\u7f51', family: 'attack', evidenceCount: 1 },
+        { term: '\u6731\u4e00\u9f99', family: 'attack', evidenceCount: 1 },
+        { term: '\u732a\u9f3b', family: 'attack', evidenceCount: 1 },
+        { term: '\u732a\u8840\u9992\u5934', family: 'attack', evidenceCount: 1 },
+        { term: '\u6293\u5230\u4e00\u4e2a\u8001\u5b9e\u4eba', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u6b63\u786e\u4e2a\u53fc \u65b9\u8a00 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6b63\u4e49\u4e4b\u58eb \u9053\u5fb7\u7ed1\u67b6 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u652f\u6301\u4e00\u4e0bup up\u4e3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u77e5\u5c0f\u793c\u800c\u65e0\u5927\u4e49 \u5178\u6545 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u503c\u4eba \u7c73\u54c8\u6e38 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u804c\u4e1a\u6f14\u5458 \u8db3\u7403 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u7ec8\u8f93\u795e\u7ecf\u7cfb\u7edf\u53d1\u529b\u4e86 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u8098\u904d\u5168\u7f51 \u5468\u6770\u4f26 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6731\u4e00\u9f99 \u7c89\u4e1d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u732a\u9f3b \u4f60\u600e\u4e48\u8fd9\u4e48\u732a\u9f3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u732a\u8840\u9992\u5934 \u5403\u4eba\u8840\u9992\u5934 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6293\u5230\u4e00\u4e2a\u8001\u5b9e\u4eba \u5f39\u5e55 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
