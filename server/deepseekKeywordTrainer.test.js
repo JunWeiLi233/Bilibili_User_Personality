@@ -4376,6 +4376,20 @@ test('normalizeKeywordEntries prunes latest harvested medical, game, and generic
       ],
     },
     {
+      term: '\u53f7\u88ab\u76d7\u4e86',
+      family: 'correction',
+      meaning: 'claims an account was stolen to deflect responsibility',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u53f7\u88ab\u76d7\u4e86\uff0c\u662f\u4e70\u7684\u53f7\uff0c\u4e00\u76f4\u5728\u7533\u8bc9\uff0c\u5ba2\u670d\u8ba9\u6211\u63d0\u4f9b\u5145\u503c\u8bb0\u5f55\uff0c\u6709\u4eba\u61c2\u600e\u4e48\u529e\u5417',
+        '\u522b\u62ff\u53f7\u88ab\u76d7\u4e86\u5f53\u501f\u53e3\u7529\u9505\uff0c\u524d\u9762\u7684\u8bdd\u4f60\u5148\u8ba4\u4e86',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u53f7\u88ab\u76d7\u4e86\uff0c\u662f\u4e70\u7684\u53f7\uff0c\u4e00\u76f4\u5728\u7533\u8bc9\uff0c\u5ba2\u670d\u8ba9\u6211\u63d0\u4f9b\u5145\u503c\u8bb0\u5f55\uff0c\u6709\u4eba\u61c2\u600e\u4e48\u529e\u5417' },
+        { source: 'Bilibili public video comment scan', sample: '\u522b\u62ff\u53f7\u88ab\u76d7\u4e86\u5f53\u501f\u53e3\u7529\u9505\uff0c\u524d\u9762\u7684\u8bdd\u4f60\u5148\u8ba4\u4e86' },
+      ],
+    },
+    {
       term: '\u6b65\u5175',
       family: 'evasion',
       meaning: 'uses foot-soldier metaphor to avoid addressing evidence',
@@ -4464,6 +4478,7 @@ test('normalizeKeywordEntries prunes latest harvested medical, game, and generic
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
     ['\u9633\u75ff', ['\u4f60\u8fd9\u53d1\u8a00\u771f\u9633\u75ff\uff0c\u522b\u88c5\u4e86']],
     ['\u5bab\u9888\u7cdc\u70c2', ['\u5bab\u9888\u7cdc\u70c2\u8fd9\u4e2a\u8bf4\u6cd5\u65e9\u5c31\u8be5\u66f4\u6b63\u4e86\uff0c\u4e0d\u662f\u4f60\u4e4b\u524d\u8bf4\u7684\u90a3\u79cd\u75c5']],
+    ['\u53f7\u88ab\u76d7\u4e86', ['\u522b\u62ff\u53f7\u88ab\u76d7\u4e86\u5f53\u501f\u53e3\u7529\u9505\uff0c\u524d\u9762\u7684\u8bdd\u4f60\u5148\u8ba4\u4e86']],
     ['\u6b65\u5175', ['\u522b\u62ff\u6b65\u5175\u5f53\u501f\u53e3\uff0c\u8bc1\u636e\u8bf4\u6e05\u695a']],
     ['\u4e25\u7236', ['\u8fd9\u6b3e\u673a\u5b50\u5c31\u662f\u540c\u4ef7\u4f4d\u4e25\u7236\uff0c\u628a\u5bf9\u624b\u6253\u7206']],
     ['\u5b9e\u540d\u5236', ['\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790']],
