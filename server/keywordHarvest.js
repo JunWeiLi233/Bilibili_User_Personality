@@ -1990,6 +1990,23 @@ function actionSortRank(action, options = {}) {
   ) {
     return coverageActionRank('harvest') - 0.5 + priorityPenalty;
   }
+  if (
+    action?.action === 'retry_with_new_variant' &&
+    currentCommentMisses > 0 &&
+    evidence === 0 &&
+    attempts <= Math.max(1, retryLimit) &&
+    options.requireCommentBackedEvidence === true
+  ) {
+    return coverageActionRank('retry_with_new_variant') + priorityPenalty;
+  }
+  if (
+    action?.action === 'retry_with_new_variant' &&
+    currentCommentMisses > 0 &&
+    evidence > 0 &&
+    options.requireCommentBackedEvidence === true
+  ) {
+    return coverageActionRank('retry_with_new_variant') + 0.5 + priorityPenalty;
+  }
   if (options.prioritizeSourceGaps === true && action?.action === 'refresh_source_metadata') {
     if (currentCommentMisses > 0) {
       return (

@@ -6114,6 +6114,50 @@ test('buildDictionaryCoverageAudit rotates repeated comment misses after unattem
   assert.equal(audit.nextActions[1].currentCommentMisses, 3);
 });
 
+test('buildDictionaryCoverageAudit lets zero-evidence retries pass already-backed comment misses', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'backedMiss',
+          family: 'attack',
+          evidenceCount: 2,
+          evidenceSources: [
+            { source: 'Bilibili public video comment scan', uid: 'BVbacked1', sample: 'backedMiss sample 1' },
+            { source: 'Bilibili public video comment scan', uid: 'BVbacked2', sample: 'backedMiss sample 2' },
+          ],
+        },
+        { term: 'zeroMiss', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+    {
+      termAttempts: {
+        backedMiss: {
+          term: 'backedMiss',
+          family: 'attack',
+          evidenceAtPlanTime: 2,
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: 'backedMiss \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, comments: 24 }],
+          lastQuery: 'backedMiss \u8bc4\u8bba\u533a',
+        },
+        zeroMiss: {
+          term: 'zeroMiss',
+          family: 'attack',
+          evidenceAtPlanTime: 0,
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: 'zeroMiss \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, comments: 20 }],
+          lastQuery: 'zeroMiss \u8bc4\u8bba\u533a',
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 1, requireCommentBackedEvidence: true },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['zeroMiss', 'backedMiss']);
+});
+
 test('buildDictionaryCoverageAudit rotates no-video discovery misses after retry limit behind fresh weak terms', () => {
   const missed = 'noVideoMiss';
   const audit = buildDictionaryCoverageAudit(
