@@ -8338,6 +8338,43 @@ test('buildDictionaryCoverageAudit upgrades sparse strict comment retries to com
   }
 });
 
+test('buildDictionaryCoverageAudit avoids definition-only templates in strict comment mode', () => {
+  const term = '\u6446\u4e8b\u5b9e\u8bb2\u9053\u7406';
+  const tried = [
+    '\u6446\u4e8b\u5b9e\u8bb2\u9053\u7406 \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u6446\u4e8b\u5b9e\u8bb2\u9053\u7406 \u8bc4\u8bba\u533a',
+    '\u6446\u4e8b\u5b9e\u8bb2\u9053\u7406 \u70ed\u8bc4',
+    '\u6446\u4e8b\u5b9e\u8bb2\u9053\u7406 \u5f39\u5e55',
+    '\u6446\u4e8b\u5b9e\u8bb2\u9053\u7406 \u4e89\u8bae \u8bc4\u8bba\u533a',
+  ];
+  const state = {
+    termAttempts: {
+      [Buffer.from(term, 'utf8').toString('base64url')]: {
+        term,
+        family: 'cooperation',
+        attempts: tried.length,
+        successfulAttempts: 0,
+        queries: tried.map((query) => ({ query, strategyVersion: 6, ok: true, hit: false, comments: 12 })),
+        lastQuery: tried.at(-1),
+      },
+    },
+  };
+
+  const audit = buildDictionaryCoverageAudit(
+    { entries: [{ term, family: 'cooperation', evidenceCount: 2 }] },
+    state,
+    { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 1, requireCommentBackedEvidence: true },
+  );
+
+  const nextQuery = audit.nextActions[0].nextQuery;
+  assert.equal(nextQuery.includes('\u662f\u4ec0\u4e48\u6897'), false);
+  assert.equal(nextQuery.includes('\u4ec0\u4e48\u610f\u601d'), false);
+  assert.equal(nextQuery.includes('\u51fa\u5904'), false);
+  assert.equal(nextQuery.includes('B\u7ad9'), false);
+  assert.notEqual(nextQuery, term);
+  assert.match(nextQuery, /\u8bc4\u8bba|\u70ed\u8bc4|\u56de\u590d|\u5f39\u5e55/u);
+});
+
 test('buildDictionaryCoverageAudit prefers semantic aliases over generic comment retries after misses', () => {
   const cases = [
     {

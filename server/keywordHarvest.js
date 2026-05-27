@@ -1540,8 +1540,12 @@ function queryTemplatesFromOptions(options = {}) {
   const extraTemplates = parseTemplateList(options.extraQueryTemplates);
   const exhaustedTemplates =
     options.includeExhaustedFallbackTemplates === false ? [] : parseTemplateList(options.exhaustedSuggestionTemplates || DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES);
+  const builtInTemplates =
+    options.requireCommentBackedEvidence === true
+      ? TERM_QUERY_TEMPLATES.filter((_, index) => ![5, 6, 7, 8, 12, 13].includes(index))
+      : TERM_QUERY_TEMPLATES;
   return [
-    ...TERM_QUERY_TEMPLATES.map((template) => ({ template, builtIn: true })),
+    ...builtInTemplates.map((template) => ({ template, builtIn: true })),
     ...extraTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
     ...exhaustedTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
   ];

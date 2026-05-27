@@ -258,6 +258,7 @@ const STRICT_TARGET_RELEVANCE_NEEDLES = new Set(
     '\u5355\u8f66\u53d8\u6469\u6258',
     '\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86',
     '\u9f3b\u5b50\u5360\u9886\u5927\u8111',
+    '\u5e76\u975e\u5076\u9047',
   ].map(cleanSearchText),
 );
 

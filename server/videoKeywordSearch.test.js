@@ -890,6 +890,46 @@ test('searchVideoKeywords requires exact video relevance for high-ambiguity meme
   assert.equal(result.discoveryContextVideos.length, 0);
 });
 
+test('searchVideoKeywords keeps ambiguous coincidence targets out of generic fallback scans', async () => {
+  let fetchCalls = 0;
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u4e00\u770b\u5c31\u5e76\u975e\u5076\u9047 \u56de\u590d \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 3,
+      pages: 1,
+      existingTermsOnly: true,
+      includeVideoContext: false,
+      allowFilteredDiscoveryFallback: true,
+      targetExistingTerms: ['\u5e76\u975e\u5076\u9047'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVcoincidence1',
+          title: '\u5730\u94c1\u642d\u8baa \u5076\u9047\u957f\u817f\u6b63\u59b9',
+          sourceUrl: 'https://www.bilibili.com/video/BVcoincidence1/',
+        },
+        {
+          bvid: 'BVcoincidence2',
+          title: '\u8857\u53e3\u5076\u9047\u9ad8\u624b\uff0c\u4e00\u62db\u60ca\u5446\u8def\u4eba',
+          sourceUrl: 'https://www.bilibili.com/video/BVcoincidence2/',
+        },
+      ],
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan generic coincidence videos for strict target');
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 0);
+});
+
 test('searchVideoKeywords does not direct-probe filtered ask-baidu search noise', async () => {
   let fetchCalls = 0;
   const result = await searchVideoKeywords(
