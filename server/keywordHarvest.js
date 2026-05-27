@@ -1422,9 +1422,16 @@ function suggestedQueriesForExhaustedTerm(term, family, attempt, options = {}) {
     .slice(0, 8);
 }
 
+function hasCurrentHarvestStrategyState(state = {}) {
+  return (
+    !Object.prototype.hasOwnProperty.call(state, 'harvestStrategyVersion') ||
+    Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION
+  );
+}
+
 export function summarizeTermAttempts(state = {}, dictionary = {}, options = {}) {
   const entries = Array.isArray(dictionary?.entries) ? dictionary.entries : [];
-  const attempts = state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
+  const attempts = hasCurrentHarvestStrategyState(state) && state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
   const attemptedTerms = Object.values(attempts).filter((item) => Number(item?.attempts) > 0);
   const successfulTerms = attemptedTerms.filter((item) => effectiveSuccessfulAttempts(item) > 0);
   const entryTerms = new Set(entries.map((entry) => String(entry.term || '').trim()).filter(Boolean));
@@ -1479,9 +1486,7 @@ export function summarizeTermAttempts(state = {}, dictionary = {}, options = {})
 
 export function buildCoverageActions(dictionary = {}, state = {}, options = {}) {
   const entries = sortEntriesForCoverage(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
-  const stateStrategyIsCurrent =
-    !Object.prototype.hasOwnProperty.call(state, 'harvestStrategyVersion') ||
-    Number(state.harvestStrategyVersion || 0) >= HARVEST_STRATEGY_VERSION;
+  const stateStrategyIsCurrent = hasCurrentHarvestStrategyState(state);
   const attempts = stateStrategyIsCurrent && state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
   const searchedQueries = new Set(Array.isArray(state.searchedQueries) ? state.searchedQueries : []);
   const assumeLegacyQueriesCurrent = stateStrategyIsCurrent;

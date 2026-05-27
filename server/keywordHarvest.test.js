@@ -1871,6 +1871,29 @@ test('summarizeTermAttempts reports attempted, successful, unattempted, and miss
   assert.equal(summary.exhaustedTerms, 0);
 });
 
+test('summarizeTermAttempts ignores stale harvest strategy attempts', () => {
+  const summary = summarizeTermAttempts(
+    {
+      harvestStrategyVersion: 4,
+      termAttempts: {
+        doge: { term: 'doge', family: 'cooperation', attempts: 99, successfulAttempts: 0, lastQuery: 'doge \u8bc4\u8bba\u533a' },
+      },
+    },
+    {
+      entries: [
+        { term: 'doge', family: 'cooperation', evidenceCount: 1 },
+        { term: 'yygq', family: 'attack', evidenceCount: 0 },
+      ],
+    },
+  );
+
+  assert.equal(summary.attemptedTerms, 0);
+  assert.equal(summary.successfulTerms, 0);
+  assert.equal(summary.unattemptedTerms, 2);
+  assert.deepEqual(summary.repeatedlyMissedTerms, []);
+  assert.equal(summary.exhaustedTerms, 0);
+});
+
 test('summarizeTermAttempts reports exhausted terms after every built-in variant misses', () => {
   const variants = [
     'doge \u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4',
