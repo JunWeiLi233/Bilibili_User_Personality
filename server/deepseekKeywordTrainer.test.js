@@ -7115,6 +7115,7 @@ test('findDictionaryEntriesWithTextEvidence rejects latest harvested emote and b
     '\u63d2\u4e2a\u773c\u4e24\u5468\u540e\u7ee7\u7eed\uff0c\u4e4b\u524d PHQ-9 \u9a6c\u4e0a\u4e5f\u8981\u5230\u7b2c\u4e09\u6b21\u54e9[doge]',
     '\u63d2\u4e2a\u773c\u6bcf\u5929\u4e00\u95ee\u6d3b\u7740\u5417',
     '\u738b\u516c\u770bwbg\u6700\u63ea\u5fc3\uff0c\u770b\u52302\u6bd40\u7b11\u563b\u4e86\uff0c2\u6bd41\u8138\u8272\u4e0d\u5bf9\u4e86\uff0c2\u6bd42\u4e0d\u8bf4\u8bdd\u4e86',
+    '\u5b66\u9738\u7ed9\u7684\u6ee1\u5206\u7b54\u6848\u786c\u662f\u81ea\u5df1\u6539\u6210\u4e86\u96f6\u5206\uff0c\u7b11\u563b\u4e86',
     '\u6211\u8bfb\u5c0f\u5b66\u65f6\u7684\u4e92\u8054\u7f51\u4e0a\uff0c99%\u90fd\u662f\u7537\u4eba\u7684\u8fd9\u7c7b\u6076\u81ed\u8a00\u8bba\uff0c\u8fd9\u51e0\u5e74\u4e92\u8054\u7f51\u50cf\u7a81\u7136\u5f00\u667a\u4e86\u4e00\u6837',
     '\u5f53\u4e00\u4e2a\u4eba\u53ef\u4ee5\u627f\u8ba4\u81ea\u5df1\u201c\u6211\u6ca1\u5f00\u667a\u201d\u65f6\uff0c\u4ed6\u5c31\u5df2\u7ecf\u5f00\u667a\u4e86\u3002',
   ].join('\n');
@@ -7141,6 +7142,24 @@ test('findDictionaryEntriesWithTextEvidence rejects latest harvested emote and b
     '\u7b11\u563b\u4e86',
     '\u5f00\u667a\u4e86',
   ]);
+});
+
+test('normalizeKeywordEntries prunes self-sabotage mocking evidence for xiaoxile cooperation term', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7b11\u563b\u4e86',
+      family: 'cooperation',
+      meaning: 'light positive reaction',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5b66\u9738\u7ed9\u7684\u6ee1\u5206\u7b54\u6848\u786c\u662f\u81ea\u5df1\u6539\u6210\u4e86\u96f6\u5206\uff0c\u7b11\u563b\u4e86',
+        '\u8fd9\u6bb5\u89e3\u91ca\u5f88\u6e05\u695a\uff0c\u770b\u5b8c\u7b11\u563b\u4e86',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u6bb5\u89e3\u91ca\u5f88\u6e05\u695a\uff0c\u770b\u5b8c\u7b11\u563b\u4e86']);
 });
 
 test('findDictionaryEntriesWithTextEvidence rejects latest harvested alias and proper-name false positives', () => {

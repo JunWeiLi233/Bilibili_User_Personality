@@ -1540,8 +1540,9 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
   }
   if (term === '\u7b11\u563b\u4e86' && family === 'cooperation') {
     const scoreReactionContext = /(?:\d+\u6bd4\d+|\u8138\u8272|\u63ea\u5fc3|\u4e0d\u8bf4\u8bdd|\u770b\w{2,8}).{0,30}\u7b11\u563b\u4e86|\u7b11\u563b\u4e86.{0,30}(?:\d+\u6bd4\d+|\u8138\u8272|\u63ea\u5fc3|\u4e0d\u8bf4\u8bdd)/iu.test(cleanSample);
+    const selfSabotageMockingContext = /(?:\u6ee1\u5206|\u7b54\u6848|\u5b66\u9738|\u81ea\u5df1).{0,24}(?:\u6539\u6210\u4e86?\u96f6\u5206|\u96f6\u5206|\u6539\u9519|\u7ffb\u8f66).{0,18}\u7b11\u563b\u4e86|\u7b11\u563b\u4e86.{0,24}(?:\u96f6\u5206|\u6539\u9519|\u7ffb\u8f66)/u.test(cleanSample);
     const positiveDiscussionContext = /(?:\u89e3\u91ca|\u8865\u5145|\u5206\u6790|\u8bf4\u6e05\u695a|\u8bc1\u636e).{0,18}\u7b11\u563b\u4e86|\u7b11\u563b\u4e86.{0,18}(?:\u8bf4\u660e\u767d|\u8c22\u8c22|\u5b66\u5230)/u.test(cleanSample);
-    if (scoreReactionContext && !positiveDiscussionContext) return true;
+    if ((scoreReactionContext || selfSabotageMockingContext) && !positiveDiscussionContext) return true;
   }
   if (term === '\u5f00\u667a\u4e86' && family === 'attack') {
     const neutralAwakeningContext = /(?:\u7a81\u7136\u5f00\u667a\u4e86|\u4ed6\u5c31\u5df2\u7ecf\u5f00\u667a\u4e86|\u5973\u6027\u5bf9\u6297\u7684\u58f0\u97f3|\u6211\u6ca1\u5f00\u667a|\u627f\u8ba4\u81ea\u5df1).{0,40}/u.test(cleanSample);
