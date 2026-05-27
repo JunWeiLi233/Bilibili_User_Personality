@@ -312,6 +312,7 @@ function cleanTerm(term) {
 }
 
 function cleanKeywordTerm(term) {
+  if (looksLikeMojibakeChinese(term)) return '';
   let cleaned = cleanTerm(term)
     .replace(/[A-Za-z0-9]+/g, (match) => match.toLowerCase())
     .replace(/^热词系列/u, '')
@@ -347,6 +348,7 @@ function looksLikeMojibakeChinese(term) {
   if (!text || !/[\p{Script=Han}]/u.test(text)) return false;
   if (KNOWN_MOJIBAKE_CHINESE_TERMS.has(text)) return true;
   if (KNOWN_MOJIBAKE_CHINESE_PREFIXES.some((prefix) => text.startsWith(prefix) && text.length > prefix.length)) return true;
+  if (/[\ue000-\uf8ff\ufffd]/u.test(text)) return true;
   if (/[�]|\?{2,}/u.test(text)) return true;
 
   const chars = [...text];

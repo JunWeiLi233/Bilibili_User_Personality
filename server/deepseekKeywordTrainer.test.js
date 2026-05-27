@@ -746,6 +746,7 @@ test('normalizes noisy punctuation and rejects low-quality keyword terms', () =>
     { term: '问百度！！', family: 'evasion', meaning: '把解释责任转移到搜索引擎' },
     { term: '[doge]', family: 'cooperation', meaning: '表情梗' },
     { term: '᭙ᦔꪀꪑᦔ', family: 'attack', meaning: 'model copied decorative script noise' },
+    { term: String.fromCodePoint(0x9411, 0xe161, 0x760e), family: 'cooperation', meaning: 'mojibake for hot comment' },
   ]);
 
   assert.deepEqual(entries.map((entry) => [entry.term, entry.family]), [

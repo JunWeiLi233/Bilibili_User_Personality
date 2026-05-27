@@ -5078,6 +5078,40 @@ test('harvestKeywordDictionary skips same-meaning contained duplicate groups in 
   }
 });
 
+test('harvestKeywordDictionary skips known shared-search duplicate groups in limited runs', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-known-search-group-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 2,
+        coverageMode: 'all-weak',
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: '\u8f66\u8f71\u8f98', family: 'evasion', evidenceCount: 2 },
+            { term: '\u8f66\u8f71\u8f98\u8bdd', family: 'attack', evidenceCount: 2 },
+            { term: '\u5403\u53f2', family: 'attack', evidenceCount: 2 },
+          ],
+        }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.deepEqual(result.plan.map((item) => item.term), ['\u8f66\u8f71\u8f98', '\u5403\u53f2']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary scales default hard zero-evidence scans with query budget', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-hard-scale-'));
   const statePath = join(dir, 'state.json');
