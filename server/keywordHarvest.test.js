@@ -554,6 +554,40 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for next comme
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for later comment-backed weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u4e0d\u662f\u5f88\u8ba4\u53ef', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u4e0d\u662f\u4f60\u649e\u7684\u4f60\u4e3a\u5565\u8981\u6276', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u5b8c\u5168\u662f', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u4e0d\u5b66\u6570\u7406\u5316\u751f\u6d3b\u5904\u5904\u662f\u795e\u8bdd', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u4e89\u4e0d\u62a2\u5ab3\u5987\u513f\u5c31\u98de\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u4e0d\u77e5\u9053ai\u5ba1\u6838', family: 'attack', evidenceCount: 1 },
+        { term: '\u6b65\u5175', family: 'attack', evidenceCount: 1 },
+        { term: '\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u4e0d\u662f\u5f88\u8ba4\u53ef \u70ed\u8bc4',
+    '\u4e0d\u662f\u4f60\u649e\u7684\u4f60\u4e3a\u5565\u8981\u6276 \u70ed\u8bc4',
+    '\u4e0d\u5b8c\u5168\u662f \u70ed\u8bc4',
+    '\u4e0d\u5b66\u6570\u7406\u5316\u751f\u6d3b\u5904\u5904\u662f\u795e\u8bdd \u70ed\u8bc4',
+    '\u4e0d\u4e89\u4e0d\u62a2\u5ab3\u5987\u513f\u5c31\u98de\u4e86 \u70ed\u8bc4',
+    '\u4e0d\u77e5\u9053ai\u5ba1\u6838 \u70ed\u8bc4',
+    '\u6b65\u5175 \u70ed\u8bc4',
+    '\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7 \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-evidence queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -1199,7 +1233,8 @@ test('buildKeywordHarvestQueries generates colloquial aliases for weak attack ph
   const cases = [
     {
       term: '\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7',
-      expectedAliasQuery: '\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
+      expectedAliasQuery: '\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7 \u70ed\u8bc4',
+      expectedIncludedQuery: '\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7\u4e86 \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4',
     },
     {
       term: '\u9f3b\u5c4e\u4e5f\u559d\u8fdb\u53bb\u4e86',
@@ -1289,6 +1324,9 @@ test('buildKeywordHarvestQueries generates colloquial aliases for weak attack ph
     );
 
     assert.equal(queries[0], item.expectedAliasQuery, `${item.term} should start with ${item.expectedAliasQuery}`);
+    if (item.expectedIncludedQuery) {
+      assert.equal(queries.includes(item.expectedIncludedQuery), true, `${item.term} should include ${item.expectedIncludedQuery}`);
+    }
   }
 });
 
