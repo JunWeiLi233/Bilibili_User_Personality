@@ -8159,6 +8159,72 @@ test('buildDictionaryCoverageAudit prefers semantic aliases over generic comment
       triedQuery: '\u660e\u5929\u6765\u4e0a\u73ed \u7b56\u5212 \u8bc4\u8bba\u533a \u70ed\u8bc4',
       nextQuery: '\u4f60\u660e\u5929\u6765\u4e0a\u73ed \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
+    {
+      term: '\u4f60\u7ba1\u5f97\u7740\u4eba\u5bb6',
+      family: 'evasion',
+      triedQuery: '\u4f60\u7ba1\u5f97\u7740\u4eba\u5bb6 \u4f60\u7ba1\u5f97\u7740\u5417 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u4f60\u7ba1\u5f97\u7740\u5417 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9',
+      family: 'evasion',
+      triedQuery: '\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9 \u53cd\u8bbd \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u4f60\u9a82\u6211\u5c31\u662f\u4f60\u5bf9 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u4f60\u53ea\u7ba1\u5c04\u5269\u4e0b\u7684\u4ea4\u7ed9\u5269\u4e0b\u7684',
+      family: 'cooperation',
+      triedQuery: '\u4f60\u53ea\u7ba1\u5c04 \u5269\u4e0b\u7684\u4ea4\u7ed9\u5269\u4e0b\u7684 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u4f60\u53ea\u7ba1\u5c04 \u5269\u4e0b\u7684\u4ea4\u7ed9\u957f\u6625 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u634f\u5ac2',
+      family: 'attack',
+      triedQuery: '\u634f\u5ac2 \u539f\u795e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u539f\u795e\u634f\u5ac2 \u7eb3\u897f\u59b2 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u626d\u77e9\u4e0d\u8be6\u9047\u5f3a\u5219\u5f3a',
+      family: 'cooperation',
+      triedQuery: '\u626d\u77e9\u4e0d\u8be6\u9047\u5f3a\u5219\u5f3a \u6c7d\u8f66 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u626d\u77e9\u4e0d\u8be6 \u9047\u5f3a\u5219\u5f3a \u67f4\u6cb9\u673a \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u7cef\u4e86',
+      family: 'attack',
+      triedQuery: '\u7cef\u4e86 \u4e0d\u6562\u6253 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u4ed6\u7cef\u4e86 \u4e0d\u6562\u6253 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u6392\u957f',
+      family: 'cooperation',
+      triedQuery: '\u6392\u957f \u6392\u961f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u6392\u957f\u6765\u4e86 \u524d\u6392 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u914d\u961f\u4fa0',
+      family: 'correction',
+      triedQuery: '\u914d\u961f\u4fa0 \u539f\u795e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u539f\u795e\u914d\u961f\u4fa0 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u9a97\u4eba\u6211\u76f4\u63a5\u53bb\u6b7b',
+      family: 'attack',
+      triedQuery: '\u9a97\u4eba\u6211\u76f4\u63a5\u53bb\u6b7b \u53d1\u8a93 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u9a97\u4f60\u6211\u76f4\u63a5\u53bb\u6b7b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u7834\u4e86\u76f8\u4e86',
+      family: 'attack',
+      triedQuery: '\u7834\u4e86\u76f8\u4e86 \u8868\u60c5\u5305 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u8fd9\u4e0b\u7834\u76f8\u4e86 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5176\u5b9e\u4e0d\u5b8c\u5168',
+      family: 'correction',
+      triedQuery: '\u5176\u5b9e\u4e0d\u5b8c\u5168 \u53cd\u9a73 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u5176\u5b9e\u4e0d\u5b8c\u5168\u662f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
   ];
   const state = { termAttempts: {}, runs: [{ queryDiagnostics: [] }] };
   const entries = [];
