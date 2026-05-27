@@ -2578,6 +2578,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for mixed meme
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for ASCII slang weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: 'dna\u89c9\u9192', family: 'cooperation', evidenceCount: 1 },
+        { term: 'gay\u8fbe', family: 'attack', evidenceCount: 1 },
+        { term: 'hapi\u8a00\u8bba', family: 'attack', evidenceCount: 1 },
+        { term: 'ip\u9519\u8bef', family: 'evasion', evidenceCount: 1 },
+        { term: 'judge\u4eba', family: 'attack', evidenceCount: 1 },
+        { term: 'kda\u5c04', family: 'attack', evidenceCount: 1 },
+        { term: 'low\u7537', family: 'attack', evidenceCount: 1 },
+        { term: 'n\u5237', family: 'cooperation', evidenceCount: 1 },
+        { term: 'pv\u8bc8\u9a97', family: 'attack', evidenceCount: 1 },
+        { term: 'pvppve\u5168\u90fd\u7528\u4e0d\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: 'py\u73b0\u573a', family: 'attack', evidenceCount: 1 },
+        { term: 'sm\u5973\u738b', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    'dna\u89c9\u9192 \u540d\u573a\u9762 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'gay\u8fbe \u5f39\u5e55 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'hapi\u8a00\u8bba \u70c2\u6d3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'ip\u9519\u8bef \u5c5e\u5730 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'judge\u4eba \u8bf4\u6559 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'kda\u5c04 \u82f1\u96c4\u8054\u76df \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'low\u7537 \u666e\u4fe1 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'n\u5237 \u5267\u60c5 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'pv\u8bc8\u9a97 \u624b\u6e38 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'pvppve\u5168\u90fd\u7528\u4e0d\u4e86 \u6e38\u620f\u7b56\u5212 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'py\u73b0\u573a \u6697\u7bb1\u64cd\u4f5c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    'sm\u5973\u738b \u89d2\u8272 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
