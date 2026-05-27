@@ -624,7 +624,31 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
             if (payload.abortSignal?.aborted) break;
           }
         }
-        discoveryGroups.push(searchGroup);
+        if (searchGroup.length === 0 && allowFilteredDiscoveryFallback && !payload.abortSignal?.aborted) {
+          for (const query of controversyQueries.slice(0, controversialPopularQueryLimit)) {
+            try {
+              throwIfAborted(payload.abortSignal);
+              controversialPopularGroup.push(
+                ...(await discoverVideos(query, discoveryCandidateLimit, { ...deps, discoveryPages, searchOrder: controversialPopularSearchOrder })),
+              );
+              throwIfAborted(payload.abortSignal);
+            } catch (error) {
+              discoveryWarnings.push(`${query} (${controversialPopularSearchOrder || 'popular'}): ${error.message}`);
+              if (payload.abortSignal?.aborted) break;
+            }
+          }
+          for (const query of controversyQueries) {
+            try {
+              throwIfAborted(payload.abortSignal);
+              controversyGroup.push(...(await discoverVideos(query, discoveryCandidateLimit, { ...deps, discoveryPages })));
+              throwIfAborted(payload.abortSignal);
+            } catch (error) {
+              discoveryWarnings.push(`${query}: ${error.message}`);
+              if (payload.abortSignal?.aborted) break;
+            }
+          }
+        }
+        discoveryGroups.push(searchGroup, controversialPopularGroup, controversyGroup);
       } else {
         for (const query of controversyQueries.slice(0, controversialPopularQueryLimit)) {
           try {

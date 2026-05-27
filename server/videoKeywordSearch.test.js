@@ -1620,6 +1620,60 @@ test('searchVideoKeywords can run only target searches for strict dictionary ref
   assert.deepEqual(queried, [{ query: 'target phrase comments', order: '' }]);
 });
 
+test('searchVideoKeywords falls back to broad controversy pools when target-only search finds no videos', async () => {
+  const queried = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: 'target phrase comments',
+      controversyQueries: ['politics debate', 'game drama'],
+      discoveryMode: 'controversial',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['target phrase'],
+      prioritizeSearchQueries: true,
+      targetSearchOnly: true,
+      includeVideoContext: false,
+      includeVideoObjectEvidence: false,
+      allowFilteredDiscoveryFallback: true,
+      preferFilteredDiscoveryFallback: true,
+    },
+    {
+      discoverVideosByKeyword: async (query, _limit, options = {}) => {
+        queried.push({ query, order: options.searchOrder || '' });
+        if (query === 'target phrase comments') return [];
+        return [{ bvid: `BV${queried.length}`.padEnd(12, '1'), title: `${query} hot comments`, sourceUrl: `https://www.bilibili.com/video/BV${queried.length}/` }];
+      },
+      fetchJson: async (url) => {
+        const bvid = new URL(String(url)).searchParams.get('bvid');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return { code: 0, data: { replies: [], cursor: { is_end: true, next: 0 } } };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(queried, [
+    { query: 'target phrase comments', order: '' },
+    { query: 'politics debate', order: 'click' },
+    { query: 'game drama', order: 'click' },
+    { query: 'politics debate', order: '' },
+    { query: 'game drama', order: '' },
+  ]);
+  assert.equal(result.videos.length, 2);
+});
+
 test('searchVideoKeywords can prefer broad controversy pools for strict comment-backed refreshes', async () => {
   const result = await searchVideoKeywords(
     {
