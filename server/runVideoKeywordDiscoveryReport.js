@@ -1,4 +1,4 @@
-import { countAcceptedEvidenceHits } from './keywordHarvest.js';
+import { countAcceptedEvidenceHitsForResult } from './keywordHarvest.js';
 
 export function priorityActionItemsFromCoverageActions(actions = []) {
   return (Array.isArray(actions) ? actions : [])
@@ -36,6 +36,8 @@ export function serializeVideoKeywordDiscoveryReport(result, statePath, reportPa
       growth: round.growth,
       coverage: round.coverage,
       coverageProgress: round.coverageProgress,
+      acceptedEvidenceCount: round.acceptedEvidenceCount || 0,
+      coverageIncreasingAcceptedEvidenceCount: round.coverageIncreasingAcceptedEvidenceCount || 0,
       termAttemptSummary: round.termAttemptSummary,
       trainingDiagnostics: round.trainingDiagnostics,
       queryDiagnostics: round.queryDiagnostics,
@@ -52,7 +54,7 @@ export function serializeVideoKeywordDiscoveryReport(result, statePath, reportPa
         comments: item.result?.comments?.length || 0,
         evidenceRejected: item.result?.keywordTraining?.evidenceRejected || 0,
         existingDictionaryEvidence: item.result?.keywordTraining?.dictionaryEvidenceEntries || [],
-        acceptedEvidenceCount: countAcceptedEvidenceHits(item.result?.entries || []),
+        acceptedEvidenceCount: countAcceptedEvidenceHitsForResult(item.result || {}),
         controversialPopularQueries: item.result?.controversialPopularQueries || [],
         controversialPopularSearchOrder: item.result?.controversialPopularSearchOrder || null,
         plan: round.plan?.find((planItem) => planItem.query === item.query) || null,

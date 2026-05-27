@@ -1140,6 +1140,7 @@ test('normalizes away mojibake Chinese-looking keyword terms', () => {
   ];
   const mojibakeQueryTerms = [
     String.fromCodePoint(0x9411, 0xe161, 0x760e),
+    String.fromCodePoint(0x9422, 0x98ce, 0x6d0d, 0x6fc2, 0x51b2, 0x5973),
   ];
   const entries = normalizeKeywordEntries([
     { term: '\u7035\u89c4\u59c9', family: 'attack', meaning: 'UTF-8/GBK mojibake for a Chinese category label' },

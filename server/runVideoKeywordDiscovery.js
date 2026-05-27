@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 import { withFileLock } from './fileLock.js';
-import { buildDictionaryCoverageAudit, countAcceptedEvidenceHits, harvestKeywordDictionaryRounds } from './keywordHarvest.js';
+import { buildDictionaryCoverageAudit, countAcceptedEvidenceHitsForResult, harvestKeywordDictionaryRounds } from './keywordHarvest.js';
 import { priorityActionItemsFromHarvestResult, serializeVideoKeywordDiscoveryReport } from './runVideoKeywordDiscoveryReport.js';
 import { buildVideoKeywordDiscoveryOptions, parsePriorityQueryContent } from './runVideoKeywordDiscoveryOptions.js';
 
@@ -51,7 +51,7 @@ function summarizeRound(round) {
   const videosScanned = okResults.reduce((sum, item) => sum + (item.result.videos?.length || 0), 0);
   const commentsCollected = okResults.reduce((sum, item) => sum + (item.result.comments?.length || 0), 0);
   const evidenceRejected = okResults.reduce((sum, item) => sum + (item.result.keywordTraining?.evidenceRejected || 0), 0);
-  const acceptedEvidenceCount = okResults.reduce((sum, item) => sum + countAcceptedEvidenceHits(item.result.entries || []), 0);
+  const acceptedEvidenceCount = okResults.reduce((sum, item) => sum + countAcceptedEvidenceHitsForResult(item.result || {}), 0);
   const existingDictionaryEvidenceTerms = okResults.reduce((sum, item) => sum + (item.result.keywordTraining?.dictionaryEvidenceEntries?.length || 0), 0);
   return {
     okResults,
@@ -75,6 +75,7 @@ function reportRound(round, index, total) {
   console.log(`Model keywords rejected without text evidence: ${summary.evidenceRejected}`);
   console.log(`Existing dictionary terms refreshed from comments: ${summary.existingDictionaryEvidenceTerms}`);
   console.log(`Accepted keyword evidence hits: ${summary.acceptedEvidenceCount}`);
+  console.log(`Coverage-increasing accepted evidence hits: ${round.coverageIncreasingAcceptedEvidenceCount || 0}`);
   console.log(`Dictionary terms before: ${round.growth.before}`);
   console.log(`Dictionary terms after: ${round.growth.after}`);
   console.log(`New dictionary terms: ${round.growth.added}`);

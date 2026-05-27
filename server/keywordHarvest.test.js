@@ -10478,7 +10478,7 @@ test('harvestKeywordDictionary keeps comment target expansion off by default dur
   const statePath = join(dir, 'state.json');
   try {
     const payloads = [];
-    await harvestKeywordDictionary(
+    const result = await harvestKeywordDictionary(
       {
         seedQueries: [],
         maxQueries: 1,
@@ -10521,7 +10521,7 @@ test('harvestKeywordDictionary does not mark unrelated comment-pool targets as m
   const statePath = join(dir, 'state.json');
   try {
     const payloads = [];
-    await harvestKeywordDictionary(
+    const result = await harvestKeywordDictionary(
       {
         seedQueries: [],
         maxQueries: 1,
@@ -10945,7 +10945,7 @@ test('harvestKeywordDictionary stores merged dictionary evidence count after a h
   const statePath = join(dir, 'state.json');
   const term = '\u5408\u5e76\u540e\u4e09\u6761\u8bc1\u636e';
   try {
-    await harvestKeywordDictionary(
+    const result = await harvestKeywordDictionary(
       {
         seedQueries: [],
         maxQueries: 1,
@@ -10986,6 +10986,7 @@ test('harvestKeywordDictionary stores merged dictionary evidence count after a h
     assert.equal(attempt.successfulAttempts, 1);
     assert.equal(attempt.lastEvidenceCount, 3);
     assert.equal(attempt.queries[0].hit, true);
+    assert.equal(result.state.runs[0].coverageIncreasingAcceptedEvidenceCount, 1);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -10996,7 +10997,7 @@ test('harvestKeywordDictionary does not record duplicate accepted evidence as a 
   const statePath = join(dir, 'state.json');
   const term = '\u5f88\u61c2\u561b';
   try {
-    await harvestKeywordDictionary(
+    const result = await harvestKeywordDictionary(
       {
         priorityQueries: [`${term} \u70ed\u8bc4`],
         seedQueries: [],
@@ -11065,6 +11066,8 @@ test('harvestKeywordDictionary does not record duplicate accepted evidence as a 
     assert.equal(attempt.successfulAttempts, 0);
     assert.equal(attempt.lastEvidenceCount, 0);
     assert.equal(attempt.queries[0].hit, false);
+    assert.equal(result.state.runs[0].acceptedEvidenceCount, 1);
+    assert.equal(result.state.runs[0].coverageIncreasingAcceptedEvidenceCount, 0);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -82,6 +82,8 @@ test('serializeVideoKeywordDiscoveryReport counts accepted evidence by unique co
           growth: { before: 1, after: 1 },
           coverage: { evidenceDeficit: 1 },
           coverageProgress: { evidenceGained: 1 },
+          acceptedEvidenceCount: 2,
+          coverageIncreasingAcceptedEvidenceCount: 1,
           termAttemptSummary: {},
           warnings: [],
           trainingDiagnostics: {},
@@ -117,6 +119,8 @@ test('serializeVideoKeywordDiscoveryReport counts accepted evidence by unique co
   );
 
   assert.equal(report.rounds[0].results[0].acceptedEvidenceCount, 2);
+  assert.equal(report.rounds[0].acceptedEvidenceCount, 2);
+  assert.equal(report.rounds[0].coverageIncreasingAcceptedEvidenceCount, 1);
 });
 
 test('priorityActionItemsFromCoverageActions serializes current non-empty next queries', () => {

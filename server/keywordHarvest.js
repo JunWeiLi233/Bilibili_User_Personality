@@ -2794,6 +2794,61 @@ export function countAcceptedEvidenceHits(entries = []) {
   }, 0);
 }
 
+function acceptedEvidenceEntries(result = {}) {
+  return [
+    ...(Array.isArray(result?.entries) ? result.entries : []),
+    ...(Array.isArray(result?.keywordTraining?.dictionaryEvidenceEntries) ? result.keywordTraining.dictionaryEvidenceEntries : []),
+  ];
+}
+
+export function countAcceptedEvidenceHitsForResult(result = {}) {
+  const sampleKeys = new Set();
+  const fallbackCounts = new Map();
+  for (const entry of acceptedEvidenceEntries(result)) {
+    const term = String(entry?.term || '').trim();
+    if (!term) continue;
+    let sampleCount = 0;
+    for (const sample of entry?.evidenceSamples || []) {
+      const clean = String(sample || '').trim();
+      if (clean) {
+        sampleKeys.add(`${term}\0${clean}`);
+        sampleCount += 1;
+      }
+    }
+    for (const source of entry?.evidenceSources || []) {
+      const clean = String(source?.sample || '').trim();
+      if (clean) {
+        sampleKeys.add(`${term}\0${clean}`);
+        sampleCount += 1;
+      }
+    }
+    if (sampleCount === 0) {
+      fallbackCounts.set(term, Math.max(fallbackCounts.get(term) || 0, Math.max(0, Number(entry?.evidenceCount) || 0)));
+    }
+  }
+  for (const key of sampleKeys) {
+    fallbackCounts.delete(key.split('\0')[0]);
+  }
+  return sampleKeys.size + [...fallbackCounts.values()].reduce((sum, count) => sum + count, 0);
+}
+
+function countCoverageIncreasingAcceptedEvidence(results = [], beforeDictionary = {}, options = {}) {
+  const beforeEntries = new Map((Array.isArray(beforeDictionary?.entries) ? beforeDictionary.entries : []).map((entry) => [String(entry?.term || '').trim(), entry]));
+  let count = 0;
+  for (const item of results) {
+    const result = item?.result || {};
+    if (!result.ok) continue;
+    const afterEntries = new Map((Array.isArray(result?.dictionary?.entries) ? result.dictionary.entries : []).map((entry) => [String(entry?.term || '').trim(), entry]));
+    const acceptedTerms = new Set(acceptedEvidenceEntries(result).map((entry) => String(entry?.term || '').trim()).filter(Boolean));
+    for (const term of acceptedTerms) {
+      const beforeCount = coverageEvidenceCount(beforeEntries.get(term), options);
+      const afterCount = coverageEvidenceCount(afterEntries.get(term), options);
+      count += Math.max(0, afterCount - beforeCount);
+    }
+  }
+  return count;
+}
+
 function summarizeTrainingDiagnostics(results = []) {
   const diagnostics = {
     deepseekCalls: 0,
@@ -3198,6 +3253,8 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   });
   const trainingDiagnostics = summarizeTrainingDiagnostics(results);
   const queryDiagnostics = summarizeQueryDiagnostics(results);
+  const acceptedEvidenceCount = results.reduce((sum, item) => sum + countAcceptedEvidenceHitsForResult(item.result || {}), 0);
+  const coverageIncreasingAcceptedEvidenceCount = countCoverageIncreasingAcceptedEvidence(results, before, coverageOptions);
   const finishedAt = new Date().toISOString();
   const nextState = {
     version: 1,
@@ -3217,7 +3274,8 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         evidenceRejected: trainingDiagnostics.evidenceRejected,
         trainingDiagnostics,
         queryDiagnostics,
-        acceptedEvidenceCount: results.reduce((sum, item) => sum + countAcceptedEvidenceHits(item.result?.entries || []), 0),
+        acceptedEvidenceCount,
+        coverageIncreasingAcceptedEvidenceCount,
         dictionaryBefore: growth.before,
         dictionaryAfter: growth.after,
         dictionaryAdded: growth.added,
@@ -3250,6 +3308,8 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     growth,
     coverage,
     coverageProgress,
+    acceptedEvidenceCount,
+    coverageIncreasingAcceptedEvidenceCount,
     trainingDiagnostics,
     queryDiagnostics,
     termAttemptSummary,
