@@ -1540,14 +1540,18 @@ function queryTemplatesFromOptions(options = {}) {
   const extraTemplates = parseTemplateList(options.extraQueryTemplates);
   const exhaustedTemplates =
     options.includeExhaustedFallbackTemplates === false ? [] : parseTemplateList(options.exhaustedSuggestionTemplates || DEFAULT_EXHAUSTED_SUGGESTION_TEMPLATES);
+  const strictCommentMode = options.requireCommentBackedEvidence === true;
   const builtInTemplates =
-    options.requireCommentBackedEvidence === true
-      ? TERM_QUERY_TEMPLATES.filter((_, index) => ![5, 6, 7, 8, 12, 13].includes(index))
+    strictCommentMode
+      ? TERM_QUERY_TEMPLATES.filter((_, index) => ![5, 6, 7, 8, 9, 10, 12, 13].includes(index))
       : TERM_QUERY_TEMPLATES;
+  const strictExhaustedTemplates = strictCommentMode
+    ? exhaustedTemplates.filter((template) => !/名场面|切片|直播切片/u.test(template))
+    : exhaustedTemplates;
   return [
     ...builtInTemplates.map((template) => ({ template, builtIn: true })),
     ...extraTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
-    ...exhaustedTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
+    ...strictExhaustedTemplates.map((template) => ({ template: (term, family) => renderQueryTemplate(template, term, family), builtIn: false })),
   ];
 }
 

@@ -8370,6 +8370,8 @@ test('buildDictionaryCoverageAudit avoids definition-only templates in strict co
   assert.equal(nextQuery.includes('\u662f\u4ec0\u4e48\u6897'), false);
   assert.equal(nextQuery.includes('\u4ec0\u4e48\u610f\u601d'), false);
   assert.equal(nextQuery.includes('\u51fa\u5904'), false);
+  assert.equal(nextQuery.includes('\u540d\u573a\u9762'), false);
+  assert.equal(nextQuery.includes('\u5207\u7247'), false);
   assert.equal(nextQuery.includes('B\u7ad9'), false);
   assert.notEqual(nextQuery, term);
   assert.match(nextQuery, /\u8bc4\u8bba|\u70ed\u8bc4|\u56de\u590d|\u5f39\u5e55/u);
