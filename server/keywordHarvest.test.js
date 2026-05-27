@@ -357,7 +357,6 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for zero-evide
   );
 
   assert.deepEqual(queries, [
-    '0\u63d0\u5347 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '10\u5e74\u8001\u7c89 \u7c89\u4e1d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '12300\u5de5\u4fe1\u90e8\u6295\u8bc9 \u6d88\u8d39 \u8bc4\u8bba',
     '2026\u6253\u5361 \u6253\u5361 \u8bc4\u8bba\u533a \u70ed\u8bc4',
@@ -365,6 +364,7 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for zero-evide
     '\u827e\u6ecb\u5200 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u827e\u6ecb\u91ce \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u7231\u548b\u548b\u5730 \u6001\u5ea6 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '0\u63d0\u5347 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
   ]);
 });
 
@@ -3443,7 +3443,6 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for retry miss
   );
 
   assert.deepEqual(queries, [
-    '0\u63d0\u5347 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '10\u5e74\u8001\u7c89 \u7c89\u4e1d \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '12300\u5de5\u4fe1\u90e8\u6295\u8bc9 \u6d88\u8d39 \u8bc4\u8bba',
     '2026\u6253\u5361 \u6253\u5361 \u8bc4\u8bba\u533a \u70ed\u8bc4',
@@ -3453,6 +3452,7 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for retry miss
     '\u7231\u548b\u548b\u5730 \u6001\u5ea6 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u7231\u548b\u548b\u7684 \u6001\u5ea6 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u868c\u57e0\u4f4f\u7684 \u7ef7\u4e0d\u4f4f \u56de\u590d \u70ed\u8bc4',
+    '0\u63d0\u5347 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
   ]);
 });
 
@@ -6114,6 +6114,45 @@ test('buildDictionaryCoverageAudit rotates repeated comment misses after unattem
   assert.equal(audit.nextActions[1].currentCommentMisses, 3);
 });
 
+test('buildDictionaryCoverageAudit defers backed strict comment misses after repeated scans', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: 'backedCommentMissed',
+          family: 'attack',
+          evidenceCount: 2,
+          evidenceSources: [
+            { source: 'Bilibili public video comment scan', uid: 'BVbacked1', sample: 'backedCommentMissed sample 1' },
+            { source: 'Bilibili public video comment scan', uid: 'BVbacked2', sample: 'backedCommentMissed sample 2' },
+          ],
+        },
+        { term: 'freshStrictWeak', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      termAttempts: {
+        backedCommentMissed: {
+          term: 'backedCommentMissed',
+          family: 'attack',
+          evidenceAtPlanTime: 2,
+          attempts: 3,
+          successfulAttempts: 0,
+          lastEvidenceCount: 0,
+          queries: [
+            { query: 'backedCommentMissed \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, comments: 240 },
+            { query: 'backedCommentMissed \u70ed\u8bc4', strategyVersion: 6, ok: true, hit: false, comments: 180 },
+            { query: 'backedCommentMissed \u56de\u590d', strategyVersion: 6, ok: true, hit: false, comments: 220 },
+          ],
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 1, requireCommentBackedEvidence: true },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['freshStrictWeak', 'backedCommentMissed']);
+});
+
 test('buildDictionaryCoverageAudit lets zero-evidence retries pass already-backed comment misses', () => {
   const audit = buildDictionaryCoverageAudit(
     {
@@ -6433,16 +6472,18 @@ test('buildDictionaryCoverageAudit defers compact metric fragments behind discou
       entries: [
         { term: '10r', family: 'evidence', evidenceCount: 0 },
         { term: '3TP', family: 'evidence', evidenceCount: 0 },
+        { term: '0\u63d0\u5347', family: 'cooperation', evidenceCount: 0 },
+        { term: '10\u5e74\u8001\u7c89', family: 'evidence', evidenceCount: 0 },
         { term: '\u6760\u7cbe', family: 'attack', evidenceCount: 0 },
         { term: '\u6d17\u5730', family: 'evasion', evidenceCount: 0 },
       ],
     },
     { termAttempts: {} },
-    { targetEvidence: 3, maxActions: 4 },
+    { targetEvidence: 3, maxActions: 6 },
   );
 
-  assert.deepEqual(audit.nextActions.map((item) => item.term), ['\u6760\u7cbe', '\u6d17\u5730', '3TP', '10r']);
-  assert.equal(audit.recommendedQueries[0], '\u6760\u7cbe \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4');
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['10\u5e74\u8001\u7c89', '\u6760\u7cbe', '\u6d17\u5730', '3TP', '10r', '0\u63d0\u5347']);
+  assert.equal(audit.recommendedQueries[0], '10\u5e74\u8001\u7c89 \u7c89\u4e1d \u8bc4\u8bba\u533a \u70ed\u8bc4');
 });
 
 test('buildDictionaryCoverageAudit keeps missed compact metrics behind fresh discourse terms', () => {

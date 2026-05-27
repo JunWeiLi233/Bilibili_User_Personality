@@ -1682,9 +1682,15 @@ function isCompactMetricSearchTerm(term) {
   return /^[0-9]+(?:\.[0-9]+)?(?:[wW\u4e07kK\u79d2sSrR][0-9]*(?:\.[0-9]+)?)?$/.test(String(term || '').trim());
 }
 
+function isShortNumericStatFragment(term) {
+  const clean = String(term || '').trim();
+  return /^[0-9]+(?:\u63d0\u5347)$/u.test(clean);
+}
+
 function coveragePriorityPenalty(item = {}) {
   const term = String(item.term || '').trim();
   if (!term) return 0;
+  if (isShortNumericStatFragment(term)) return 4;
   if (isCompactMetricSearchTerm(term)) return 3;
   if (/^[A-Za-z0-9]+$/.test(term) && /\d/.test(term)) return 2;
   return 0;
@@ -2014,6 +2020,14 @@ function actionSortRank(action, options = {}) {
     return coverageActionRank('harvest_more_evidence') + 0.5 + priorityPenalty;
   }
   if (duplicateAcceptedNoProgress && action?.action === 'retry_with_new_variant' && retryLimit > 0 && attempts >= retryLimit) {
+    return coverageActionRank('harvest') + 0.75 + priorityPenalty;
+  }
+  if (
+    action?.action === 'retry_with_new_variant' &&
+    currentCommentMisses >= Math.max(2, retryLimit + 1) &&
+    evidence > 0 &&
+    options.requireCommentBackedEvidence === true
+  ) {
     return coverageActionRank('harvest') + 0.75 + priorityPenalty;
   }
   if (
