@@ -8441,6 +8441,54 @@ test('buildDictionaryCoverageAudit prefers semantic aliases over generic comment
       triedQuery: '\u5854\u5723 \u5854\u83f2 \u8bc4\u8bba\u533a \u70ed\u8bc4',
       nextQuery: '\u5854\u5723\u6765\u4e86 \u5854\u83f2 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     },
+    {
+      term: '\u592a\u76d1\u4e86',
+      family: 'cooperation',
+      triedQuery: '\u592a\u76d1\u4e86 \u505c\u66f4 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u8fd9\u756a\u592a\u76d1\u4e86 \u505c\u66f4 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u592a\u6709\u795e\u97f5\u4e86\u8001\u94c1',
+      family: 'cooperation',
+      triedQuery: '\u592a\u6709\u795e\u97f5\u4e86\u8001\u94c1 \u9b3c\u755c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u6709\u795e\u97f5\u4e86\u8001\u94c1 \u9b3c\u755c \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u6001\u5ea6\u51b3\u5b9a\u4e00\u5207',
+      family: 'cooperation',
+      triedQuery: '\u6001\u5ea6\u51b3\u5b9a\u4e00\u5207 \u52aa\u529b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u771f\u7684\u6001\u5ea6\u51b3\u5b9a\u4e00\u5207 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5929\u6587\u9635\u8425',
+      family: 'cooperation',
+      triedQuery: '\u5929\u6587\u9635\u8425 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u5929\u6587\u9635\u8425\u600e\u4e48\u9009 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5077\u5077\u53d6\u5173',
+      family: 'cooperation',
+      triedQuery: '\u5077\u5077\u53d6\u5173 up\u4e3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u6211\u8981\u5077\u5077\u53d6\u5173 up\u4e3b \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u56fe\u7247\u53ef\u4ee5\u62ff\u5417',
+      family: 'cooperation',
+      triedQuery: '\u56fe\u7247\u53ef\u4ee5\u62ff\u5417 \u6388\u6743 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u56fe\u53ef\u4ee5\u62ff\u5417 \u6388\u6743 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5154\u5154\u5c9b',
+      family: 'cooperation',
+      triedQuery: '\u5154\u5154\u5c9b \u865a\u62df\u4e3b\u64ad \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u5154\u5154\u5c9b\u7761\u89c9 \u865a\u62df\u4e3b\u64ad \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
+    {
+      term: '\u5154\u5154\u5c9b\u7761\u89c9',
+      family: 'cooperation',
+      triedQuery: '\u5154\u5154\u5c9b\u7761\u89c9 \u865a\u62df\u4e3b\u64ad \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      nextQuery: '\u5154\u5154\u5c9b \u7761\u89c9 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    },
   ];
   const state = { termAttempts: {}, runs: [{ queryDiagnostics: [] }] };
   const entries = [];
