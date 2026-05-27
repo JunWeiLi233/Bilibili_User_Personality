@@ -3504,6 +3504,8 @@ test('buildDictionaryCoverageAudit diversifies common suffix duplicate groups', 
     '\u6485\u9192',
     '\u4eae\u8840\u6761',
   ]);
+  assert.equal(audit.nextActions.find((item) => item.term === '\u6485\u9192').recommendationGroup, '\u6485\u9192');
+  assert.equal(audit.nextActions.some((item) => item.term === '\u6485\u9192\u4eba'), false);
 });
 
 test('buildDictionaryCoverageAudit recommends precision queries for hard zero-evidence misses', () => {
@@ -5895,6 +5897,49 @@ test('harvestKeywordDictionary sends a weak-term batch to strict comment-pool re
     assert.equal(payloads[0].targetExistingTerms.includes('\u4e00\u53f7\u5f31\u8bcd'), true);
     assert.equal(payloads[0].targetExistingTerms.includes('\u4e8c\u53f7\u5f31\u8bcd'), true);
     assert.equal(payloads[0].targetExistingTerms.includes('\u4e09\u53f7\u5f31\u8bcd'), true);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary keeps comment target expansion off by default during strict refreshes', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-no-comment-expand-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        requireCommentBackedEvidence: true,
+        discoveryMode: 'controversial',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term: '\u76ee\u6807\u5f31\u8bcd', family: 'attack', evidenceCount: 1 }],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BVnoexpand111' }],
+            comments: [{ message: '\u65e0\u5173\u5f31\u8bcd \u8bc4\u8bba\u8bc1\u636e', rpid: '1' }],
+            entries: [],
+            collectionDiagnostics: {
+              targetExistingTerms: payload.targetExistingTerms,
+              acceptedTerms: [],
+            },
+          };
+        },
+      },
+    );
+
+    assert.equal(payloads[0].expandTargetsFromComments, false);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

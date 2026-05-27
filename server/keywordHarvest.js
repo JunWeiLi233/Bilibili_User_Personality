@@ -872,7 +872,7 @@ function relatedContainedSearchTerms(entries, entry) {
 
 function recommendationGroupForEntry(entries, entry) {
   const relatedTerms = relatedContainedSearchTerms(entries, entry);
-  return relatedTerms[0] || recommendationGroupForTerm(entry?.term);
+  return recommendationGroupForTerm(relatedTerms[0] || entry?.term);
 }
 
 function attemptedVariantQueries(attempt, options = {}) {
@@ -2074,7 +2074,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         searchPayload.evidenceSourceVideoFallback = options.existingTermsOnly === true;
         searchPayload.allowFilteredDiscoveryFallback = options.allowFilteredDiscoveryFallback !== false;
         searchPayload.preferFilteredDiscoveryFallback = options.preferFilteredDiscoveryFallback !== false;
-        searchPayload.expandTargetsFromComments = options.expandTargetsFromComments !== false;
+        searchPayload.expandTargetsFromComments = options.expandTargetsFromComments === true;
         if (options.existingTermsOnly === true && options.prioritizeSearchQueries !== false) {
           searchPayload.prioritizeSearchQueries = true;
           searchPayload.targetSearchOnly = options.targetSearchOnly !== false;
