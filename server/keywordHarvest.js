@@ -1059,6 +1059,10 @@ function sameRecommendationGroupSort(actionA = {}, actionB = {}) {
 function recommendationGroupForTerm(term) {
   const clean = String(term || '').trim();
   if (clean.startsWith('\u4e0d\u4f1a\u771f\u6709\u4eba')) return '\u4e0d\u4f1a\u771f\u6709\u4eba';
+  if (clean.includes('\u4ece\u826f')) return '\u4ece\u826f';
+  if (clean.startsWith('\u7231\u548b\u548b')) return '\u7231\u548b\u548b\u5730';
+  if (clean.includes('\u4eae\u8840\u6761')) return '\u4eae\u8840\u6761';
+  if (clean.includes('\u6485\u9192')) return '\u6485\u9192';
   if (clean.includes('\u8f66\u8f71\u8f98')) return '\u8f66\u8f71\u8f98';
   if (clean.includes('\u8f66\u5bb6\u519b')) return '\u8f66\u5bb6\u519b';
   if (clean.includes('\u8e6d\u6982\u5ff5')) return '\u8e6d\u6982\u5ff5';

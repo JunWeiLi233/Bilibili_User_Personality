@@ -3481,6 +3481,31 @@ test('buildDictionaryCoverageAudit diversifies same-meaning contained phrase gro
   ]);
 });
 
+test('buildDictionaryCoverageAudit diversifies common suffix duplicate groups', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: '\u4eae\u8840\u6761', family: 'attack', evidenceCount: 2 },
+        { term: '\u4eae\u8840\u6761\u4e86', family: 'attack', evidenceCount: 2 },
+        { term: '\u6485\u9192', family: 'cooperation', evidenceCount: 2 },
+        { term: '\u6485\u9192\u4eba', family: 'cooperation', evidenceCount: 2 },
+        { term: '\u753b\u997c', family: 'attack', evidenceCount: 2 },
+      ],
+    },
+    {},
+    {
+      targetEvidence: 3,
+      maxActions: 3,
+    },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), [
+    '\u753b\u997c',
+    '\u6485\u9192',
+    '\u4eae\u8840\u6761',
+  ]);
+});
+
 test('buildDictionaryCoverageAudit recommends precision queries for hard zero-evidence misses', () => {
   const audit = buildDictionaryCoverageAudit(
     {
@@ -5107,6 +5132,46 @@ test('harvestKeywordDictionary skips known shared-search duplicate groups in lim
     );
 
     assert.deepEqual(result.plan.map((item) => item.term), ['\u8f66\u8f71\u8f98', '\u5403\u53f2']);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('harvestKeywordDictionary skips colloquial suffix duplicate groups in limited runs', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-colloquial-search-group-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 5,
+        coverageMode: 'all-weak',
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: '\u4ece\u826f', family: 'correction', evidenceCount: 2 },
+            { term: '\u4ece\u826f\u4e86', family: 'correction', evidenceCount: 2 },
+            { term: '\u7231\u548b\u548b\u5730', family: 'evasion', evidenceCount: 0 },
+            { term: '\u7231\u548b\u548b\u7684', family: 'evasion', evidenceCount: 0 },
+            { term: '\u6485\u9192', family: 'cooperation', evidenceCount: 2 },
+            { term: '\u6485\u9192\u4eba', family: 'cooperation', evidenceCount: 2 },
+            { term: '\u4eae\u8840\u6761', family: 'attack', evidenceCount: 2 },
+            { term: '\u4eae\u8840\u6761\u4e86', family: 'attack', evidenceCount: 2 },
+            { term: '\u62d4\u7fa4', family: 'cooperation', evidenceCount: 0 },
+          ],
+        }),
+        searchVideoKeywords: async () => ({
+          ok: true,
+          warnings: [],
+          videos: [],
+          comments: [],
+          entries: [],
+        }),
+      },
+    );
+
+    assert.deepEqual(result.plan.map((item) => item.term), ['\u4ece\u826f', '\u6485\u9192', '\u4eae\u8840\u6761', '\u7231\u548b\u548b\u5730', '\u62d4\u7fa4']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
