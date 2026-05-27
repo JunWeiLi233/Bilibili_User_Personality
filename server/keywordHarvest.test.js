@@ -758,6 +758,29 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for next furth
   ]);
 });
 
+test('buildKeywordHarvestQueries avoids concatenated and over-broad meme probes', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u5355\u8f66\u53d8\u6469\u6258', family: 'evasion', evidenceCount: 0 },
+        { term: '\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86', family: 'evasion', evidenceCount: 0 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 4,
+      preferShortCommentVariants: true,
+    },
+  );
+
+  assert.ok(queries.includes('\u640f\u4e00\u640f \u5355\u8f66\u53d8\u6469\u6258 \u8bc4\u8bba\u533a \u70ed\u8bc4'));
+  assert.ok(queries.includes('\u574f\u4e86\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86 \u8bc4\u8bba\u533a \u70ed\u8bc4'));
+  assert.equal(queries.includes('\u5355\u8f66\u53d8\u6469\u6258\u62bd\u5956'), false);
+  assert.equal(queries.includes('\u4e00\u904d\u5c31\u770b\u61c2\u4e86'), false);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for following weak queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -2739,8 +2762,8 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for watch and 
     '\u7f57\u9a6c\u4eba\u5b58\u7591 \u8bc1\u636e \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u54d2\u52fe\u52fe \u62bd\u8c61 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u5927\u8c61\u611f\u5192\u4e86 \u56de\u907f \u8bc4\u8bba\u533a \u70ed\u8bc4',
-    '\u5355\u8f66\u53d8\u6469\u6258 \u62bd\u5956 \u8bc4\u8bba\u533a \u70ed\u8bc4',
-    '\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86 \u5267\u60c5 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u640f\u4e00\u640f \u5355\u8f66\u53d8\u6469\u6258 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u574f\u4e86\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u6389\u5c0f\u73cd\u73e0 \u7834\u9632 \u8bc4\u8bba\u533a \u70ed\u8bc4',
     '\u61c2\u5f97\u81ea\u7136\u61c2 \u8c1c\u8bed\u4eba \u8bc4\u8bba\u533a \u70ed\u8bc4',
   ]);

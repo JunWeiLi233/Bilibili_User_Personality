@@ -255,6 +255,9 @@ const STRICT_TARGET_RELEVANCE_NEEDLES = new Set(
     '\u5c31\u4e0d\u4e00\u4e00\u8bc4\u4ef7\u4e86',
     '\u6015\u88ab\u5220\u8bc4',
     '\u6015\u88ab\u5220\u8bc4\u6545\u53d1\u56fe',
+    '\u5355\u8f66\u53d8\u6469\u6258',
+    '\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86',
+    '\u9f3b\u5b50\u5360\u9886\u5927\u8111',
   ].map(cleanSearchText),
 );
 
@@ -337,6 +340,11 @@ function relevanceScoreForVideo(video, needles = []) {
   }, 0);
 }
 
+function strictTargetRelevanceScoreForVideo(video, targetExistingTerms = []) {
+  const targetNeedles = uniqueByKey(targetExistingTerms.map(cleanSearchText).filter((item) => item.length >= 2), (item) => item);
+  return relevanceScoreForVideo(video, targetNeedles);
+}
+
 function sortVideosByRelevance(videos = [], searchQueries = [], targetExistingTerms = []) {
   const needles = searchNeedlesForRelevance(searchQueries, targetExistingTerms);
   if (needles.length === 0) return videos;
@@ -350,11 +358,13 @@ function filterRelevantVideos(videos = [], searchQueries = [], targetExistingTer
   const needles = searchNeedlesForRelevance(searchQueries, targetExistingTerms);
   if (needles.length === 0) return videos;
   const rejectAskBaiduProductNoise = targetsAskBaiduTerm(targetExistingTerms);
+  const requireStrictTargetRelevance = targetsRequireStrictRelevance(targetExistingTerms);
   const requiredAsciiAnchors = requiredAsciiAnchorsForSearch(searchQueries);
   return videos.filter((video) => {
     if (rejectAskBaiduProductNoise && isAskBaiduProductNoiseVideo(video)) return false;
     const text = videoSearchText(video);
     if (requiredAsciiAnchors.length > 0 && !requiredAsciiAnchors.some((anchor) => text.includes(anchor))) return false;
+    if (requireStrictTargetRelevance) return strictTargetRelevanceScoreForVideo(video, targetExistingTerms) > 0;
     return relevanceScoreForVideo(video, needles) > 0;
   });
 }

@@ -850,6 +850,46 @@ test('searchVideoKeywords avoids scanning zero-relevance videos for target cover
   assert.equal(trainedPayloads.length, 0);
 });
 
+test('searchVideoKeywords requires exact video relevance for high-ambiguity meme targets', async () => {
+  let fetchCalls = 0;
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u4e00\u904d\u5c31\u770b\u61c2\u4e86 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 2,
+      pages: 1,
+      existingTermsOnly: true,
+      includeVideoContext: false,
+      allowFilteredDiscoveryFallback: true,
+      targetExistingTerms: ['\u7b2c\u4e00\u6b21\u5c31\u770b\u61c2\u4e86'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVgenericUnderstand',
+          title: '\u4e00\u904d\u5c31\u770b\u61c2\u4e86\uff1a\u526a\u8f91\u6559\u7a0b\u5168\u89e3\u6790',
+          sourceUrl: 'https://www.bilibili.com/video/BVgenericUnderstand/',
+        },
+        {
+          bvid: 'BVliteralNose',
+          title: '\u9f3b\u5b50\u548c\u5927\u8111\u7684\u5173\u7cfb\uff1a\u79d1\u666e\u52a8\u753b',
+          sourceUrl: 'https://www.bilibili.com/video/BVliteralNose/',
+        },
+      ],
+      fetchJson: async () => {
+        fetchCalls += 1;
+        throw new Error('should not scan alias-only or literal videos for strict meme targets');
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, false);
+  assert.equal(fetchCalls, 0);
+  assert.deepEqual(result.discoveredVideos, []);
+  assert.equal(result.discoveryContextVideos.length, 0);
+});
+
 test('searchVideoKeywords does not direct-probe filtered ask-baidu search noise', async () => {
   let fetchCalls = 0;
   const result = await searchVideoKeywords(
