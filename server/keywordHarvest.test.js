@@ -8741,6 +8741,36 @@ test('buildDictionaryCoverageAudit prefers semantic aliases over generic comment
   }
 });
 
+test('buildDictionaryCoverageAudit does not fall back to bare queries when strict comment retry was already tried', () => {
+  const term = '\u4e0d\u4e00\u4e00';
+  const triedQueries = [
+    '\u4e0d\u4e00\u4e00\u5217\u4e3e \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4e0d\u4e00\u4e00\u8bc4\u4ef7 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ];
+  const state = {
+    termAttempts: {
+      [Buffer.from(term, 'utf8').toString('base64url')]: {
+        term,
+        family: 'evasion',
+        evidenceAtPlanTime: 0,
+        attempts: 2,
+        successfulAttempts: 0,
+        queries: triedQueries.map((query) => ({ query, strategyVersion: 6, ok: true, hit: false, comments: 20 })),
+        lastQuery: triedQueries.at(-1),
+      },
+    },
+  };
+
+  const audit = buildDictionaryCoverageAudit(
+    { entries: [{ term, family: 'evasion', evidenceCount: 0 }] },
+    state,
+    { targetEvidence: 3, maxActions: 1, retryBeforeUnattemptedLimit: 1, requireCommentBackedEvidence: true },
+  );
+
+  assert.notEqual(audit.nextActions[0].nextQuery, '\u4e0d\u4e00\u4e00\u5217\u4e3e');
+  assert.match(audit.nextActions[0].nextQuery, /\u8bc4\u8bba|\u70ed\u8bc4|\u56de\u590d|\u5f39\u5e55/u);
+});
+
 test('buildDictionaryCoverageAudit tries bare aliases after scaffolded search results filter out', () => {
   const term = '\u4f60\u88c5\u4ec0\u4e48';
   const audit = buildDictionaryCoverageAudit(

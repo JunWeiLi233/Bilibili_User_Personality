@@ -1827,8 +1827,8 @@ function queryVariantsForTerm(term, family, limit = TERM_QUERY_TEMPLATES.length,
     .slice(0, limit);
 }
 
-function isCommentEvidenceQuery(query) {
-  return /评论|热评|回复|互动|控评|节奏|粉丝|弹幕/.test(String(query || ''));
+function isRealCommentEvidenceQuery(query) {
+  return /\u8bc4\u8bba|\u70ed\u8bc4|\u56de\u590d|\u4e92\u52a8|\u63a7\u8bc4|\u8282\u594f|\u7c89\u4e1d|\u5f39\u5e55/u.test(String(query || ''));
 }
 
 function commentScopeMissedRetryVariant(variant, triedQueries = new Set(), options = {}, attemptsCount = 0, successfulAttempts = 0, needsSourceRefresh = false) {
@@ -1836,13 +1836,21 @@ function commentScopeMissedRetryVariant(variant, triedQueries = new Set(), optio
   const query = normalizeQueryText(variant.query);
   if (!query) return variant;
   const sparseCommentMatch = query.match(/^(.+)\s+(?:\u8bc4\u8bba|\u70ed\u8bc4|\u56de\u590d)$/);
+  const commentScopedCandidates = (baseQuery) =>
+    unique([
+      `${baseQuery} \u8bc4\u8bba\u533a \u70ed\u8bc4`,
+      `${baseQuery} \u8bc4\u8bba`,
+      `${baseQuery} \u70ed\u8bc4`,
+      `${baseQuery} \u56de\u590d`,
+      `${baseQuery} \u5f39\u5e55`,
+    ].map((item) => normalizeQueryText(item)).filter(Boolean));
   if (sparseCommentMatch) {
-    const scopedQuery = normalizeQueryText(`${sparseCommentMatch[1]} \u8bc4\u8bba\u533a \u70ed\u8bc4`);
-    if (scopedQuery && !triedQueries.has(scopedQuery)) return { ...variant, query: scopedQuery, builtIn: false };
+    const scopedQuery = commentScopedCandidates(sparseCommentMatch[1]).find((item) => !triedQueries.has(item));
+    if (scopedQuery) return { ...variant, query: scopedQuery, builtIn: false };
   }
-  if (isCommentEvidenceQuery(query)) return variant;
-  const scopedQuery = normalizeQueryText(`${query} \u8bc4\u8bba\u533a \u70ed\u8bc4`);
-  if (!scopedQuery || triedQueries.has(scopedQuery)) return variant;
+  if (isRealCommentEvidenceQuery(query)) return variant;
+  const scopedQuery = commentScopedCandidates(query).find((item) => !triedQueries.has(item));
+  if (!scopedQuery) return null;
   return { ...variant, query: scopedQuery, builtIn: false };
 }
 
@@ -2619,12 +2627,12 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
     const sourceRefreshExactQuery =
       needsSourceRefresh && options.requireCommentBackedEvidence === true
         ? sourceRefreshQueriesForTerm(term).find(
-            (query) => !triedQueries.has(query) && !usesTriedBareSearchQuery(query, term, triedQueries) && isCommentEvidenceQuery(query),
+            (query) => !triedQueries.has(query) && !usesTriedBareSearchQuery(query, term, triedQueries) && isRealCommentEvidenceQuery(query),
           )
         : '';
     const sourceRefreshVariant =
       needsSourceRefresh && options.requireCommentBackedEvidence === true
-        ? availableVariants.find((variant) => !triedQueries.has(variant.query) && isCommentEvidenceQuery(variant.query))
+        ? availableVariants.find((variant) => !triedQueries.has(variant.query) && isRealCommentEvidenceQuery(variant.query))
         : null;
     let nextVariant =
       (sourceRefreshExactQuery ? { query: sourceRefreshExactQuery, variantIndex: null, builtIn: false } : null) ||

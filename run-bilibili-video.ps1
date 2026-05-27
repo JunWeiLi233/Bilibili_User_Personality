@@ -28,6 +28,7 @@ param(
   [switch]$IncludeDanmaku,
   [switch]$NoDanmaku,
   [switch]$IncludeGenericPopular,
+  [switch]$SkipPriorityActionRefresh,
   [switch]$ResetHarvestState
 )
 
@@ -59,8 +60,10 @@ if ($PriorityQueryFile) {
 }
 if ($PriorityActionFile) {
   $env:BILIBILI_HARVEST_PRIORITY_ACTION_FILE = $PriorityActionFile
+  $env:BILIBILI_COVERAGE_ACTION_FILE_PATH = $PriorityActionFile
 } else {
   Remove-Item Env:\BILIBILI_HARVEST_PRIORITY_ACTION_FILE -ErrorAction SilentlyContinue
+  Remove-Item Env:\BILIBILI_COVERAGE_ACTION_FILE_PATH -ErrorAction SilentlyContinue
 }
 if ($ControversyQuery.Count -gt 0) {
   $env:BILIBILI_CONTROVERSY_SEARCH_QUERIES = ($ControversyQuery -join "`n")
@@ -183,7 +186,35 @@ Write-Host "Require evidence sources: $($RequireEvidenceSources -or $RequireComm
 Write-Host "Require Bilibili comment evidence: $RequireCommentEvidence"
 Write-Host "Existing dictionary terms only: $ExistingTermsOnly"
 Write-Host "Reset harvest state: $ResetHarvestState"
+Write-Host "Refresh priority action file: $($PriorityActionFile -and -not $SkipPriorityActionRefresh)"
 Write-Host ""
+
+if ($PriorityActionFile -and -not $SkipPriorityActionRefresh) {
+  Write-Host "Refreshing priority action file from current dictionary coverage..."
+  $previousMaxActions = $env:BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS
+  $previousStrict = $env:BILIBILI_COVERAGE_AUDIT_STRICT
+  if (-not $previousMaxActions) {
+    $env:BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS = [string]([Math]::Max(20, $MaxQueries * 4))
+  }
+  $env:BILIBILI_COVERAGE_AUDIT_STRICT = "0"
+  node .\server\runDictionaryCoverageAudit.js
+  $coverageExitCode = $LASTEXITCODE
+  if ($previousMaxActions) {
+    $env:BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS = $previousMaxActions
+  } else {
+    Remove-Item Env:\BILIBILI_COVERAGE_AUDIT_MAX_ACTIONS -ErrorAction SilentlyContinue
+  }
+  if ($previousStrict) {
+    $env:BILIBILI_COVERAGE_AUDIT_STRICT = $previousStrict
+  } else {
+    Remove-Item Env:\BILIBILI_COVERAGE_AUDIT_STRICT -ErrorAction SilentlyContinue
+  }
+  if ($coverageExitCode -ne 0) {
+    exit $coverageExitCode
+  }
+  Write-Host ""
+}
+
 Write-Host "Harvesting dictionary-seeded Bilibili videos, scanning comments, and training the local keyword dictionary..."
 
 node .\server\runVideoKeywordDiscovery.js

@@ -142,6 +142,8 @@ To run the next audit-recommended queries first:
 .\run-bilibili-video.ps1 -PriorityActionFile server\keywordCoverageActions.json -RequireCommentEvidence -ExistingTermsOnly
 ```
 
+When `-PriorityActionFile` is used, the script refreshes that file from the current backend coverage audit immediately before harvesting. This prevents stale action files from repeatedly targeting old no-hit queries after the harvest state has moved on. Use `-SkipPriorityActionRefresh` only when you intentionally want to replay the exact structured action file already on disk.
+
 Each priority query has a per-query timeout so one slow Bilibili or DeepSeek call cannot hold the harvest lock forever. The default is `-QueryTimeoutMs 180000`; lower it for quick triage runs, for example `-QueryTimeoutMs 60000`.
 
 `-PriorityQueryFile server\keywordCoverageQueries.txt` still works for plain one-query-per-line runs, but `-PriorityActionFile` is better for coverage work because it keeps the backend target-term metadata from the audit.
