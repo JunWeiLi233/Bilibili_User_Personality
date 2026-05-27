@@ -1528,6 +1528,48 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for entertainm
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for reply and counterwind weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u4f60\u7684\u8bf4\u6cd5\u592a\u7edd\u5bf9\u4e86', family: 'absolutes', evidenceCount: 1 },
+        { term: '\u4f60\u597d\u6025', family: 'attack', evidenceCount: 1 },
+        { term: '\u4f60\u597d\u6025\u554a', family: 'attack', evidenceCount: 1 },
+        { term: '\u4f60\u51e0\u5e74\u7ea7', family: 'attack', evidenceCount: 1 },
+        { term: '\u4f60\u4eec\u597d\u81ea\u4e3a\u4e4b', family: 'attack', evidenceCount: 1 },
+        { term: '\u4f60\u8bf4\u7684\u6709\u9053\u7406', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u4f60\u7279me', family: 'attack', evidenceCount: 1 },
+        { term: '\u4f60\u7ec6\u54c1', family: 'evasion', evidenceCount: 1 },
+        { term: '\u4f60\u6709\u836f\u554a', family: 'attack', evidenceCount: 1 },
+        { term: '\u9006\u98ce\u5c40', family: 'attack', evidenceCount: 1 },
+        { term: '\u9006\u98ce\u8f93\u51fa', family: 'attack', evidenceCount: 1 },
+        { term: '\u9006\u5929\u5c0f\u9ed1\u5b50', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 12,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u4f60\u7684\u8bf4\u6cd5\u592a\u7edd\u5bf9\u4e86 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u597d\u6025 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u597d\u6025\u554a \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u51e0\u5e74\u7ea7 \u5c0f\u5b66\u751f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u4eec\u597d\u81ea\u4e3a\u4e4b \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u8bf4\u7684\u6709\u9053\u7406 \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u7279me \u5f39\u5e55 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u7ec6\u54c1 \u61c2\u7684\u90fd\u61c2 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u4f60\u6709\u836f\u554a \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u9006\u98ce\u5c40 \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u9006\u98ce\u8f93\u51fa \u6e38\u620f \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u9006\u5929\u5c0f\u9ed1\u5b50 \u996d\u5708 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries prioritizes exact searches for mixed compact metric terms', () => {
   const queries = buildKeywordHarvestQueries(
     {
