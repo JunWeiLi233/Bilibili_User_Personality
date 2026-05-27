@@ -724,6 +724,40 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for further co
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for next further weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u5355\u8d706', family: 'attack', evidenceCount: 1 },
+        { term: '\u5355\u8d70\u4e00\u4e2a6', family: 'cooperation', evidenceCount: 1 },
+        { term: '\u5f39\u5e55\u5168\u662f\u8282\u594f\u590d\u5236', family: 'absolutes', evidenceCount: 1 },
+        { term: '\u5f39\u6027\u56de\u5e94', family: 'attack', evidenceCount: 1 },
+        { term: '\u86cb\u4ed4\u6d3e\u5bf9\u5168\u662f\u5c0f\u5b69\u4f60\u641e\u8fd9\u4e2a', family: 'attack', evidenceCount: 1 },
+        { term: '\u5c9b\u4e0a\u5b8c\u5168\u662f\u5e7b\u5883', family: 'absolutes', evidenceCount: 1 },
+        { term: '\u767b\u9f3b\u5b50\u4e0a\u8138', family: 'attack', evidenceCount: 1 },
+        { term: '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211', family: 'absolutes', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u5355\u8d70\u4e00\u4e2a6 \u70ed\u8bc4',
+    '\u5355\u8d70\u4e00\u4e2a6 \u8bc4\u8bba\u533a \u70ed\u8bc4',
+    '\u5f39\u5e55\u5168\u662f\u8282\u594f\u590d\u5236 \u70ed\u8bc4',
+    '\u5f39\u6027\u56de\u5e94 \u70ed\u8bc4',
+    '\u86cb\u4ed4\u6d3e\u5bf9\u5168\u662f\u5c0f\u5b69\u4f60\u641e\u8fd9\u4e2a \u70ed\u8bc4',
+    '\u5c9b\u4e0a\u5b8c\u5168\u662f\u5e7b\u5883 \u70ed\u8bc4',
+    '\u767b\u9f3b\u5b50\u4e0a\u8138 \u70ed\u8bc4',
+    '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211 \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-evidence queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -1243,7 +1277,7 @@ test('buildKeywordHarvestQueries generates higher-signal sentence-form aliases f
     },
     {
       term: '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211',
-      expectedAliasQuery: '\u7b2c\u4e00\u4e2a\u6295\u5e01 \u7edd\u5bf9\u5316 \u8bc4\u8bba \u70ed\u8bc4',
+      expectedAliasQuery: '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211 \u70ed\u8bc4',
     },
     {
       term: '\u6839\u672c\u6ca1\u6709\u53c2\u8003\u4ef7\u503c\u5440',
