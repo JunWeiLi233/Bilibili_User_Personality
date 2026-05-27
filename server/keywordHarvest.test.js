@@ -690,6 +690,40 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for next conti
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for further continued weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u5927\u8dcc\u763e', family: 'attack', evidenceCount: 1 },
+        { term: '\u5927\u53f7\u6ca1\u4e86', family: 'evasion', evidenceCount: 1 },
+        { term: '\u5927\u529b\u91d1\u521a\u6307', family: 'attack', evidenceCount: 1 },
+        { term: '\u5927\u540d\u6ca1\u6709\u4e00\u4e2a\u4eba\u77e5\u9053', family: 'attack', evidenceCount: 1 },
+        { term: '\u5927\u9b54\u6cd5\u5e08', family: 'attack', evidenceCount: 1 },
+        { term: '\u5927\u610f\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u5927\u610f\u4e86\u6ca1\u6709\u95ea', family: 'attack', evidenceCount: 1 },
+        { term: '\u5e26\u6c9f', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u5927\u8dcc\u763e \u70ed\u8bc4',
+    '\u5927\u53f7\u6ca1\u4e86 \u70ed\u8bc4',
+    '\u5927\u529b\u91d1\u521a\u6307 \u70ed\u8bc4',
+    '\u5927\u540d\u6ca1\u6709\u4e00\u4e2a\u4eba\u77e5\u9053 \u70ed\u8bc4',
+    '\u5927\u9b54\u6cd5\u5e08 \u70ed\u8bc4',
+    '\u5927\u610f\u4e86 \u70ed\u8bc4',
+    '\u5927\u610f\u4e86\u6ca1\u6709\u95ea \u70ed\u8bc4',
+    '\u5e26\u6c9f \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-evidence queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -1511,8 +1545,8 @@ test('buildKeywordHarvestQueries starts with comment anchors for evidence-backed
     '\u7eaf\u51fa\u751f \u70ed\u8bc4',
     '\u8fbe\u7edd\u5bc6\u5168\u662f\u6302 \u70ed\u8bc4',
     '\u8fbe\u7edd\u5bc6 \u5168\u662f\u6302 \u8bc4\u8bba',
+    '\u5927\u53f7\u6ca1\u4e86 \u70ed\u8bc4',
     '\u5927\u53f7\u6ca1\u4e86 \u8bc4\u8bba',
-    '\u53f7\u6ca1\u4e86 \u70ed\u8bc4',
   ]);
 });
 
