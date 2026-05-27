@@ -4786,6 +4786,94 @@ test('normalizeKeywordEntries prunes latest harvested bare agreement, self-state
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested broad alias and literal gameplay evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u53ef\u4ee5\u8d34',
+      family: 'cooperation',
+      meaning: 'ask another user to post evidence or context',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u7b28\u7684\u4eba\u603b\u662f\u4e0d\u4f1a\u7528\uff0c\u89c9\u5f97\u6fc0\u6602\u7684\u53d1\u52a8\u9891\u7387\u4f4e\uff0c\u4e8e\u662f\u9ed1\u5b83\u4e3a\u767d\u677f\uff0c\u800c\u806a\u660e\u7684\u4eba\u5219\u53ef\u4ee5\u53d1\u6325\u51fa\u5b83\u7684\u6700\u5927\u529f\u529b\u3002',
+        '\u6211\u60f3\u6293\u4f4f\u8fd9\u4e2a\u98ce\u53e3\uff0c\u505a\u4e00\u4e2a\u7a00\u7f3a\u7684\uff0c\u771f\u6b63\u5e26\u5927\u5bb6\u63d0\u5347\u8ba4\u77e5\uff0c\u7cbe\u901a\u7b2c\u4e00\u6027\u539f\u7406\u3002',
+        '\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6211\u7684\u95ee\u9898',
+      family: 'correction',
+      meaning: 'admit a mistake or oversight',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8c22\u8c22\uff0c\u539f\u6765\u4e0d\u662f\u6211\u7684\u95ee\u9898',
+        '\u6211\u7684\u95ee\u9898\uff0c\u521a\u624d\u770b\u9519\u4e86',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u5c0f\u998b\u732b',
+      family: 'attack',
+      meaning: 'tease someone as greedy',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '182\u4f4d\u5c0f\u998b\u732b\u3002',
+        '66\u4f4d\u5c0f\u998b\u732b\u3002',
+        '\u56de\u590d @\u963f\u5c0f\u67ef101 :\u5c0f\u998b\u732b\uff0c\u4ec0\u4e48\u90fd\u60f3\u5403\u53ea\u4f1a\u4e0d\u8fc7\u5ba1[doge]',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u4e0b\u996d',
+      family: 'cooperation',
+      meaning: 'watchable with a meal',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u4e0b\u996d',
+        '\u771f\u4e0b\u996d',
+        '\u4e0b\u996d\u89c6\u9891',
+        '\u8fd9\u671f\u8282\u76ee\u5f88\u4e0b\u996d\uff0c\u770b\u7740\u8f7b\u677e',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u60c5\u7eea\u4ef7\u503c',
+      family: 'cooperation',
+      meaning: 'provide emotional support or social value',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u5199\u8bba\u6587\u8fd9\u4e00\u5757\u8c46\u5305\u914d\u653e\u5728\u8138\u4e0a\u5417[\u5618\u58f0]\u9876\u591a\u653e\u5c41\u80a1\u4e0a\uff0c\u7ed9\u70b9\u60c5\u7eea\u4ef7\u503c',
+        '\u4f60\u662f\u62a4\u822a\uff0c\u4f60\u662f\u7ed9\u522b\u4eba\u521b\u9020\u60c5\u7eea\u4ef7\u503c\u7684\uff0c\u4f60\u8981\u6c42\u8001\u677f\u6709\u610f\u601d\uff1f',
+        '\u8fd9\u4e24\u6761\u8981\u6280\u672f\u6ca1\u6280\u672f\u8981\u60c5\u7eea\u4ef7\u503c\u6ca1\u60c5\u7eea\u4ef7\u503c\u7684\u600e\u4e48\u5165\u804c\u7684\uff1f',
+        '\u8c22\u8c22\u4f60\u7684\u56de\u590d\uff0c\u786e\u5b9e\u7ed9\u4e86\u5f88\u591a\u60c5\u7eea\u4ef7\u503c',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u91ce\u6392',
+      family: 'cooperation',
+      meaning: 'coordinate with random teammates',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u8ba9\u8001\u677f\u8d77\u67aa \u4e0d\u7ed9\u8001\u677f\u5e26\u5305 \u8ba9\u8001\u677f\u6253\u67b6\u8bf4\u662f \u90a3\u8ddf\u91ce\u6392\u6709\u4ec0\u4e48\u533a\u522b[\u7b11\u54ed]',
+        '\u8fd9\u4e0d\u5c31\u662f\u91ce\u6392\u5417\uff1f',
+        '\u6211\u4e00\u4e2a\u666e\u901a\u73a9\u5bb6\uff0c\u7edd\u5bc6\u4e0d\u5e26\u4efb\u4f55\u4eba\uff0c\u6211\u81ea\u5df1\u91ce\u6392\u90fd\u7a7f55\u7532\u5e26\u91d1\u86cb\u3002',
+        '\u91ce\u6392\u961f\u53cb\u613f\u610f\u914d\u5408\uff0c\u8fd9\u5c40\u624d\u6253\u5f97\u8d77\u6765',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u53ef\u4ee5\u8d34', ['\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417']],
+    ['\u6211\u7684\u95ee\u9898', ['\u6211\u7684\u95ee\u9898\uff0c\u521a\u624d\u770b\u9519\u4e86']],
+    ['\u5c0f\u998b\u732b', ['\u56de\u590d @\u963f\u5c0f\u67ef101 :\u5c0f\u998b\u732b\uff0c\u4ec0\u4e48\u90fd\u60f3\u5403\u53ea\u4f1a\u4e0d\u8fc7\u5ba1[doge]']],
+    ['\u4e0b\u996d', ['\u4e0b\u996d\u89c6\u9891', '\u8fd9\u671f\u8282\u76ee\u5f88\u4e0b\u996d\uff0c\u770b\u7740\u8f7b\u677e']],
+    ['\u60c5\u7eea\u4ef7\u503c', ['\u8c22\u8c22\u4f60\u7684\u56de\u590d\uff0c\u786e\u5b9e\u7ed9\u4e86\u5f88\u591a\u60c5\u7eea\u4ef7\u503c']],
+    ['\u91ce\u6392', ['\u91ce\u6392\u961f\u53cb\u613f\u610f\u914d\u5408\uff0c\u8fd9\u5c40\u624d\u6253\u5f97\u8d77\u6765']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes latest harvested proper-name and literal setup evidence', () => {
   const entries = normalizeKeywordEntries([
     {
