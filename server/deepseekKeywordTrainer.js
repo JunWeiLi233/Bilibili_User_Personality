@@ -476,6 +476,25 @@ function evidenceSourceSortKey(source = {}) {
   return isVideoContextSource(source) ? 1 : 0;
 }
 
+function evidenceUnitCount(evidenceSamples = [], evidenceSources = []) {
+  const units = new Set();
+  for (const sample of evidenceSamples || []) {
+    const clean = String(sample || '').trim();
+    if (clean) units.add(`sample:${clean}`);
+  }
+  for (const source of evidenceSources || []) {
+    const sample = String(source?.sample || '').trim();
+    if (sample) {
+      units.add(`sample:${sample}`);
+      continue;
+    }
+    const sourceText = String(source?.source || '').trim();
+    const uid = String(source?.uid || '').trim();
+    if (sourceText || uid) units.add(`source:${sourceText}\n${uid}`);
+  }
+  return units.size;
+}
+
 function mergeKeywordEntry(existing, incoming, now) {
   if (!existing) return { ...incoming, updatedAt: incoming.updatedAt || now };
 
@@ -508,6 +527,7 @@ function mergeKeywordEntry(existing, incoming, now) {
   const existingEvidenceCount = Math.max(0, Number(existing.evidenceCount) || 0);
   const incomingEvidenceCount = Math.max(0, Number(incoming.evidenceCount) || 0);
   const ambiguousEvidenceWasFiltered = evidenceSamples.length < Math.min(mergedEvidenceSamples.length, 5) || evidenceSources.length < Math.min(mergedEvidenceSources.length, 8);
+  const sampleBackedEvidenceCount = evidenceUnitCount(evidenceSamples, evidenceSources);
 
   return {
     ...base,
@@ -517,11 +537,12 @@ function mergeKeywordEntry(existing, incoming, now) {
     meaning: details.meaning || existing.meaning || incoming.meaning,
     risk: details.risk || existing.risk || incoming.risk,
     confidence: Math.max(existingConfidence, incomingConfidence),
-    evidenceCount: ambiguousEvidenceWasFiltered
-      ? Math.max(evidenceSamples.length, evidenceSources.length)
-      : evidenceSamples.length > 0 && evidenceSamples.length < existingEvidenceCount + incomingEvidenceCount
-        ? Math.max(existingEvidenceCount, incomingEvidenceCount)
-        : existingEvidenceCount + incomingEvidenceCount,
+    evidenceCount:
+      sampleBackedEvidenceCount > 0
+        ? sampleBackedEvidenceCount
+        : ambiguousEvidenceWasFiltered
+          ? Math.max(evidenceSamples.length, evidenceSources.length)
+          : existingEvidenceCount + incomingEvidenceCount,
     evidenceSamples,
     evidenceSources,
     updatedAt: now,
@@ -717,8 +738,11 @@ export function normalizeKeywordEntries(rawEntries = []) {
       if (isTitleSplicedVideoContextOnlyTerm(term, termEvidenceSamples, termEvidenceSources)) continue;
       if (isAskBaiduSongVideoContextOnlyTerm(term, termEvidenceSamples, termEvidenceSources)) continue;
       if (isMisleadingCarArmyVideoContextOnlyTerm(term, termEvidenceSamples, termEvidenceSources)) continue;
+      const sampleBackedEvidenceCount = evidenceUnitCount(termEvidenceSamples, termEvidenceSources);
       const evidenceCount =
-        rawEvidenceCount > 0 && (termEvidenceSamples.length !== evidenceSamples.length || termEvidenceSources.length !== evidenceSources.length)
+        sampleBackedEvidenceCount > 0
+          ? Math.min(rawEvidenceCount || sampleBackedEvidenceCount, sampleBackedEvidenceCount)
+          : rawEvidenceCount > 0 && (termEvidenceSamples.length !== evidenceSamples.length || termEvidenceSources.length !== evidenceSources.length)
           ? Math.max(termEvidenceSamples.length, termEvidenceSources.length)
           : rawEvidenceCount;
       entries.push({

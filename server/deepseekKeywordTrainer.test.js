@@ -1775,7 +1775,7 @@ test('mergeEntriesIntoDictionary keeps canonical ASCII terms split by family con
 
     assert.deepEqual(dictionary.entries.map((item) => item.term), ['doge']);
     assert.equal(entry.family, 'cooperation');
-    assert.equal(entry.evidenceCount, 2);
+    assert.equal(entry.evidenceCount, 1);
     assert.deepEqual(entry.evidenceSamples, ['nice one doge']);
   } finally {
     await rm(dir, { recursive: true, force: true });
@@ -8133,6 +8133,39 @@ test('trainKeywordDictionary updates evidence for existing terms found in crawle
   }
 });
 
+test('mergeEntriesIntoDictionary counts duplicate source labels for the same comment once', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-merge-dedupe-comment-sample-'));
+  const dictionaryPath = join(dir, 'dictionary.json');
+  try {
+    const sameComment = '\u56de\u590d @\u7535\u73a9\u96f7\u8bfa :\u7ec4\u5efa\u4e00\u53ea\u56fd\u9645\u5b85\u7537\u8054\u76df\u5427';
+    await mergeEntriesIntoDictionary(
+      [
+        {
+          term: '\u56fd\u9645\u5b85\u7537\u8054\u76df',
+          family: 'attack',
+          meaning: 'hostile mobilization meme phrase',
+          confidence: 0.8,
+          evidenceCount: 2,
+          evidenceSamples: [sameComment],
+          evidenceSources: [
+            { source: 'Bilibili public search-discovered video comment scan', uid: 'BVsame', sample: sameComment },
+            { source: 'Bilibili public existing evidence-source video comment scan', uid: 'BVsame', sample: sameComment },
+          ],
+        },
+      ],
+      { dictionaryPath },
+    );
+
+    const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
+    const entry = dictionary.entries.find((item) => item.term === '\u56fd\u9645\u5b85\u7537\u8054\u76df');
+    assert.equal(entry.evidenceCount, 1);
+    assert.deepEqual(entry.evidenceSamples, [sameComment]);
+    assert.equal(entry.evidenceSources.length, 2);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('trainKeywordDictionary fallback treats zhubi as dumb-action criticism', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-train-zhubi-fallback-'));
   const dictionaryPath = join(dir, 'dictionary.json');
@@ -8580,7 +8613,7 @@ test('mergeEntriesIntoDictionary existing-only mode refuses new terms', async ()
     );
 
     assert.equal(dictionary.entries.some((entry) => entry.term === '新增词'), false);
-    assert.equal(dictionary.entries.find((entry) => entry.term === '已有词').evidenceCount, 2);
+    assert.equal(dictionary.entries.find((entry) => entry.term === '已有词').evidenceCount, 1);
     const persisted = JSON.parse(await readFile(dictionaryPath, 'utf8'));
     assert.equal(persisted.entries.some((entry) => entry.term === '新增词'), false);
   } finally {
