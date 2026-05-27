@@ -4730,6 +4730,62 @@ test('normalizeKeywordEntries prunes latest harvested loose publish, understand,
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested bare agreement, self-state, and emote bot evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6ca1\u6bdb\u75c5\u554a',
+      family: 'cooperation',
+      meaning: 'agreement that an argument or description has no issue',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u6ca1\u6bdb\u75c5\uff01',
+        '\u90d1\u5973\u58eb\u8bf4\u7684\u6ca1\u6bdb\u75c5',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: '\u6ca1\u6551\u4e86',
+      family: 'correction',
+      meaning: 'admits a previous position is unsalvageable',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u592a\u597d\u4e86\uff0c\u7126\u8651\u6027\u52a0\u4e0a\u9ad8\u654f\u611f\u4eba\u683c\u52a0\u4e0a\u6cea\u5931\u7981\u52a0\u4e0a\u7ae5\u5e74\u521b\u4f24\u52a0\u4e0a\u8ba8\u597d\u578b\u4eba\u683c\uff0c\u6211\u6ca1\u6551\u4e86 [\u661f\u661f\u773c]',
+        '\u524d\u9762\u90a3\u4e2a\u8bf4\u6cd5\u6ca1\u6551\u4e86\uff0c\u6211\u6536\u56de\u91cd\u8bf4',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: 'ai\u8bc6\u7247\u9171',
+      family: 'cooperation',
+      meaning: 'calls the AI video-identification bot for help',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '@AI\u8bc6\u7247\u9171',
+        '@AI\u8bc6\u7247\u9171 \u8bf7\u5e2e\u5fd9\u8bc6\u522b\u8fd9\u6bb5\u89c6\u9891\u6765\u6e90',
+      ],
+      evidenceSources: [],
+    },
+    {
+      term: 'tv\u70b9\u8d5e',
+      family: 'cooperation',
+      meaning: 'uses a thumbs-up emote to support a comment',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u90a3\u5f88\u6709\u751f\u6d3b\u4e86[tv_\u70b9\u8d5e]',
+        '\u8fd9\u4e2a\u8865\u5145\u5f88\u6709\u7528[tv_\u70b9\u8d5e]\uff0c\u5efa\u8bae\u7f6e\u9876',
+      ],
+      evidenceSources: [],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u6ca1\u6bdb\u75c5\u554a', ['\u90d1\u5973\u58eb\u8bf4\u7684\u6ca1\u6bdb\u75c5']],
+    ['\u6ca1\u6551\u4e86', ['\u524d\u9762\u90a3\u4e2a\u8bf4\u6cd5\u6ca1\u6551\u4e86\uff0c\u6211\u6536\u56de\u91cd\u8bf4']],
+    ['ai\u8bc6\u7247\u9171', ['@AI\u8bc6\u7247\u9171 \u8bf7\u5e2e\u5fd9\u8bc6\u522b\u8fd9\u6bb5\u89c6\u9891\u6765\u6e90']],
+    ['tv\u70b9\u8d5e', ['\u8fd9\u4e2a\u8865\u5145\u5f88\u6709\u7528[tv_\u70b9\u8d5e]\uff0c\u5efa\u8bae\u7f6e\u9876']],
+  ]);
+});
+
 test('normalizeKeywordEntries prunes latest harvested proper-name and literal setup evidence', () => {
   const entries = normalizeKeywordEntries([
     {
