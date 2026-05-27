@@ -656,6 +656,40 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for continued 
   ]);
 });
 
+test('buildKeywordHarvestQueries uses high-signal comment queries for next continued weak queue', () => {
+  const queries = buildKeywordHarvestQueries(
+    {
+      entries: [
+        { term: '\u7eaf\u763e\u5927\u7684\u6765\u4e86', family: 'attack', evidenceCount: 1 },
+        { term: '\u4ece\u672a\u611f\u89c9\u81ea\u5df1\u5982\u6b64\u91cd\u8981', family: 'attack', evidenceCount: 1 },
+        { term: '\u4ece\u5c0f\u4e11\u5230\u5927', family: 'attack', evidenceCount: 1 },
+        { term: '\u6751\u53e3\u96c6\u5408\u6c34\u6ce5\u81ea\u5e26', family: 'attack', evidenceCount: 1 },
+        { term: '\u8fbe\u7edd\u5bc6\u5168\u662f\u6302', family: 'attack', evidenceCount: 1 },
+        { term: '\u6253\u4e86\u81ea\u5df1\u7535\u8bdd', family: 'attack', evidenceCount: 1 },
+        { term: '\u6253\u6458\u6843\u5b50\u70df\u96fe\u5f39', family: 'attack', evidenceCount: 1 },
+        { term: '\u5927\u5927\u9634', family: 'attack', evidenceCount: 1 },
+      ],
+    },
+    {
+      seedQueries: [],
+      coverageMode: 'all-weak',
+      maxQueries: 8,
+      queryVariantsPerTerm: 1,
+    },
+  );
+
+  assert.deepEqual(queries, [
+    '\u7eaf\u763e\u5927\u7684\u6765\u4e86 \u70ed\u8bc4',
+    '\u4ece\u672a\u611f\u89c9\u81ea\u5df1\u5982\u6b64\u91cd\u8981 \u70ed\u8bc4',
+    '\u4ece\u5c0f\u4e11\u5230\u5927 \u70ed\u8bc4',
+    '\u6751\u53e3\u96c6\u5408\u6c34\u6ce5\u81ea\u5e26 \u70ed\u8bc4',
+    '\u8fbe\u7edd\u5bc6\u5168\u662f\u6302 \u70ed\u8bc4',
+    '\u6253\u4e86\u81ea\u5df1\u7535\u8bdd \u70ed\u8bc4',
+    '\u6253\u6458\u6843\u5b50\u70df\u96fe\u5f39 \u70ed\u8bc4',
+    '\u5927\u5927\u9634 \u70ed\u8bc4',
+  ]);
+});
+
 test('buildKeywordHarvestQueries uses high-signal comment queries for next zero-evidence queue', () => {
   const queries = buildKeywordHarvestQueries(
     {
@@ -1475,8 +1509,8 @@ test('buildKeywordHarvestQueries starts with comment anchors for evidence-backed
     '\u522b\u80e1\u8bf4 \u8bc4\u8bba',
     '\u51fa\u751f \u6e38\u620f \u8bc4\u8bba',
     '\u7eaf\u51fa\u751f \u70ed\u8bc4',
+    '\u8fbe\u7edd\u5bc6\u5168\u662f\u6302 \u70ed\u8bc4',
     '\u8fbe\u7edd\u5bc6 \u5168\u662f\u6302 \u8bc4\u8bba',
-    '\u673a\u5bc6\u5168\u662f\u6302 \u70ed\u8bc4',
     '\u5927\u53f7\u6ca1\u4e86 \u8bc4\u8bba',
     '\u53f7\u6ca1\u4e86 \u70ed\u8bc4',
   ]);
