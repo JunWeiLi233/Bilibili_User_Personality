@@ -6081,6 +6081,55 @@ test('normalizeKeywordEntries prunes bare labels and literal academic examples f
   assert.deepEqual(byTerm['\u5e03\u4ec0\u6208\u95e8'].evidenceSamples, ['\u5e03\u4ec0\u6208\u95e8\u554a\uff0c\u8fd9\u64cd\u4f5c\u771f\u79bb\u8c31']);
 });
 
+test('normalizeKeywordEntries prunes literal tragedy and game heirloom evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u60e8\u6848',
+      family: 'attack',
+      meaning: '\u8c03\u4f83\u7cdf\u7cd5\u7ed3\u679c',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u60e8\u6848',
+        'Bilibili video context: \u592e\u89c6\u6700\u5f3a\u516c\u76ca\u5e7f\u544a\uff1a\u4e00\u6839\u70df\u5f15\u53d1\u7684\u60e8\u6848',
+        '\u8db3\u575b\u60e8\u6848\u5343\u5343\u4e07\uff0c\u5fb7\u56fd\u62dc\u4ec1\u5360\u4e00\u534a\u3002\u5fb7\u56fd\u4f6c\u592a\u6b8b\u66b4\u4e86[\u5927\u54ed]',
+        '\u6253\u7834\u60e8\u6848',
+        '\u8fd9\u64ad\u653e\u91cf\u60e8\u6848\u4e86\uff0c\u6807\u9898\u515a\u771f\u7ed9\u6211\u770b\u7b11',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u60e8\u6848' },
+        { source: 'Bilibili public video context', sample: 'Bilibili video context: \u592e\u89c6\u6700\u5f3a\u516c\u76ca\u5e7f\u544a\uff1a\u4e00\u6839\u70df\u5f15\u53d1\u7684\u60e8\u6848' },
+        { source: 'Bilibili public video comment scan', sample: '\u8db3\u575b\u60e8\u6848\u5343\u5343\u4e07\uff0c\u5fb7\u56fd\u62dc\u4ec1\u5360\u4e00\u534a\u3002\u5fb7\u56fd\u4f6c\u592a\u6b8b\u66b4\u4e86[\u5927\u54ed]' },
+        { source: 'Bilibili public video comment scan', sample: '\u6253\u7834\u60e8\u6848' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u64ad\u653e\u91cf\u60e8\u6848\u4e86\uff0c\u6807\u9898\u515a\u771f\u7ed9\u6211\u770b\u7b11' },
+      ],
+    },
+    {
+      term: '\u4f20\u5bb6\u5b9d\u4e86',
+      family: 'absolutes',
+      meaning: '\u5938\u5f20\u8bf4\u6cd5\uff0c\u8868\u793a\u628a\u4e1c\u897f\u957f\u671f\u7559\u7740\u4e0d\u52a8',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u4f20\u5bb6\u5b9d\u4e86',
+        '\u6211\u89c9\u5f97apex\u7684\u95ee\u9898\u5728\u4e8e\u51fa\u901a\u4f20\u4e0d\u5e94\u8be5\u76f4\u63a5\u5360\u7528\u4e86\u4f20\u5bb6\u5b9d\u7684\u4ea7\u91cf',
+        'up\u8bf4\u7684\u5927\u90e8\u5206\u6ca1\u6bdb\u75c5\uff0capex\u7684\u4f20\u5bb6\u5b9d\u7b80\u76f4\u662f\u5929\u624d\u7684\u8bbe\u8ba1',
+        '\u91cd\u751f\u5b83\u660e\u660e\u53ef\u4ee5\u6240\u6709\u4f20\u5bb6\u5b9d\u591a\u6574\u51e0\u4e2a\u989c\u8272\uff0c\u4e4b\u540e\u591a\u51fa\u51e0\u6b21\u534a\u4ef7\u81ea\u9009\u8ba9\u73a9\u5bb6\u81ea\u5df1\u6311',
+        '\u8fd9\u7834\u89c4\u5219\u7559\u7740\u5f53\u4f20\u5bb6\u5b9d\u4e86\u662f\u5427\uff0c\u5341\u5e74\u90fd\u4e0d\u6539',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', sample: '\u4f20\u5bb6\u5b9d\u4e86' },
+        { source: 'Bilibili public video comment scan', sample: '\u6211\u89c9\u5f97apex\u7684\u95ee\u9898\u5728\u4e8e\u51fa\u901a\u4f20\u4e0d\u5e94\u8be5\u76f4\u63a5\u5360\u7528\u4e86\u4f20\u5bb6\u5b9d\u7684\u4ea7\u91cf' },
+        { source: 'Bilibili public video comment scan', sample: 'up\u8bf4\u7684\u5927\u90e8\u5206\u6ca1\u6bdb\u75c5\uff0capex\u7684\u4f20\u5bb6\u5b9d\u7b80\u76f4\u662f\u5929\u624d\u7684\u8bbe\u8ba1' },
+        { source: 'Bilibili public video comment scan', sample: '\u91cd\u751f\u5b83\u660e\u660e\u53ef\u4ee5\u6240\u6709\u4f20\u5bb6\u5b9d\u591a\u6574\u51e0\u4e2a\u989c\u8272\uff0c\u4e4b\u540e\u591a\u51fa\u51e0\u6b21\u534a\u4ef7\u81ea\u9009\u8ba9\u73a9\u5bb6\u81ea\u5df1\u6311' },
+        { source: 'Bilibili public video comment scan', sample: '\u8fd9\u7834\u89c4\u5219\u7559\u7740\u5f53\u4f20\u5bb6\u5b9d\u4e86\u662f\u5427\uff0c\u5341\u5e74\u90fd\u4e0d\u6539' },
+      ],
+    },
+  ]);
+
+  const byTerm = Object.fromEntries(entries.map((entry) => [entry.term, entry]));
+  assert.deepEqual(byTerm['\u60e8\u6848'].evidenceSamples, ['\u8fd9\u64ad\u653e\u91cf\u60e8\u6848\u4e86\uff0c\u6807\u9898\u515a\u771f\u7ed9\u6211\u770b\u7b11']);
+  assert.deepEqual(byTerm['\u4f20\u5bb6\u5b9d\u4e86'].evidenceSamples, ['\u8fd9\u7834\u89c4\u5219\u7559\u7740\u5f53\u4f20\u5bb6\u5b9d\u4e86\u662f\u5427\uff0c\u5341\u5e74\u90fd\u4e0d\u6539']);
+});
+
 test('normalizeKeywordEntries prunes persisted loose reaction evidence for bengbuzhu variants', () => {
   const entries = normalizeKeywordEntries([
     {
