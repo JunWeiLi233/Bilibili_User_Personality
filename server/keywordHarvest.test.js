@@ -9890,6 +9890,102 @@ test('harvestKeywordDictionary caps hard zero-evidence scans per run', async () 
   }
 });
 
+test('harvestKeywordDictionary lets strict comment runs fill with hard zero retries by default', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-strict-hard-default-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    const searched = [];
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        version: 1,
+        harvestStrategyVersion: 6,
+        updatedAt: null,
+        searchedQueries: [],
+        scannedBvids: [],
+        termAttempts: {
+          hardA: {
+            term: 'hardA',
+            family: 'attack',
+            evidenceAtPlanTime: 0,
+            attempts: 6,
+            successfulAttempts: 0,
+            lastEvidenceCount: 0,
+            queries: [{ query: 'hardA \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+          },
+          hardB: {
+            term: 'hardB',
+            family: 'attack',
+            evidenceAtPlanTime: 0,
+            attempts: 6,
+            successfulAttempts: 0,
+            lastEvidenceCount: 0,
+            queries: [{ query: 'hardB \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+          },
+          hardC: {
+            term: 'hardC',
+            family: 'attack',
+            evidenceAtPlanTime: 0,
+            attempts: 6,
+            successfulAttempts: 0,
+            lastEvidenceCount: 0,
+            queries: [{ query: 'hardC \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+          },
+          normal: {
+            term: 'normal',
+            family: 'attack',
+            evidenceAtPlanTime: 2,
+            attempts: 1,
+            successfulAttempts: 1,
+            lastEvidenceCount: 1,
+            queries: [{ query: 'normal \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
+          },
+        },
+        runs: [],
+      }),
+      'utf8',
+    );
+
+    const result = await harvestKeywordDictionary(
+      {
+        maxQueries: 3,
+        coverageMode: 'all-weak',
+        queryVariantsPerTerm: 2,
+        retryBeforeUnattemptedLimit: 3,
+        requireCommentBackedEvidence: true,
+        discoveryLimit: 2,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [
+            { term: 'hardA', family: 'attack', evidenceCount: 0 },
+            { term: 'hardB', family: 'attack', evidenceCount: 0 },
+            { term: 'hardC', family: 'attack', evidenceCount: 0 },
+            { term: 'normal', family: 'attack', evidenceCount: 2 },
+          ],
+        }),
+        searchVideoKeywords: async (payload) => {
+          searched.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.deepEqual(result.plan.map((item) => item.term), ['hardA', 'hardB', 'hardC']);
+    assert.equal(searched.length, 3);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary fills limited runs with distinct term groups before duplicate variants', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-distinct-groups-'));
   const statePath = join(dir, 'state.json');

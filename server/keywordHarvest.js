@@ -1952,7 +1952,7 @@ function isHardMissedPlanItem(planItem, termAttempts, retryBeforeUnattemptedLimi
 
 function selectHarvestPlan(candidatePlan, options = {}) {
   const maxQueries = asPositiveInt(options.maxQueries, 12, 100);
-  const defaultHardMissedQueries = Math.max(2, Math.ceil(maxQueries / 2));
+  const defaultHardMissedQueries = options.requireCommentBackedEvidence === true ? maxQueries : Math.max(2, Math.ceil(maxQueries / 2));
   const maxHardMissedQueries = Math.max(0, Number(options.maxHardMissedQueries ?? defaultHardMissedQueries) || 0);
   const termAttempts = options.termAttempts && typeof options.termAttempts === 'object' ? options.termAttempts : {};
   const searchedQuerySet = options.searchedQuerySet instanceof Set ? options.searchedQuerySet : new Set();
@@ -3158,6 +3158,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     maxHardMissedQueries: options.maxHardMissedQueries,
     termAttempts,
     retryBeforeUnattemptedLimit: options.retryBeforeUnattemptedLimit,
+    requireCommentBackedEvidence: options.requireCommentBackedEvidence,
     searchedQuerySet: skipSearchedQuerySet,
     skipSeen,
   });
