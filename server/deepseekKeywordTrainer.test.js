@@ -5709,7 +5709,6 @@ test('normalizeKeywordEntries prunes latest harvested bare slogan, school identi
     ['\u4e3a\u53d1\u70e7\u800c\u751f', ['\u8fd9\u6b21\u4e3a\u53d1\u70e7\u800c\u751f\u7684\u8bbe\u8ba1\u601d\u8def\u8bb2\u5f97\u5f88\u6e05\u695a']],
     ['\u5b9e\u540d\u5236', ['\u6211\u5b9e\u540d\u5236\u652f\u6301\u8fd9\u4e2a\u5206\u6790']],
     ['\u5b9e\u540d\u5236\u89c2\u770b', ['\u8fd9\u4e2a\u89c6\u9891\u6211\u5b9e\u540d\u5236\u89c2\u770b\u5e76\u4e14\u4e09\u8fde']],
-    ['\u79d1\u5b66\u4e0a\u7f51', ['\u522b\u53ea\u8bf4\u79d1\u5b66\u4e0a\u7f51\u81ea\u5df1\u641c\uff0c\u8bc1\u636e\u94fe\u63a5\u5462']],
   ]);
 });
 
@@ -10961,6 +10960,80 @@ test('normalizeKeywordEntries prunes current no-progress coverage literal produc
   ]);
 
   assert.deepEqual(entries.map((entry) => entry.term), ['\u770b\u95e8\u72d7']);
+});
+
+test('normalizeKeywordEntries prunes latest strict harvest self-score, tutorial, ad-critique, and typo noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u8003\u5f97\u50cf\u53f2',
+      family: 'attack',
+      meaning: 'self-directed exam complaint',
+      evidenceCount: 1,
+      evidenceSamples: ['step\u8003\u5f97\u50cf\u53f2\uff0c\u611f\u89c9\u79bbcam\u8d8a\u6765\u8d8a\u8fdc\u4e86[\u5927\u54ed]'],
+    },
+    {
+      term: '\u79d1\u5b66\u4e0a\u7f51',
+      family: 'evasion',
+      meaning: 'literal network circumvention tutorial term',
+      evidenceCount: 1,
+      evidenceSamples: ['\u672c\u89c6\u9891\u8bb2\u8ff0\u4e86\u5982\u4f55\u901a\u8fc7\u4fee\u6539host\u6587\u4ef6\u6216\u4f7f\u7528\u52a0\u901f\u5668\u7b49\u65b9\u5f0f\uff0c\u5b9e\u73b0\u963f\u65af\u52a0\u5fb7\u4e4b\u6012\u4e8c\u7684\u66f4\u65b0\u548c\u5546\u5e97\u8bbf\u95ee\uff0c\u65e0\u9700\u79d1\u5b66\u4e0a\u7f51'],
+    },
+    {
+      term: '\u55d1\u836f\u63a8\u5e7f\u5e7f\u544a',
+      family: 'attack',
+      meaning: 'over-specific media critique phrase',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6211\u89c9\u5f97\u4ea2\u594b\u5c31\u662f\u55d1\u836f\u63a8\u5e7f\u5e7f\u544a \u65e0\u75db\u547b\u541f\u7684\u6770\u51fa\u4e4b\u4f5c'],
+    },
+    {
+      term: '\u53ef\u80fd\u5012\u95ed\u4f46\u7edd\u4e0d\u53ef\u80fd\u53d8\u8d28',
+      family: 'absolutes',
+      meaning: 'brand slogan fragment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u65f6\u5019\u6211\u5c31\u8981\u8bf4\u4e00\u4e2a\u53ef\u80fd\u5012\u95ed\u4f46\u7edd\u4e0d\u53ef\u80fd\u53d8\u8d28\u5e76\u4e14\u70ed\u7231\u751f\u6d3b\uff0c\u8fd8\u9001\u5927\u4f1a\u5458\u7684\u6545\u4e8b\u4e86\uff08\uff09'],
+    },
+    {
+      term: '\u80af\u5b9a\u662f\u53ef\u4ee5\u7684',
+      family: 'absolutes',
+      meaning: 'generic capability assertion',
+      evidenceCount: 1,
+      evidenceSamples: ['\u81f3\u4e8e\u66f4\u6539\u5b9e\u540d\uff0c\u80af\u5b9a\u662f\u53ef\u4ee5\u7684\uff0c\u53ea\u4e0d\u8fc7\u4ed6\u672c\u4eba\u7684\u5b9e\u540d\u5728\u7b2c\u4e00\u4e2a\u53f7\u4e0a'],
+    },
+    {
+      term: '\u80ef\u7fa4\u6267\u6cd5',
+      family: 'attack',
+      meaning: 'typo for cross-group enforcement',
+      evidenceCount: 1,
+      evidenceSamples: ['\u574f\u5728\u53bb\u522b\u4eba\u7684\u7fa4\u80ef\u7fa4\u6267\u6cd5\uff0c\u8fd8\u5e2e\u522b\u4eba\u505a\u51b3\u5b9a'],
+    },
+    {
+      term: '\u53ef\u4e0d\u662f\u5c31\u6025\u4e86\u561b',
+      family: 'attack',
+      meaning: 'mocks the other side as anxious or triggered',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4f46\u7ad9\u5bf9\u9762\u7684\u53ef\u4e0d\u662f\u5c31\u6025\u4e86\u561b'],
+    },
+    {
+      term: '\u80af\u5b9a\u662f\u4eba\u7684\u9519',
+      family: 'absolutes',
+      meaning: 'absolute blame assignment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6700\u6076\u5fc3\u7684\u8bc4\u8bba\u5c31\u662f\u3010\u53cd\u6b63\u6211\u6ca1\u6709\u89c1\u8fc7\u72d7\u54ac\u4eba\uff0c\u5982\u679c\u771f\u7684\u54ac\u4e86\u4eba\uff0c\u90a3\u80af\u5b9a\u662f\u4eba\u7684\u9519\u3011'],
+    },
+    {
+      term: '\u8de8\u7fa4\u6267\u6cd5',
+      family: 'attack',
+      meaning: 'criticizes enforcing rules across unrelated groups',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8dd1\u5230\u522b\u4eba\u7fa4\u91cc\u8de8\u7fa4\u6267\u6cd5\uff0c\u8fd9\u4e0d\u5c31\u662f\u627e\u67b6\u5417'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u53ef\u4e0d\u662f\u5c31\u6025\u4e86\u561b',
+    '\u80af\u5b9a\u662f\u4eba\u7684\u9519',
+    '\u8de8\u7fa4\u6267\u6cd5',
+  ]);
 });
 
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {

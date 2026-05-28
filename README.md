@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2001`
+- Dictionary terms: `1995`
 - Target evidence per term: `3`
-- Coverage ratio: `61.52%`
-- Weak terms below target: `770`
-- Zero-evidence terms: `179`
-- Evidence deficit: `1609`
-- Source-backed terms: `1822`
+- Coverage ratio: `61.70%`
+- Weak terms below target: `764`
+- Zero-evidence terms: `178`
+- Evidence deficit: `1596`
+- Source-backed terms: `1817`
 - Unsourced evidence terms: `0`
-- Attempted terms: `449`
-- Successful terms: `126`
+- Attempted terms: `454`
+- Successful terms: `127`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -96,6 +96,7 @@ Recent dictionary-cleaning updates:
 - Ran another low-yield strict `deepseek-v4-flash` max-effort pass; kept useful terms such as `鉴定为屎`, `纠正哥`, `你的说法太绝对了`, `太绝对了`, and `抓到一个老实人`, while pruning literal/over-specific noise `极限模式` and `今天被打了没有`.
 - Ran the next strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 3; pruned literal homophone or one-off absolute fragments such as `酒废了`, `酒沸了`, `绝对比条形更好`, `绝对的生产力`, `绝对高于兰博基尼`, and `绝对买的到` so coverage work does not chase product/game/daily-life sentence fragments.
 - Ran another strict `deepseek-v4-flash` max-effort pass; the only evidence gain came from low-portability fragments, so pruned product/game/request or sentence-copy noise such as `绝对是质量问题`, `绝对有问题的`, `绝活强度`, `开国的时候`, `开爽咯`, `看过去全是美国自己干的`, `看门小丑`, and `看下灵根`, while keeping directed insult patterns such as `看门狗`.
+- Ran the next strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 1; kept useful patterns such as `可不是就急了嘛` and `肯定是人的错`, while pruning low-portability or non-argument terms `考得像史`, `科学上网`, `嗑药推广广告`, `可能倒闭但绝不可能变质`, `肯定是可以的`, and typo noise `胯群执法` without blocking the correct `跨群执法`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
