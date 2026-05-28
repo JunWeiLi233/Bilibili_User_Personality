@@ -8839,6 +8839,82 @@ test('normalizeKeywordEntries prunes latest harvested generic aoligei and rhythm
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest harvested explanation, neutral objection, and literal learning samples', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6840\u6840\u6840',
+      family: 'attack',
+      meaning: 'villain-style mocking laugh',
+      evidenceCount: 5,
+      evidenceSamples: [
+        '\u6840\u6840\u6840\u6840\u6840\u6840\uff0c\u4f60\u4e2a\u5c0f\u732b\u54aa\uff0c\u600e\u4e48\u9003\u5f97\u51fa\u9f99\u9f99\u7684\u624b\u638c\u5fc3\uff0c\u4f60\u4e0d\u80fd\u5566~',
+        '\u87f9\u8001\u677f\u7684\u7b11\u58f0\u662f\u6840\u6840\u6840',
+        '\u90a3\u4e3a\u4ec0\u4e48\u8981\u5199\u6210\u6840\u6840\u6840',
+      ],
+    },
+    {
+      term: '\u5f02\u8bae',
+      family: 'attack',
+      meaning: 'dismissive objection marker',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u8fd9\u662f\u4e94\u5e74\u7ea7\u5f02\u8bae\u4e0e\u53cd\u5bf9[doge]',
+        '\u6a21\u62df\u5668\u5f00\u516b\u500d\u901f\u7684\u4e0b\u573a\u5c31\u662f\u6bcf\u4e2a\u5f02\u8bae\u90fd\u4f1a\u51fa\u5f8b\u5e08\u5fbd\u7ae0',
+        '25\u5e74\u5408\u4f5c\u534f\u8bae\u4f0a\u5185\u90e8\u6709\u5f02\u8bae',
+        '\u6211\u5bf9\u4f60\u8fd9\u4e2a\u8bf4\u6cd5\u6709\u5f02\u8bae\uff0c\u8bc1\u636e\u5462',
+      ],
+    },
+    {
+      term: '\u53ef\u4ee5\u8d34',
+      family: 'cooperation',
+      meaning: 'ask another user to post evidence or context',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u76f4\u63a5\u628a\u8bc4\u8bba\u8d34\u51fa\u6765\u4e0d\u884c\u5417\uff1f\u5728\u6015\u4ec0\u4e48\uff1f',
+        '\u6211\u7684\u8bc4\u8bba\u53ef\u80fd\u6709\u70b9\u683c\u683c\u4e0d\u5165\uff0c\u8bf7\u95ee\u4f60\u90a3\u4e2a\u7c89\u8272\u7684\u536b\u8863\u5916\u5957\uff0c\u53ef\u4ee5\u53d1\u6211\u94fe\u63a5\u5417[\u7b11\u54ed]',
+        '\u4f60\u8fd9\u56fe\u7247\u600e\u4e48\u53d1\u51fa\u6765\u7684\uff1f[\u60ca\u8bb6]\u6211\u4e0d\u662f\u8fd9\u79cd\u4eba',
+      ],
+    },
+    {
+      term: '\u5b66\u4e60\u4e86',
+      family: 'cooperation',
+      meaning: 'acknowledges learning from a useful explanation',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u8c22\u8c22\uff01\u5b66\u4e60\u4e86\uff0c\u4e0b\u4e00\u5957\u623f\u5c31\u6309\u7167\u4f60\u8bf4\u7684\u65b9\u5f0f\u6765',
+        '\u65e5\u672c\u5e76\u4e0d\u662f\u534e\u590f\u6c11\u65cf\u7684\u5206\u652f\u2026\u2026\u5b83\u53ea\u662f\u5b66\u4e60\u4e86\u4e2d\u534e\u6587\u5316',
+        '\u6765\u5b66\u4e60\u4e86\uff01',
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceCount, entry.evidenceSamples]), [
+    [
+      '\u6840\u6840\u6840',
+      1,
+      ['\u6840\u6840\u6840\u6840\u6840\u6840\uff0c\u4f60\u4e2a\u5c0f\u732b\u54aa\uff0c\u600e\u4e48\u9003\u5f97\u51fa\u9f99\u9f99\u7684\u624b\u638c\u5fc3\uff0c\u4f60\u4e0d\u80fd\u5566~'],
+    ],
+    [
+      '\u5f02\u8bae',
+      1,
+      ['\u6211\u5bf9\u4f60\u8fd9\u4e2a\u8bf4\u6cd5\u6709\u5f02\u8bae\uff0c\u8bc1\u636e\u5462'],
+    ],
+    [
+      '\u53ef\u4ee5\u8d34',
+      1,
+      ['\u76f4\u63a5\u628a\u8bc4\u8bba\u8d34\u51fa\u6765\u4e0d\u884c\u5417\uff1f\u5728\u6015\u4ec0\u4e48\uff1f'],
+    ],
+    [
+      '\u5b66\u4e60\u4e86',
+      2,
+      [
+        '\u8c22\u8c22\uff01\u5b66\u4e60\u4e86\uff0c\u4e0b\u4e00\u5957\u623f\u5c31\u6309\u7167\u4f60\u8bf4\u7684\u65b9\u5f0f\u6765',
+        '\u6765\u5b66\u4e60\u4e86\uff01',
+      ],
+    ],
+  ]);
+});
+
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {
   const dictionary = {
     entries: [
