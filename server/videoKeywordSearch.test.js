@@ -39,6 +39,47 @@ test('searchVideoKeywords discovers backend videos when no video link is provide
   assert.equal(requestedUrls.some((url) => url.includes('bvid=BV19yGa61Ee6')), true);
 });
 
+test('searchVideoKeywords forwards user Bilibili cookie to backend comment requests', async () => {
+  const seenCookies = [];
+  const result = await searchVideoKeywords(
+    { videoLink: 'https://www.bilibili.com/video/BV19yGa61Ee6/', pages: 1, bilibiliCookie: 'SESSDATA=session-value; bili_jct=csrf-value' },
+    {
+      fetchJson: async (url, _referer, options = {}) => {
+        seenCookies.push(options.bilibiliCookie || '');
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: 'cookie video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 1,
+                ctime: 1,
+                member: { mid: '2', uname: 'viewer' },
+                content: { message: '\u7528\u767b\u5f55 cookie \u626b\u66f4\u591a\u8bc4\u8bba' },
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(seenCookies.every((cookie) => cookie === 'SESSDATA=session-value; bili_jct=csrf-value'), true);
+});
+
+
 test('searchVideoKeywords reports target text hits in collection diagnostics', async () => {
   const result = await searchVideoKeywords(
     {

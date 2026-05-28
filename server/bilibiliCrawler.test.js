@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  analyzeUid,
   collectReplyForUid,
   dedupePublicObjects,
   discoverVideosByKeyword,
@@ -289,6 +290,96 @@ test('fetchJson uses configured Bilibili cookie when provided', async () => {
     }
     resetBilibiliRequestState();
   }
+});
+
+test('fetchJson can use a per-request Bilibili login cookie without caching it', async () => {
+  resetBilibiliRequestState();
+  const seenHeaders = [];
+  let calls = 0;
+  const options = {
+    bilibiliCookie: 'SESSDATA=session-value; bili_jct=csrf-value; invalid; bad\r\nname=x',
+    env: {},
+    config: {
+      minDelayMs: 0,
+      jitterMs: 0,
+      blockCooldownMs: 0,
+      cacheTtlMs: 60000,
+      longPauseProbability: 0,
+    },
+    nowFn: () => 1700000000000,
+    randomFn: () => 0,
+    waitFn: async () => {},
+    fetchImpl: async (_url, init) => {
+      calls += 1;
+      seenHeaders.push(init.headers);
+      return { ok: true, json: async () => ({ code: 0, data: { calls } }) };
+    },
+  };
+
+  await fetchJson('https://api.bilibili.com/login-only', 'https://www.bilibili.com/video/BVxxx/', options);
+  await fetchJson('https://api.bilibili.com/login-only', 'https://www.bilibili.com/video/BVxxx/', options);
+
+  assert.equal(calls, 2);
+  assert.match(seenHeaders[0].cookie, /SESSDATA=session-value/);
+  assert.match(seenHeaders[0].cookie, /bili_jct=csrf-value/);
+  assert.doesNotMatch(seenHeaders[0].cookie, /bad/);
+  resetBilibiliRequestState();
+});
+
+test('analyzeUid forwards user Bilibili cookie through UID object scans', async () => {
+  const seenCookies = [];
+  const result = await analyzeUid(
+    {
+      uid: '453244911',
+      objectLimit: 1,
+      dynamicLimit: 0,
+      pagesPerObject: 1,
+      bilibiliCookie: 'SESSDATA=session-value; bili_jct=csrf-value',
+    },
+    {
+      fetchJson: async (url, _referer, options = {}) => {
+        seenCookies.push(options.bilibiliCookie || '');
+        if (String(url).includes('/x/web-interface/card')) {
+          return { code: 0, card: { mid: '453244911', name: 'target user', sign: '' } };
+        }
+        if (String(url).includes('/x/space/arc/search')) {
+          return {
+            code: 0,
+            data: {
+              list: {
+                vlist: [
+                  {
+                    aid: 123,
+                    bvid: 'BV19yGa61Ee6',
+                    title: 'user upload',
+                    author: 'target user',
+                  },
+                ],
+              },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 1,
+                mid: '453244911',
+                member: { mid: '453244911', uname: 'target user' },
+                content: { message: '\u767b\u5f55 cookie \u626b\u5230 UID \u4e92\u52a8' },
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.equal(result.comments.length, 1);
+  assert.equal(seenCookies.every((cookie) => cookie === 'SESSDATA=session-value; bili_jct=csrf-value'), true);
 });
 
 test('fetchJson caches successful Bilibili JSON responses for repeated reads', async () => {

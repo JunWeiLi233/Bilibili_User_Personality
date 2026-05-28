@@ -27,7 +27,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -182,6 +183,18 @@ h1 {
   padding: 0 14px;
   color: #1c1c1b;
   background: transparent;
+}
+
+.search-row textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  outline: 0;
+  padding: 12px 14px;
+  color: #1c1c1b;
+  background: rgba(255, 255, 255, 0.64);
+  border-radius: 4px;
 }
 
 .search-row button {

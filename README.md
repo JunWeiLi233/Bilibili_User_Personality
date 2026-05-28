@@ -176,6 +176,7 @@ In the app:
 
 - Click `后端默认视频` to run backend video discovery or the configured backend video links.
 - Or paste a UID, Bilibili video URL, or `BV` id into the `B 站 UID / 视频链接` search box.
+- Optional: paste your Bilibili browser cookie into `Bilibili Cookie (optional)` before scanning. The frontend sends it only in that backend request body; the backend forwards it to Bilibili API calls for UID discovery, video discovery, comments, and danmaku so logged-in scans can see more accessible public comments. Cookie-backed scans also raise the UI request size from 2 comment pages to 5, and UID scans expand from 8 to 12 public objects. Do not paste cookies from accounts you do not control.
 - If no explicit backend video link is configured, default video discovery uses `controversial` mode. It reads `BILIBILI_CONTROVERSY_SEARCH_QUERIES` for debate-heavy topics and `BILIBILI_VIDEO_SEARCH_QUERY` / `BILIBILI_VIDEO_SEARCH_QUERIES` for extra dictionary-oriented queries.
 
 For DeepSeek V4 keyword training, configure an API key before starting the server:
@@ -210,8 +211,11 @@ $env:BILIBILI_VIDEO_DISCOVERY_PAGES="1"
 $env:BILIBILI_CONTROVERSIAL_POPULAR_QUERY_LIMIT="4"
 $env:BILIBILI_CONTROVERSIAL_POPULAR_SEARCH_ORDER="click"
 $env:BILIBILI_VIDEO_COMMENT_PAGES="2"
+$env:BILIBILI_COOKIE="SESSDATA=...; bili_jct=...; DedeUserID=..."
 $env:DEEPSEEK_KEYWORD_DICTIONARY_PATH="server/deepseekKeywordDictionary.json"
 ```
+
+`BILIBILI_COOKIE` is the CLI/server equivalent of the optional website cookie field. Keep it out of committed files and terminal screenshots. The crawler disables response caching for per-request cookies so one login cookie cannot poison another scan's cached response.
 
 `DEEPSEEK_MODEL=deepseek-v4-pro` can be used when you want the stronger V4 model for dictionary extraction.
 DeepSeek's API accepts `medium` as a compatibility reasoning-effort value and maps it to its supported V4 thinking effort internally.

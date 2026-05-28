@@ -720,6 +720,7 @@ function App() {
   const [selectedId, setSelectedId] = React.useState(defaultUsers[0].id);
   const [activeError, setActiveError] = React.useState('全部');
   const [query, setQuery] = React.useState('');
+  const [bilibiliCookie, setBilibiliCookie] = React.useState('');
   const [uid, setUid] = React.useState('UID 349872641');
   const [commentText, setCommentText] = React.useState(sampleTextA);
   const [fetchState, setFetchState] = React.useState({
@@ -798,6 +799,7 @@ function App() {
 
   const fetchVideoKeywords = async () => {
     const videoLink = query.trim();
+    const hasBilibiliCookie = Boolean(bilibiliCookie.trim());
     if (videoLink && !/BV[0-9A-Za-z]+|bilibili\.com\/video|b23\.tv/i.test(videoLink)) {
       setFetchState({ status: 'error', message: '留空使用后端默认视频；或输入包含 BV 号的 B 站视频链接。' });
       return;
@@ -816,7 +818,8 @@ function App() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           ...(videoLink ? { videoLink } : {}),
-          pages: 2,
+          ...(hasBilibiliCookie ? { bilibiliCookie: bilibiliCookie.trim() } : {}),
+          pages: hasBilibiliCookie ? 5 : 2,
         }),
       });
       const data = await response.json();
@@ -885,6 +888,7 @@ function App() {
 
   const fetchUidComments = async () => {
     const searchUid = query.trim().match(/\d+/)?.[0] || '';
+    const hasBilibiliCookie = Boolean(bilibiliCookie.trim());
     if (!searchUid) {
       setFetchState({ status: 'error', message: '请输入数字 UID。' });
       return;
@@ -898,10 +902,11 @@ function App() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           uid: searchUid,
+          ...(hasBilibiliCookie ? { bilibiliCookie: bilibiliCookie.trim() } : {}),
           bvidPool: '',
-          objectLimit: 8,
-          dynamicLimit: 8,
-          pagesPerObject: 2,
+          objectLimit: hasBilibiliCookie ? 12 : 8,
+          dynamicLimit: hasBilibiliCookie ? 12 : 8,
+          pagesPerObject: hasBilibiliCookie ? 5 : 2,
         }),
       });
       const data = await response.json();
@@ -1148,6 +1153,14 @@ function App() {
                   后端默认视频
                 </button>
               </div>
+              <label htmlFor="bilibili-cookie">Bilibili Cookie (optional)</label>
+              <textarea
+                id="bilibili-cookie"
+                value={bilibiliCookie}
+                onChange={(event) => setBilibiliCookie(event.target.value)}
+                placeholder="SESSDATA=...; bili_jct=...; DedeUserID=..."
+                spellCheck="false"
+              />
               <p className={`fetch-status fetch-${fetchState.status}`}>{fetchState.message}</p>
               <div className="mode-selector" role="radiogroup" aria-label="分析模式">
                 {analysisModes.map((mode) => (

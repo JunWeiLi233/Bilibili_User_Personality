@@ -1,4 +1,4 @@
-import { discoverPopularVideos, discoverVideosByKeyword, extractBvid, fetchJson, fetchRepliesForVideo, fetchText } from './bilibiliCrawler.js';
+import { depsWithBilibiliCookie, discoverPopularVideos, discoverVideosByKeyword, extractBvid, fetchJson, fetchRepliesForVideo, fetchText } from './bilibiliCrawler.js';
 import {
   findDictionaryEntriesWithTextEvidence as defaultFindDictionaryEntriesWithTextEvidence,
   readKeywordDictionary as defaultReadKeywordDictionary,
@@ -552,6 +552,7 @@ function evidenceSourceVideosForTerms(dictionary = {}, targetExistingTerms = [],
 }
 
 export async function searchVideoKeywords(payload = {}, deps = {}) {
+  deps = depsWithBilibiliCookie(deps, payload.bilibiliCookie || payload.bilibiliCookieHeader || payload.cookie);
   deps = depsWithAbortSignal(deps, payload.abortSignal);
   const videoLinks = parseList(
     payload.videoLinks ||

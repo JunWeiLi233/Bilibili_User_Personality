@@ -113,9 +113,42 @@ function ensureCookies(randomFn, nowFn) {
   cookieJar.set('home_feed', 'recommend');
 }
 
-function cookieHeader() {
-  if (!cookieJar.size) return '';
-  return [...cookieJar.entries()].map(([k, v]) => `${k}=${v}`).join('; ');
+export function normalizeBilibiliCookie(value) {
+  return String(value || '')
+    .split(/;\s*/)
+    .map((part) => part.trim())
+    .filter((part) => {
+      const eq = part.indexOf('=');
+      if (eq <= 0) return false;
+      const name = part.slice(0, eq).trim();
+      const cookieValue = part.slice(eq + 1).trim();
+      return Boolean(name && cookieValue) && !/[\r\n:]/.test(name) && !/[\r\n]/.test(cookieValue);
+    })
+    .join('; ');
+}
+
+function cookieHeader(requestCookie = '') {
+  const merged = new Map(cookieJar);
+  for (const part of normalizeBilibiliCookie(requestCookie).split(/;\s*/).filter(Boolean)) {
+    const eq = part.indexOf('=');
+    const name = part.slice(0, eq).trim();
+    const value = part.slice(eq + 1).trim();
+    if (name && value) merged.set(name, value);
+  }
+  if (!merged.size) return '';
+  return [...merged.entries()].map(([k, v]) => `${k}=${v}`).join('; ');
+}
+
+export function depsWithBilibiliCookie(deps = {}, cookie = '') {
+  const bilibiliCookie = normalizeBilibiliCookie(cookie);
+  if (!bilibiliCookie) return deps;
+  const requestJson = deps.fetchJson || fetchJson;
+  const requestText = deps.fetchText || fetchText;
+  return {
+    ...deps,
+    fetchJson: (url, referer, options = {}) => requestJson(url, referer, { ...options, bilibiliCookie }),
+    fetchText: (url, referer, options = {}) => requestText(url, referer, { ...options, bilibiliCookie }),
+  };
 }
 
 function captureSetCookies(response) {
@@ -156,7 +189,7 @@ function siteRelation(url, referer) {
   }
 }
 
-function buildHeaders(url, referer, randomFn, nowFn) {
+function buildHeaders(url, referer, randomFn, nowFn, requestCookie = '') {
   ensureSessionUserAgent(randomFn);
   ensureCookies(randomFn, nowFn);
   let origin = 'https://www.bilibili.com';
@@ -176,7 +209,7 @@ function buildHeaders(url, referer, randomFn, nowFn) {
     'sec-fetch-mode': 'cors',
     'sec-fetch-site': siteRelation(url, referer),
   };
-  const cookies = cookieHeader();
+  const cookies = cookieHeader(requestCookie);
   if (cookies) headers.cookie = cookies;
   return headers;
 }
@@ -262,10 +295,11 @@ function applyBlockCooldown(config, nowFn) {
 
 export async function fetchJson(url, referer = 'https://www.bilibili.com', options = {}) {
   const config = fetchConfigWithSignal({ ...readCrawlerConfig(options.env), ...(options.config || {}) }, options.signal);
-  const key = cacheKey(url, referer);
+  const requestCookie = normalizeBilibiliCookie(options.bilibiliCookie || options.cookie);
+  const key = requestCookie ? '' : cacheKey(url, referer);
   const nowFn = options.nowFn || Date.now;
   const randomFn = options.randomFn || Math.random;
-  const cached = responseCache.get(key);
+  const cached = key ? responseCache.get(key) : null;
   if (cached && config.cacheTtlMs > 0 && cached.expiresAt > nowFn()) {
     return cached.payload;
   }
@@ -276,7 +310,7 @@ export async function fetchJson(url, referer = 'https://www.bilibili.com', optio
     fetchImpl,
     url,
     {
-      headers: buildHeaders(url, referer, randomFn, nowFn),
+      headers: buildHeaders(url, referer, randomFn, nowFn, requestCookie),
       ...(config.signal ? { signal: config.signal } : {}),
     },
     config,
@@ -293,7 +327,7 @@ export async function fetchJson(url, referer = 'https://www.bilibili.com', optio
     applyBlockCooldown(config, nowFn);
   } else if (payload?.code === 0) {
     consecutiveBlocks = 0;
-    if (config.cacheTtlMs > 0) {
+    if (key && config.cacheTtlMs > 0) {
       responseCache.set(key, {
         expiresAt: nowFn() + config.cacheTtlMs,
         payload,
@@ -307,13 +341,14 @@ export async function fetchText(url, referer = 'https://www.bilibili.com', optio
   const config = fetchConfigWithSignal({ ...readCrawlerConfig(options.env), ...(options.config || {}) }, options.signal);
   const nowFn = options.nowFn || Date.now;
   const randomFn = options.randomFn || Math.random;
+  const requestCookie = normalizeBilibiliCookie(options.bilibiliCookie || options.cookie);
   await scheduleBilibiliRequest({ ...options, config });
   const fetchImpl = options.fetchImpl || fetch;
   const response = await fetchWithTimeout(
     fetchImpl,
     url,
     {
-      headers: buildHeaders(url, referer, randomFn, nowFn),
+      headers: buildHeaders(url, referer, randomFn, nowFn, requestCookie),
       ...(config.signal ? { signal: config.signal } : {}),
     },
     config,
@@ -788,6 +823,7 @@ function uniqueByRpid(items) {
 }
 
 export async function analyzeUid(payload, deps = {}) {
+  deps = depsWithBilibiliCookie(deps, payload.bilibiliCookie || payload.bilibiliCookieHeader || payload.cookie);
   const uid = String(payload.uid || '').trim();
   if (!/^\d+$/.test(uid)) {
     return { ok: false, error: 'UID must be a numeric Bilibili mid.' };
