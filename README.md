@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2066`
+- Dictionary terms: `2057`
 - Target evidence per term: `3`
-- Coverage ratio: `59.34%`
-- Weak terms below target: `840`
+- Coverage ratio: `59.60%`
+- Weak terms below target: `831`
 - Zero-evidence terms: `196`
-- Evidence deficit: `1773`
-- Source-backed terms: `1870`
+- Evidence deficit: `1755`
+- Source-backed terms: `1861`
 - Unsourced evidence terms: `0`
-- Attempted terms: `362`
-- Successful terms: `100`
+- Attempted terms: `368`
+- Successful terms: `103`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -87,6 +87,7 @@ Recent dictionary-cleaning updates:
 - Pruned no-progress auto-coverage noise after another `deepseek-v4-flash` max-effort run: removed product/equipment terms `电锯pro` / `电锯promax`, title-only `定叫你好评如潮`, entertainment absolute `东海每次同框绝对有笑点`, literal TV phrase `上电视`, and emote labels `doge圣诞` / `tv点赞`; kept target-context `东户西甜` and sarcastic `良心辣`.
 - Pruned the next flash/max coverage batch after it reduced weak and zero-evidence gaps: removed short fragment `高完了`, generic praise/emote `妙啊`, proper-name political labels `川建国` / `川普`, poetry ranking phrases `杜甫第一李白不参与排名` / `李白不参与排名`, fandom/person reaction `全是我们马哥`, entertainment pun `会云多云`, and fiction trope `小叔文学`; kept directed argument markers such as `都让你高完了`, `堵住人民嘴`, and `多少有点小丑`.
 - Pruned the current flash/max coverage batch after it reduced weak and zero-evidence gaps: removed game-completion sentence `发现全是缺`, mine/rank pun `排长`, stale game nickname `牢祖冲之`, generic luck phrase `运气真好`, and generic product/game praise `炒鸡好用`; kept argument-use terms such as `防杠我先说`, `不要胡说`, and object-dismissal `废铜烂铁`.
+- Pruned the latest flash/max coverage-batch fandom/title/platform/emote noise: removed generic family address `都是家人`, entertainment ranking `恐怖童谣绝对第一`, bare `PY现场`, creator-follow/platform actions `关注力` / `三联`, fandom-specific `高妃应得的待遇`, slogan `正道的光`, and emote labels `斜眼笑` / `tv斜眼笑`; kept valid argumentative uses such as `感谢指正`, `干崩阿`, `根本没有说不允许`, and `td小青蛙`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
