@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2035`
+- Dictionary terms: `2028`
 - Target evidence per term: `3`
-- Coverage ratio: `60.49%`
-- Weak terms below target: `804`
-- Zero-evidence terms: `189`
-- Evidence deficit: `1690`
-- Source-backed terms: `1846`
+- Coverage ratio: `60.70%`
+- Weak terms below target: `797`
+- Zero-evidence terms: `183`
+- Evidence deficit: `1670`
+- Source-backed terms: `1845`
 - Unsourced evidence terms: `0`
-- Attempted terms: `405`
-- Successful terms: `118`
+- Attempted terms: `417`
+- Successful terms: `120`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -91,6 +91,7 @@ Recent dictionary-cleaning updates:
 - Ran another `deepseek-v4-flash` max-effort auto-coverage pass over controversial Bilibili searches; kept useful discourse evidence such as `公知话术`, `精神美国人`, `狗屎机制`, and `不黑不吹`, while pruning generic/outdated/title or creator-noise terms `梗out了` / `out了`, `监狱来的妈妈`, `小up`, `千年是哮天犬`, and `原来你也玩原神`.
 - Ran another `deepseek-v4-flash` max-effort auto-coverage pass that reduced strict comment-backed zero-evidence terms by 3 and weak terms by 4; kept useful terms such as `挂路灯`, `全是广东的`, `全是水军`, `有人急了`, `规训顾客`, `猪血馒头`, `心里没点b数`, and `hapi言论`, while pruning broad/generic noise `广东的`, `笑嘻了`, `拔群` / `效果拔群`, `罗神伟大`, `国际宅男联盟` / `宅男联盟`, and `好时代来临力`.
 - Ran the next `deepseek-v4-flash` max-effort auto-coverage pass and pushed audited coverage above 60%; kept useful evidence such as `毫无吊用`, `没吊用`, `罕见ip`, `老抠比`, `无脑喷`, and `好拼截图`, while pruning narrow or non-argument terms `战绩清零卡`, `问老马本人`, `三年就走了`, `好磕的很`, `咱们眼光一样`, and tool-object fragments `快速平整` / `平整器` / `土地快速平整器`.
+- Ran another strict `deepseek-v4-flash` max-effort coverage pass and reduced zero-evidence terms again; kept generalized argumentative terms such as `好自为之`, `好自为之吧`, `义务教育没上完`, `很懂嘛`, `很懂嘛老铁`, `洗钱片`, and `弱弱说一句`, while pruning over-specific or literal noise `甜菜`, `黑陶渊明`, `乾隆老儿`, `破了相了`, `一曲忠诚的赞歌`, `cos路易十六`, and `视频全都不见了`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally

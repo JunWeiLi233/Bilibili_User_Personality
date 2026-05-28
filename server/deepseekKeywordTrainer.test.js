@@ -5483,9 +5483,7 @@ test('normalizeKeywordEntries prunes latest harvested loose restored-metadata ev
     },
   ]);
 
-  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
-    ['cos\u8def\u6613\u5341\u516d', ['\u8fd9\u4e2a\u5986\u9020\u662f\u5728cos\u8def\u6613\u5341\u516d\uff0c\u6885\u5f00\u4e8c\u5ea6\u4e86']],
-  ]);
+  assert.deepEqual(entries, []);
 });
 
 test('normalizeKeywordEntries prunes latest harvested literal mode, commerce, and bare reaction evidence', () => {
@@ -10675,6 +10673,87 @@ test('normalizeKeywordEntries prunes current coverage batch narrow meme, fandom,
     ['\u6beb\u65e0\u540a\u7528', ['\u522b\u4e70\uff0c\u6beb\u65e0\u540a\u7528']],
     ['\u7f55\u89c1ip', ['\u7f55\u89c1IP[\u7b11\u54ed]']],
     ['\u65e0\u8111\u55b7', ['\u662f\u7684\u5f88\u591a\u4eba\u771f\u7684\u65e0\u8111\u55b7[\u5403\u74dc]']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes latest coverage batch proper-name, generic-state, and title-noise terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u751c\u83dc',
+      family: 'cooperation',
+      meaning: 'ambiguous generic praise or typo-like fragment',
+      evidenceCount: 3,
+      evidenceSamples: ['\u8fd9\u4e2a\u8bf4\u641e\u7b11\u7684\u4e5f\u771f\u662f\u751c\u83dc', '\u751c\u83dc\uff0c\u6211\u8981\u88ab\u7b11\u6b7b\u4e86[\u559c\u6781\u800c\u6ce3]'],
+    },
+    {
+      term: '\u9ed1\u9676\u6e0a\u660e',
+      family: 'attack',
+      meaning: 'over-specific proper-name criticism',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4f60\u751a\u81f3\u53ef\u4ee5\u770b\u5230\u9ed1\u9676\u6e0a\u660e\uff0c\u9a82\u6b27\u9633\u4fee\u7684[\u7b11\u54ed]'],
+    },
+    {
+      term: '\u4e7e\u9686\u8001\u513f',
+      family: 'attack',
+      meaning: 'proper-name historical insult',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6b63\u89e3\uff0c\u8fde\u4e7e\u9686\u8001\u513f\u5c45\u7136\u90fd\u80fd\u4e0a\u699c[\u7b11\u54ed]'],
+    },
+    {
+      term: '\u7834\u4e86\u76f8\u4e86',
+      family: 'cooperation',
+      meaning: 'generic appearance-state reaction',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u4e0d\u7834\u4e86\u76f8\u4e86\u561b[doge_\u91d1\u7b8d]'],
+    },
+    {
+      term: '\u4e00\u66f2\u5fe0\u8bda\u7684\u8d5e\u6b4c',
+      family: 'cooperation',
+      meaning: 'over-specific media quote/title-like phrase',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5148\u53bb\u627e\u7b2c\u516b\u5c40\u603b\u52a1\u5904\u957f\u5218\u65b0\u6770\uff0c\u8d70\u6d77\u8def\u8fd0\u5230\u5929\u6d25\u3002'],
+    },
+    {
+      term: 'cos\u8def\u6613\u5341\u516d',
+      family: 'cooperation',
+      meaning: 'over-specific cosplay proper-name phrase',
+      evidenceCount: 0,
+      evidenceSamples: [],
+    },
+    {
+      term: '\u89c6\u9891\u5168\u90fd\u4e0d\u89c1\u4e86',
+      family: 'evasion',
+      meaning: 'literal platform/content state',
+      evidenceCount: 1,
+      evidenceSamples: ['\u89c6\u9891\u5168\u90fd\u4e0d\u89c1\u4e86'],
+    },
+    {
+      term: '\u4e49\u52a1\u6559\u80b2\u6ca1\u4e0a\u5b8c',
+      family: 'attack',
+      meaning: 'mocking someone as lacking basic education',
+      evidenceCount: 1,
+      evidenceSamples: ['\u864e\u6251\u8fd9\u8bc4\u5206\u7684\u4eba\u611f\u89c9\u662f\u4e49\u52a1\u6559\u80b2\u6ca1\u4e0a\u5b8c\u7684\u90a3\u79cd[\u7b11\u54ed][\u7b11\u54ed]'],
+    },
+    {
+      term: '\u5f88\u61c2\u561b',
+      family: 'attack',
+      meaning: 'sarcastic claim that someone thinks they know a lot',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5f88\u61c2\u561b\u8001\u94c1[doge]'],
+    },
+    {
+      term: '\u6d17\u94b1\u7247',
+      family: 'attack',
+      meaning: 'accuses a film of being money laundering',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6d17\u94b1\u7247'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u4e49\u52a1\u6559\u80b2\u6ca1\u4e0a\u5b8c', ['\u864e\u6251\u8fd9\u8bc4\u5206\u7684\u4eba\u611f\u89c9\u662f\u4e49\u52a1\u6559\u80b2\u6ca1\u4e0a\u5b8c\u7684\u90a3\u79cd[\u7b11\u54ed][\u7b11\u54ed]']],
+    ['\u5f88\u61c2\u561b', ['\u5f88\u61c2\u561b\u8001\u94c1[doge]']],
+    ['\u6d17\u94b1\u7247', ['\u6d17\u94b1\u7247']],
   ]);
 });
 
