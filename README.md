@@ -42,15 +42,15 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2080`
+- Dictionary terms: `2071`
 - Target evidence per term: `3`
-- Coverage ratio: `58.89%`
-- Weak terms below target: `855`
-- Zero-evidence terms: `198`
-- Evidence deficit: `1802`
-- Source-backed terms: `1882`
+- Coverage ratio: `59.15%`
+- Weak terms below target: `846`
+- Zero-evidence terms: `197`
+- Evidence deficit: `1786`
+- Source-backed terms: `1874`
 - Unsourced evidence terms: `0`
-- Attempted terms: `346`
+- Attempted terms: `355`
 - Successful terms: `98`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
@@ -85,6 +85,7 @@ Recent dictionary-cleaning updates:
 - Pruned current auto-coverage praise/platform/identity noise after the `deepseek-v4-flash` max-effort run: removed generic praise `很棒先生` / `这很棒先生` / `up好牛`, payment fragment `我将支付您画画的费用`, neutral `直言不讳`, reaction-only `草生`, identity/platform terms `福瑞控` / `帽子叔` / `帽子叔叔` / `小黄鱼`, game-stat sentence `五维图全都低的可怜`, video-participation reaction `打了自己电话`, and bare meme label `肘遍全网`; kept contextual attack terms such as `饭圈味` and `纯小人`.
 - Pruned latest auto-coverage fan/profile/check-in noise after the `deepseek-v4-flash` max-effort run: removed fandom reaction phrases `伊利亚我软脚了` / `伊莉雅我软脚了`, profile-signature shorthand `个签`, and coin/check-in absolutes `第一个投币肯定是我` / `第一个投币肯定是我的`; kept contextual discourse evidence such as `弹性回应` and `你喷我就是你对`.
 - Pruned no-progress auto-coverage noise after another `deepseek-v4-flash` max-effort run: removed product/equipment terms `电锯pro` / `电锯promax`, title-only `定叫你好评如潮`, entertainment absolute `东海每次同框绝对有笑点`, literal TV phrase `上电视`, and emote labels `doge圣诞` / `tv点赞`; kept target-context `东户西甜` and sarcastic `良心辣`.
+- Pruned the next flash/max coverage batch after it reduced weak and zero-evidence gaps: removed short fragment `高完了`, generic praise/emote `妙啊`, proper-name political labels `川建国` / `川普`, poetry ranking phrases `杜甫第一李白不参与排名` / `李白不参与排名`, fandom/person reaction `全是我们马哥`, entertainment pun `会云多云`, and fiction trope `小叔文学`; kept directed argument markers such as `都让你高完了`, `堵住人民嘴`, and `多少有点小丑`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
