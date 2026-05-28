@@ -3723,7 +3723,7 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested narration, joke re
     ].join('\n'),
   );
 
-  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u81ea\u5df1\u770b', '\u6ca1\u60f3\u5230\u5427', '\u8131\u5355', '\u516d\u6247\u95e8']);
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u81ea\u5df1\u770b', '\u6ca1\u60f3\u5230\u5427', '\u8131\u5355']);
 });
 
 test('findDictionaryEntriesWithTextEvidence rejects apology reactions, standalone emotes, and bare bug labels', () => {
@@ -11164,6 +11164,74 @@ test('normalizeKeywordEntries prunes latest strict harvest image-request, produc
   ]);
 
   assert.deepEqual(entries.map((entry) => entry.term), ['\u8001sp', '\u4e24\u516c\u6bcd']);
+});
+
+test('normalizeKeywordEntries prunes current strict harvest game terms and explanation-only attack evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u516d\u6247\u95e8',
+      family: 'cooperation',
+      meaning: 'game revival count or wuxia faction term',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u8fd9\u6e38\u620f\u6211\u6700\u521d\u5bf9\u516d\u6247\u95e8\u5b8c\u5168\u4e00\u5934\u96fe\u6c34[\u7b11\u54ed]',
+      ],
+    },
+    {
+      term: '\u8f6e\u6905\u8f74',
+      family: 'cooperation',
+      meaning: 'game rotation term',
+      evidenceCount: 3,
+      evidenceSamples: ['\u9e23\u6f6e\u73b0\u5728\u7684\u602a\u5df2\u7ecf\u4e0d\u652f\u6301\u6253\u8f6e\u6905\u8f74\u4e86[doge]'],
+    },
+    {
+      term: '\u5927\u9b54\u6cd5\u5e08',
+      family: 'attack',
+      meaning: 'mocking older single men',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u56de\u590d @\u634f\u9ebb\u9ebb\u6ef4_\u6d3b\u7740\u771f\u597d :\u9b54\u79d1\u80dc\u5229\u9f99link\u548c\u80dc\u5229\u9f99link\u56db\u516d\u5f00\uff0c\u8fd8\u5f97\u770b\u6211\u6700\u5f3a\u9b54\u6cd5\u5e08\u9b54\u79d1',
+      ],
+    },
+    {
+      term: '\u849c\u8304\u8111\u888b',
+      family: 'attack',
+      meaning: 'insult for a muddled person',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u56de\u590d @\u697c\u4e0b\u4e2d\u5851 :\u849c\u8304\uff0c\u56e0\u4e3a\u4e1c\u5317\u5403\u849c\u6ce5\u8304\u5b50\uff0c\u8304\u5b50\u84b8\u70c2\u7cca\u4e86\uff0c\u849c\u6ce5\u6363\u70c2\u4e86\uff0c\u52a0\u4e00\u8d77\u5c31\u662f\u849c\u8304\u8111\u888b\u54c8\u54c8\u54c8\uff0c\u5f88\u5f62\u8c61',
+      ],
+    },
+    {
+      term: '\u849c\u8304\u8111\u74dc',
+      family: 'attack',
+      meaning: 'insult for a muddled person',
+      evidenceCount: 1,
+      evidenceSamples: ['\u56de\u590d @\u697c\u4e0b\u4e2d\u5851 :\u662f\u849c\u8304\u8111\u74dc'],
+    },
+    {
+      term: '\u5168\u662f\u7c89\u4e1d',
+      family: 'attack',
+      meaning: 'accuses critics of being fans',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7136\u540e\u8fd8\u80fd\u8bf4\u603c\u5979\u7684\u5168\u662f\u7c89\u4e1d\uff0c\u88c5\u6e05\u767d\u88c5\u65e0\u8f9c'],
+    },
+    {
+      term: '\u4e0d\u9ed1\u4e0d\u5439',
+      family: 'cooperation',
+      meaning: 'claims neutrality before opinion',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4e0d\u9ed1\u4e0d\u5439\uff0c\u4e0d\u767d\u4e0d\u8214\uff0c\u4e0d\u9ec4\u4e0d\u9493[doge]'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceCount, entry.evidenceSamples]), [
+    ['\u5927\u9b54\u6cd5\u5e08', 0, []],
+    ['\u849c\u8304\u8111\u888b', 0, []],
+    ['\u849c\u8304\u8111\u74dc', 0, []],
+    ['\u5168\u662f\u7c89\u4e1d', 1, ['\u7136\u540e\u8fd8\u80fd\u8bf4\u603c\u5979\u7684\u5168\u662f\u7c89\u4e1d\uff0c\u88c5\u6e05\u767d\u88c5\u65e0\u8f9c']],
+    ['\u4e0d\u9ed1\u4e0d\u5439', 1, ['\u4e0d\u9ed1\u4e0d\u5439\uff0c\u4e0d\u767d\u4e0d\u8214\uff0c\u4e0d\u9ec4\u4e0d\u9493[doge]']],
+  ]);
 });
 
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {

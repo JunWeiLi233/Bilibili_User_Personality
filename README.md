@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `1984`
+- Dictionary terms: `1980`
 - Target evidence per term: `3`
-- Coverage ratio: `62.25%`
-- Weak terms below target: `749`
+- Coverage ratio: `62.37%`
+- Weak terms below target: `745`
 - Zero-evidence terms: `174`
-- Evidence deficit: `1561`
-- Source-backed terms: `1810`
+- Evidence deficit: `1552`
+- Source-backed terms: `1806`
 - Unsourced evidence terms: `0`
-- Attempted terms: `468`
-- Successful terms: `134`
+- Attempted terms: `478`
+- Successful terms: `135`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -99,6 +99,7 @@ Recent dictionary-cleaning updates:
 - Ran the next strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 1; kept useful patterns such as `可不是就急了嘛` and `肯定是人的错`, while pruning low-portability or non-argument terms `考得像史`, `科学上网`, `嗑药推广广告`, `可能倒闭但绝不可能变质`, `肯定是可以的`, and typo noise `胯群执法` without blocking the correct `跨群执法`.
 - Ran another strict `deepseek-v4-flash` max-effort pass with stronger progress, reducing zero-evidence terms by 2 and weak terms by 5; kept useful attack patterns such as `拉小群`, `拉jb倒`, and `老处男`, while pruning narrow sports/stage/stale-meme/nickname noise `快乐一赛季难过总决赛`, `拉椅子`, `蓝瘦香菇`, `牢将`, and `牢伟`.
 - Ran another strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 2; kept directed attack terms such as `老sp` and `两公母`, while pruning low-portability image request, product, neutral-romance, proper-name, and narrow-meme noise such as `老师图片可以拿吗`, `李氏父子`, `里面全是锂电池`, `联动杯`, `两情相悦`, and `量子监控摄像头`.
+- Ran the next strict `deepseek-v4-flash` max-effort pass and kept useful discourse evidence such as `全是粉丝` and `不黑不吹`; pruned pure game or office/faction terms `六扇门` and `轮椅轴`, and rejected explanation-only or card-game evidence for attack terms such as `大魔法师`, `蒜茄脑袋`, and `蒜茄脑瓜`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
