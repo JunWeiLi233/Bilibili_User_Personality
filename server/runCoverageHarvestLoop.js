@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { readKeywordDictionary } from './deepseekKeywordTrainer.js';
-import { coverageDelta, hasCoverageGateProgress } from './coverageProgress.js';
+import { coverageDeltaFromHarvest, hasCoverageDeltaProgress } from './coverageProgress.js';
 import { buildCoverageRuntimeOptions } from './coverageCliOptions.js';
 import {
   buildDictionaryCoverageAudit,
@@ -163,7 +163,8 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
   });
   const nextAudit = await buildAudit(auditOptions);
   const executedQueries = harvest.rounds.flatMap((round) => round.queries);
-  const delta = coverageDelta(audit.coverage, nextAudit.coverage);
+  const harvestProgressItems = harvest.rounds.map((round) => round.coverageProgress);
+  const delta = coverageDeltaFromHarvest(audit.coverage, nextAudit.coverage, harvestProgressItems);
   cycles.push({
     cycle,
     priorityQueries,
@@ -172,7 +173,7 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
       rounds: harvest.rounds.length,
       queries: executedQueries,
       warnings: harvest.rounds.flatMap((round) => round.warnings || []),
-      coverageProgress: harvest.rounds.map((round) => round.coverageProgress),
+      coverageProgress: harvestProgressItems,
       trainingDiagnostics: harvest.rounds.map((round) => round.trainingDiagnostics),
       queryDiagnostics: harvest.rounds.map((round) => round.queryDiagnostics || []),
     },
@@ -190,10 +191,7 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     break;
   }
   if (
-    !hasCoverageGateProgress(audit.coverage, nextAudit.coverage, {
-      beforeActions: audit.nextActions,
-      afterActions: nextAudit.nextActions,
-    }) &&
+    !hasCoverageDeltaProgress(delta) &&
     process.env.BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS === '1'
   ) {
     stopReason = 'no_coverage_progress';

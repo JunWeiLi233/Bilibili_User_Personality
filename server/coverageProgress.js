@@ -10,6 +10,39 @@ export function coverageDelta(before = {}, after = {}) {
   };
 }
 
+function zeroDelta() {
+  return {
+    evidenceDeficitReduced: 0,
+    zeroEvidenceResolved: 0,
+    weakTermsResolved: 0,
+    unsourcedEvidenceReduced: 0,
+    totalEvidenceGained: 0,
+    termsAdded: 0,
+    coverageRatioDelta: 0,
+  };
+}
+
+export function hasCoverageDeltaProgress(delta = {}) {
+  return (
+    Number(delta.evidenceDeficitReduced || 0) > 0 ||
+    Number(delta.zeroEvidenceResolved || 0) > 0 ||
+    Number(delta.weakTermsResolved || 0) > 0 ||
+    Number(delta.unsourcedEvidenceReduced || 0) > 0 ||
+    Number(delta.totalEvidenceGained || 0) > 0
+  );
+}
+
+export function coverageDeltaFromHarvest(before = {}, after = {}, harvestProgressItems = []) {
+  const items = Array.isArray(harvestProgressItems) ? harvestProgressItems : [];
+  const harvestMadeEvidenceProgress = items.some((item) => (
+    Number(item?.evidenceDeficitReduced || 0) > 0 ||
+    Number(item?.zeroEvidenceResolved || 0) > 0 ||
+    Number(item?.weakTermsResolved || 0) > 0 ||
+    Number(item?.evidenceGained || 0) > 0
+  ));
+  return harvestMadeEvidenceProgress ? coverageDelta(before, after) : zeroDelta();
+}
+
 function actionNeed(action) {
   return Math.max(0, Number(action?.needs) || 0);
 }

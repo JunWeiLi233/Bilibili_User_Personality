@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { coverageDelta, hasCoverageGateProgress } from './coverageProgress.js';
+import { coverageDelta, coverageDeltaFromHarvest, hasCoverageDeltaProgress, hasCoverageGateProgress } from './coverageProgress.js';
 
 test('hasCoverageGateProgress rejects dictionary growth that does not reduce coverage gaps', () => {
   const before = {
@@ -74,4 +74,58 @@ test('hasCoverageGateProgress accepts target action progress even when new weak 
     }),
     true,
   );
+});
+
+test('coverageDeltaFromHarvest ignores audit-only drift when harvest made no evidence progress', () => {
+  const before = {
+    terms: 2157,
+    totalEvidence: 6033,
+    coverageRatio: 0.5415,
+    evidenceDeficit: 2086,
+    weakTerms: 989,
+    zeroEvidenceTerms: 227,
+    unsourcedEvidenceTerms: 0,
+  };
+  const after = {
+    terms: 2157,
+    totalEvidence: 6035,
+    coverageRatio: 0.5415,
+    evidenceDeficit: 2084,
+    weakTerms: 989,
+    zeroEvidenceTerms: 225,
+    unsourcedEvidenceTerms: 0,
+  };
+  const harvestProgress = [
+    { weakTermsResolved: 0, zeroEvidenceResolved: 0, evidenceGained: 0, evidenceDeficitReduced: 0 },
+  ];
+
+  assert.deepEqual(coverageDeltaFromHarvest(before, after, harvestProgress), {
+    evidenceDeficitReduced: 0,
+    zeroEvidenceResolved: 0,
+    weakTermsResolved: 0,
+    unsourcedEvidenceReduced: 0,
+    totalEvidenceGained: 0,
+    termsAdded: 0,
+    coverageRatioDelta: 0,
+  });
+  assert.equal(hasCoverageDeltaProgress(coverageDeltaFromHarvest(before, after, harvestProgress)), false);
+});
+
+test('coverageDeltaFromHarvest reports audit delta after real harvest evidence progress', () => {
+  const before = { totalEvidence: 10, evidenceDeficit: 5, zeroEvidenceTerms: 2, weakTerms: 4 };
+  const after = { totalEvidence: 12, evidenceDeficit: 3, zeroEvidenceTerms: 1, weakTerms: 3 };
+  const harvestProgress = [
+    { weakTermsResolved: 0, zeroEvidenceResolved: 1, evidenceGained: 2, evidenceDeficitReduced: 2 },
+  ];
+
+  assert.deepEqual(coverageDeltaFromHarvest(before, after, harvestProgress), {
+    evidenceDeficitReduced: 2,
+    zeroEvidenceResolved: 1,
+    weakTermsResolved: 1,
+    unsourcedEvidenceReduced: 0,
+    totalEvidenceGained: 2,
+    termsAdded: 0,
+    coverageRatioDelta: 0,
+  });
+  assert.equal(hasCoverageDeltaProgress(coverageDeltaFromHarvest(before, after, harvestProgress)), true);
 });
