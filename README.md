@@ -144,7 +144,7 @@ To run the next audit-recommended queries first:
 
 When `-PriorityActionFile` is used, the script refreshes that file from the current backend coverage audit immediately before harvesting. This prevents stale action files from repeatedly targeting old no-hit queries after the harvest state has moved on. Use `-SkipPriorityActionRefresh` only when you intentionally want to replay the exact structured action file already on disk.
 
-Each priority query has a per-query timeout so one slow Bilibili or DeepSeek call cannot hold the harvest lock forever. The default is `-QueryTimeoutMs 180000`; lower it for quick triage runs, for example `-QueryTimeoutMs 60000`.
+Each priority query has a per-query timeout so one slow Bilibili or DeepSeek call cannot hold the harvest lock forever. For `run-bilibili-video.ps1`, the default is `-QueryTimeoutMs 180000`; lower it for quick triage runs, for example `-QueryTimeoutMs 60000`. For `run-bilibili-auto-coverage.ps1`, use seconds: the default is `-QueryTimeoutSeconds 180`, and a quick triage run can use `-QueryTimeoutSeconds 60`.
 
 `-PriorityQueryFile server\keywordCoverageQueries.txt` still works for plain one-query-per-line runs, but `-PriorityActionFile` is better for coverage work because it keeps the backend target-term metadata from the audit.
 The direct harvest script includes public danmaku by default because many short meme phrases appear in弹幕 before they appear in replies. Pass `-NoDanmaku` when you intentionally want reply comments only:
@@ -163,6 +163,7 @@ npm run dictionary:auto
 
 The loop audits coverage, runs the recommended queries as priority harvest queries, audits again, and stops when the coverage gate passes, there are no recommended queries, or the cycle limit is reached. It writes `server/keywordCoverageLoopReport.json` with per-cycle coverage deltas for evidence deficit, zero-evidence terms, source-backed terms, total evidence, and coverage ratio.
 Set `BILIBILI_COVERAGE_LOOP_STOP_ON_NO_PROGRESS=1` when you want the loop to stop early if a cycle runs queries but does not reduce the evidence deficit, clear a zero-evidence term, or add source-backed evidence.
+Set `BILIBILI_HARVEST_QUERY_TIMEOUT_MS` for the npm loop when you need a tighter per-query cap, for example `60000` for 60 seconds.
 
 `npm run server` starts both services:
 

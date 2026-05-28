@@ -84,6 +84,7 @@ const controversialPopularSearchOrder = String(process.env.BILIBILI_CONTROVERSIA
 const includeGenericPopular = flagFromEnv('BILIBILI_CONTROVERSIAL_INCLUDE_GENERIC_POPULAR', false);
 const includeDanmaku = flagFromEnv('BILIBILI_HARVEST_INCLUDE_DANMAKU', false);
 const pages = positiveIntFromEnv('BILIBILI_VIDEO_COMMENT_PAGES', 2, 20);
+const perQueryTimeoutMs = positiveIntFromEnv('BILIBILI_HARVEST_QUERY_TIMEOUT_MS', 180000, 30 * 60 * 1000);
 const queryVariantsPerTerm = positiveIntFromEnv('BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM', 2, 20);
 const termsPerFamily = positiveIntFromEnv('BILIBILI_HARVEST_TERMS_PER_FAMILY', 4, 20);
 const retryBeforeUnattemptedLimit = runtimeOptions.retryBeforeUnattemptedLimit;
@@ -152,6 +153,7 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     includeGenericPopular,
     includeDanmaku,
     pages,
+    perQueryTimeoutMs,
     rounds: roundsPerCycle,
     statePath,
     resetState: cycle === 1 ? resetState : false,

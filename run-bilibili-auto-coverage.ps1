@@ -9,6 +9,7 @@ param(
   [int]$ControversialPopularQueryLimit = 4,
   [string]$ControversialPopularSearchOrder = "click",
   [int]$CommentPages = 2,
+  [int]$QueryTimeoutSeconds = 180,
   [int]$MaxQueries = 12,
   [int]$TermsPerFamily = 4,
   [int]$QueryVariantsPerTerm = 2,
@@ -73,6 +74,7 @@ if ($NoDanmaku) {
   $env:BILIBILI_HARVEST_INCLUDE_DANMAKU = "1"
 }
 $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
+$env:BILIBILI_HARVEST_QUERY_TIMEOUT_MS = [string]($QueryTimeoutSeconds * 1000)
 $env:BILIBILI_HARVEST_MAX_QUERIES = [string]$MaxQueries
 $env:BILIBILI_HARVEST_TERMS_PER_FAMILY = [string]$TermsPerFamily
 $env:BILIBILI_HARVEST_QUERY_VARIANTS_PER_TERM = [string]$QueryVariantsPerTerm
@@ -136,6 +138,7 @@ Write-Host "Discovery mode: $DiscoveryMode"
 Write-Host "Discovery limit: $DiscoveryLimit"
 Write-Host "Discovery pages: $DiscoveryPages"
 Write-Host "Comment pages per video: $CommentPages"
+Write-Host "Per-query timeout: ${QueryTimeoutSeconds}s"
 Write-Host "Controversial popular query limit: $ControversialPopularQueryLimit"
 Write-Host "Controversial popular search order: $ControversialPopularSearchOrder"
 Write-Host "Include generic popular feed in controversial mode: $IncludeGenericPopular"

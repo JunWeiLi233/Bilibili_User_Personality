@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-function runScript(args = []) {
+function runScript(args = [], script = '.\\run-bilibili-video.ps1') {
   const tempDir = mkdtempSync(join(tmpdir(), 'bilibili-video-script-'));
   try {
     writeFileSync(
@@ -18,11 +18,12 @@ function runScript(args = []) {
         'echo REQUEST_TIMEOUT=%BILIBILI_CRAWLER_REQUEST_TIMEOUT_MS%',
         'echo MIN_DELAY=%BILIBILI_CRAWLER_MIN_DELAY_MS%',
         'echo JITTER=%BILIBILI_CRAWLER_JITTER_MS%',
+        'echo HARVEST_QUERY_TIMEOUT=%BILIBILI_HARVEST_QUERY_TIMEOUT_MS%',
       ].join('\r\n'),
     );
     const result = spawnSync(
       'powershell',
-      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', '.\\run-bilibili-video.ps1', ...args],
+      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script, ...args],
       {
         cwd: process.cwd(),
         env: {
@@ -86,4 +87,16 @@ test('run-bilibili-video.ps1 uses fast crawler pacing for strict comment harvest
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /MIN_DELAY=250/);
   assert.match(result.stdout, /JITTER=125/);
+});
+
+test('run-bilibili-auto-coverage.ps1 forwards per-query timeout seconds', (t) => {
+  const result = runScript(['-MaxCycles', '1', '-MaxQueries', '1', '-QueryTimeoutSeconds', '45'], '.\\run-bilibili-auto-coverage.ps1');
+  if (!result) {
+    t.skip('PowerShell is unavailable in this environment');
+    return;
+  }
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /HARVEST_QUERY_TIMEOUT=45000/);
+  assert.match(result.stdout, /Per-query timeout: 45s/);
 });
