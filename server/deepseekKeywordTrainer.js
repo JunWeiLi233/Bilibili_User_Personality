@@ -28,6 +28,8 @@ STOP_TERMS.add('\u6211\u609f\u4e86');
 STOP_TERMS.add('\u609f\u4e86');
 STOP_TERMS.add('\u6218\u4e59\u5973');
 STOP_TERMS.add('ai\u8bc6\u7247\u9171');
+STOP_TERMS.add('\u6050\u827e');
+STOP_TERMS.add('\u6050\u827e\u75c7');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',
@@ -970,6 +972,11 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
       && /[\u3001\uff0c,].*[\u3001\uff0c,]/u.test(contextSample);
     const hostileExplanationContext = /(?:\u9ed1\u79f0|\u9a82\u4eba|\u653b\u51fb|\u522b\u62ff|\u522b\u590d\u8bfb|\u522b\u4e71\u7528)/u.test(contextSample);
     if (glossaryQuestionContext && !hostileExplanationContext) return true;
+  }
+  if (term === '7\u79d2\u7126\u8651' && family === 'attack') {
+    const negatedComfortContext = /(?:\u6ca1\u6709|\u6ca1|\u65e0|\u4e0d\u4f1a).{0,8}7\u79d2\u7126\u8651|7\u79d2\u7126\u8651.{0,8}(?:\u6ca1\u6709|\u6ca1|\u65e0|\u4e0d\u4f1a)/u.test(cleanSample);
+    const criticalAnxietyContext = /(?:\u5236\u9020|\u8d29\u5356|\u5f15\u53d1|\u641e|\u5e26\u6765|\u6545\u610f|\u8282\u594f).{0,16}7\u79d2\u7126\u8651|7\u79d2\u7126\u8651.{0,16}(?:\u8282\u594f|\u7126\u8651|\u6298\u78e8|\u6076\u5fc3|\u725b\u9a6c|\u6545\u610f)/u.test(cleanSample);
+    if (negatedComfortContext && !criticalAnxietyContext) return true;
   }
   if (term === '\u6840\u6840\u6840' && family === 'attack') {
     const laughExplanationContext = /(?:\u7b11\u58f0|\u914d\u97f3|\u4e0d\u4f1a\u7b11|\u600e\u4e48\u7b11|\u4e3a\u4ec0\u4e48\u8981\u5199\u6210|\u5199\u6210\u6840\u6840\u6840|\u87f9\u8001\u677f).{0,18}\u6840\u6840\u6840|\u6840\u6840\u6840.{0,18}(?:\u7b11\u58f0|\u914d\u97f3|\u4e0d\u4f1a\u7b11|\u600e\u4e48\u7b11|\u4e3a\u4ec0\u4e48\u8981\u5199\u6210|\u87f9\u8001\u677f)/u.test(cleanSample);

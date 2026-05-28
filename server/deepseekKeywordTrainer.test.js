@@ -9459,6 +9459,56 @@ test('normalizeKeywordEntries prunes current flash harvest bot-name, location-fr
   ]);
 });
 
+test('normalizeKeywordEntries prunes current flash harvest medical-anxiety and negated anxiety evidence', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u6050\u827e',
+      family: 'evidence',
+      meaning: 'medical anxiety term mislabeled as request for evidence',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5f88\u591a\u6050\u5b8c\u827e\u5c31\u6050\u6885\u4e86[doge][doge]',
+        '\u4f60\u8fd9\u5c31\u662f\u5178\u578b\u7684\u6050\u827e\u75c7\u72b6\uff0c\u4e0a\u5929\u7ed9\u4e86\u4f60\u4e00\u4e2a\u673a\u4f1a\uff0c\u518d\u522b\u4e71\u6765',
+      ],
+    },
+    {
+      term: '\u6050\u827e\u75c7',
+      family: 'evidence',
+      meaning: 'medical anxiety term mislabeled as request for evidence',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u5f88\u591a\u6050\u5b8c\u827e\u5c31\u6050\u6885\u4e86[doge][doge]',
+        '\u4f60\u8fd9\u5c31\u662f\u5178\u578b\u7684\u6050\u827e\u75c7\u72b6\uff0c\u4e0a\u5929\u7ed9\u4e86\u4f60\u4e00\u4e2a\u673a\u4f1a\uff0c\u518d\u522b\u4e71\u6765',
+      ],
+    },
+    {
+      term: '7\u79d2\u7126\u8651',
+      family: 'attack',
+      meaning: 'game anxiety phrase',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u4e2a\u4eba\u73a9\u4e0b\u6765\u8fd9\u4e48\u6253\u6700\u8212\u670d\uff0c\u4e5f\u6ca1\u67097\u79d2\u7126\u8651\u3002[LoveLive\u661f\u5149\u65cb\u5f8b_\u52a0\u6cb9]',
+      ],
+    },
+    {
+      term: '7\u79d2\u7126\u8651',
+      family: 'attack',
+      meaning: 'mocking short-cycle anxiety',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u8fd9\u73a9\u6cd5\u5c31\u662f\u6545\u610f\u5236\u90207\u79d2\u7126\u8651\uff0c\u8ba9\u4eba\u4e00\u76f4\u88ab\u8282\u594f\u7275\u7740\u8d70',
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    [
+      '7\u79d2\u7126\u8651',
+      ['\u8fd9\u73a9\u6cd5\u5c31\u662f\u6545\u610f\u5236\u90207\u79d2\u7126\u8651\uff0c\u8ba9\u4eba\u4e00\u76f4\u88ab\u8282\u594f\u7275\u7740\u8d70'],
+    ],
+  ]);
+});
+
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {
   const dictionary = {
     entries: [
