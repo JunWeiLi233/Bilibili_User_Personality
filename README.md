@@ -44,14 +44,14 @@ Current audited dictionary state:
 
 - Dictionary terms: `1980`
 - Target evidence per term: `3`
-- Coverage ratio: `65.71%`
-- Weak terms below target: `679`
-- Zero-evidence terms: `120`
-- Evidence deficit: `1340`
-- Source-backed terms: `1860`
+- Coverage ratio: `66.16%`
+- Weak terms below target: `670`
+- Zero-evidence terms: `109`
+- Evidence deficit: `1312`
+- Source-backed terms: `1871`
 - Unsourced evidence terms: `0`
-- Attempted terms: `832`
-- Successful terms: `329`
+- Attempted terms: `906`
+- Successful terms: `403`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -103,6 +103,7 @@ Recent dictionary-cleaning updates:
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 - Ran an extended strict `deepseek-v4-flash` max-effort auto-coverage batch (20 priority queries per cycle, 6 terms per family, 10 cycles) that lifted audited comment-backed coverage from `60.86%` to `65.25%`, reduced zero-evidence terms from `171` to `130`, and reduced weak terms from `775` to `688` while keeping the require-comment evidence gate on.
 - Ran a second extended strict `deepseek-v4-flash` max-effort batch (same 20-query, 6-term-per-family, 10-cycle config) over the harder dictionary tail; audited comment-backed coverage rose from `65.25%` to `65.71%`, zero-evidence terms fell from `130` to `120`, and weak terms fell from `688` to `679`. Per-cycle yield is lower now because the remaining terms are niche game/fandom slang that rarely surface in searchable comment pages.
+- Ran a third extended strict `deepseek-v4-flash` max-effort batch (same config) that lifted audited comment-backed coverage from `65.71%` to `66.16%`, reduced zero-evidence terms from `120` to `109`, and reduced weak terms from `679` to `670`, all with the require-comment evidence gate held on.
 
 ## Run Locally
 
