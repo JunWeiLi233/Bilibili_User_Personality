@@ -291,6 +291,10 @@ function isAskBaiduProductNoiseVideo(video) {
   return text && ASK_BAIDU_PRODUCT_NOISE_NEEDLES.some((needle) => needle && text.includes(needle));
 }
 
+function isBlockedDiscoveryWarning(warning) {
+  return /\bHTTP\s+(?:403|412|429)\b/iu.test(String(warning || ''));
+}
+
 function searchNeedlesForRelevance(searchQueries = [], targetExistingTerms = []) {
   const targetNeedles = uniqueByKey(
     targetExistingTerms.map(cleanSearchText).filter((item) => item.length >= 2),
@@ -655,6 +659,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const targetSearchOnly = payload.targetSearchOnly === true || deps.targetSearchOnly === true;
   const allowFilteredDiscoveryFallback = payload.allowFilteredDiscoveryFallback === true || deps.allowFilteredDiscoveryFallback === true;
   const preferFilteredDiscoveryFallback = payload.preferFilteredDiscoveryFallback === true || deps.preferFilteredDiscoveryFallback === true;
+  const allowPopularDiscoveryOnSearchBlock = payload.allowPopularDiscoveryOnSearchBlock === true || deps.allowPopularDiscoveryOnSearchBlock === true;
   const evidenceSourceVideoFallback =
     payload.evidenceSourceVideoFallback === true ||
     payload.allowEvidenceSourceVideoFallback === true ||
@@ -676,6 +681,7 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   let discoveredVideos = [];
   let discoveryContextVideos = [];
   let usedEvidenceSourceFallback = false;
+  let usedPopularDiscoveryFallback = false;
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
   const loadEvidenceSourceFallbackVideos = async () => {
     if (!evidenceSourceVideoFallback || !existingTermsOnly || targetExistingTerms.length === 0) return [];
@@ -793,6 +799,22 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
         throwIfAborted(payload.abortSignal);
       } catch (error) {
         discoveryWarnings.push(`popular: ${error.message}`);
+      }
+    }
+    if (
+      allowPopularDiscoveryOnSearchBlock &&
+      discoveryGroups.every((group) => group.length === 0) &&
+      discoveryWarnings.some(isBlockedDiscoveryWarning) &&
+      !payload.abortSignal?.aborted
+    ) {
+      const discoverPopular = deps.discoverPopularVideos || discoverPopularVideos;
+      try {
+        throwIfAborted(payload.abortSignal);
+        discoveryGroups.push(await discoverPopular(discoveryLimit, deps));
+        usedPopularDiscoveryFallback = true;
+        throwIfAborted(payload.abortSignal);
+      } catch (error) {
+        discoveryWarnings.push(`popular after search block: ${error.message}`);
       }
     }
     discoveryContextVideos = uniqueByKey(
@@ -1003,7 +1025,9 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       : buildTargetVideoObjectEvidenceText(contextVideos, searchQueries, targetExistingTerms);
   const trainingText = [commentText, videoObjectEvidenceText, videoContextText].filter((item) => item.trim()).join('\n');
   const effectiveTargetExistingTerms =
-    payload.expandTargetsFromComments === true || deps.expandTargetsFromComments === true
+    payload.expandTargetsFromComments === true ||
+    deps.expandTargetsFromComments === true ||
+    (usedPopularDiscoveryFallback && payload.expandTargetsFromSearchBlockComments !== false && deps.expandTargetsFromSearchBlockComments !== false)
       ? await expandTargetTermsFromCommentHits({
           commentText,
           existingTermsOnly,

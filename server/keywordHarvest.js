@@ -3250,6 +3250,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         searchPayload.evidenceSourceVideoFallback = options.existingTermsOnly === true && !duplicateAcceptedNoProgress;
         searchPayload.allowFilteredDiscoveryFallback = !duplicateAcceptedNoProgress && options.allowFilteredDiscoveryFallback !== false;
         searchPayload.preferFilteredDiscoveryFallback = !duplicateAcceptedNoProgress && options.preferFilteredDiscoveryFallback !== false;
+        searchPayload.allowPopularDiscoveryOnSearchBlock = options.allowPopularDiscoveryOnSearchBlock !== false;
         searchPayload.expandTargetsFromComments = options.expandTargetsFromComments === true;
         if (options.existingTermsOnly === true && options.prioritizeSearchQueries !== false) {
           searchPayload.prioritizeSearchQueries = true;

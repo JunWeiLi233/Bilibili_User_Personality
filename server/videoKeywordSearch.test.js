@@ -2090,6 +2090,81 @@ test('searchVideoKeywords falls back to broad controversy pools when target-only
   assert.equal(result.videos.length, 2);
 });
 
+test('searchVideoKeywords falls back to popular videos when search discovery is blocked', async () => {
+  const queried = [];
+  const popularLimits = [];
+  const trainingPayloads = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: 'blocked target comments',
+      controversyQueries: ['politics debate'],
+      discoveryMode: 'controversial',
+      discoveryLimit: 1,
+      pages: 1,
+      existingTermsOnly: true,
+      targetExistingTerms: ['blocked target'],
+      prioritizeSearchQueries: true,
+      targetSearchOnly: true,
+      includeVideoContext: false,
+      includeVideoObjectEvidence: false,
+      allowFilteredDiscoveryFallback: true,
+      preferFilteredDiscoveryFallback: true,
+      allowPopularDiscoveryOnSearchBlock: true,
+    },
+    {
+      discoverVideosByKeyword: async (query) => {
+        queried.push(query);
+        throw new Error(`HTTP 412 from search for ${query}`);
+      },
+      discoverPopularVideos: async (limit) => {
+        popularLimits.push(limit);
+        return [{ bvid: 'BV1popular12', title: 'popular fallback video', sourceUrl: 'https://www.bilibili.com/video/BV1popular12/' }];
+      },
+      fetchJson: async (url) => {
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 777,
+              title: 'popular fallback video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [{ rpid: 1, mid: 100, member: { uname: 'viewer' }, content: { message: 'this popular comment contains blocked target' } }],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      trainKeywordDictionary: async (payload) => {
+        trainingPayloads.push(payload);
+        return { ok: true, entries: [], dictionaryEvidenceEntries: [], dictionary: { entries: [] } };
+      },
+      readKeywordDictionary: async () => ({
+        entries: [
+          { term: 'blocked target', family: 'attack', evidenceCount: 0 },
+          { term: 'popular comment', family: 'attack', evidenceCount: 0 },
+        ],
+      }),
+      findDictionaryEntriesWithTextEvidence: (_dictionary, text) => {
+        assert.equal(text.includes('popular comment'), true);
+        return [{ term: 'popular comment', family: 'attack', evidenceCount: 1 }];
+      },
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(queried, ['blocked target comments', 'politics debate', 'politics debate']);
+  assert.deepEqual(popularLimits, [1]);
+  assert.deepEqual(result.videos.map((video) => video.bvid), ['BV1popular12']);
+  assert.equal(trainingPayloads[0].text.includes('blocked target'), true);
+  assert.deepEqual(trainingPayloads[0].targetExistingTerms, ['blocked target', 'popular comment']);
+});
+
 test('searchVideoKeywords can prefer broad controversy pools for strict comment-backed refreshes', async () => {
   const result = await searchVideoKeywords(
     {
