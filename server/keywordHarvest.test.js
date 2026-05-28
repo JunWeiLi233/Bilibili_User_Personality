@@ -11290,6 +11290,73 @@ test('harvestKeywordDictionary broadens strict comment discovery after a comment
   }
 });
 
+test('harvestKeywordDictionary broadens strict comment discovery after a no-video miss', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-no-video-broaden-'));
+  const statePath = join(dir, 'state.json');
+  try {
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        harvestStrategyVersion: 7,
+        termAttempts: {
+          '\u65e0\u89c6\u9891\u5f31\u8bcd': {
+            term: '\u65e0\u89c6\u9891\u5f31\u8bcd',
+            family: 'attack',
+            attempts: 1,
+            successfulAttempts: 0,
+            queries: [
+              {
+                query: '\u65e0\u89c6\u9891\u5f31\u8bcd \u8bc4\u8bba\u533a',
+                strategyVersion: 7,
+                ok: false,
+                hit: false,
+                videos: 0,
+                comments: 0,
+                error: 'No Bilibili videos were discovered from the backend discovery mode.',
+              },
+            ],
+          },
+        },
+      }),
+    );
+    const payloads = [];
+    await harvestKeywordDictionary(
+      {
+        seedQueries: [],
+        maxQueries: 1,
+        existingTermsOnly: true,
+        requireCommentBackedEvidence: true,
+        discoveryMode: 'controversial',
+        discoveryLimit: 1,
+        pages: 1,
+        statePath,
+      },
+      {
+        readKeywordDictionary: async () => ({
+          entries: [{ term: '\u65e0\u89c6\u9891\u5f31\u8bcd', family: 'attack', evidenceCount: 1 }],
+        }),
+        searchVideoKeywords: async (payload) => {
+          payloads.push(payload);
+          return {
+            ok: true,
+            warnings: [],
+            videos: [{ bvid: 'BVnovideo111' }],
+            comments: [],
+            entries: [],
+          };
+        },
+      },
+    );
+
+    assert.equal(payloads[0].prioritizeSearchQueries, true);
+    assert.equal(payloads[0].targetSearchOnly, false);
+    assert.equal(payloads[0].discoveryLimit, 2);
+    assert.equal(payloads[0].pages, 3);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 test('harvestKeywordDictionary still expands strict comment retries when stale limit equals discovery limit', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'bili-harvest-comment-expand-stale-floor-'));
   const statePath = join(dir, 'state.json');

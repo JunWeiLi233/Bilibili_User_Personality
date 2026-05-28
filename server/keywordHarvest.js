@@ -2254,6 +2254,17 @@ function currentStrategyCommentMisses(attempt) {
   ).length;
 }
 
+function currentStrategyNoVideoMisses(attempt) {
+  return (attempt?.queries || []).filter(
+    (query) =>
+      Number(query?.strategyVersion || 0) >= HARVEST_STRATEGY_VERSION &&
+      query?.ok === false &&
+      Boolean(query?.hit) === false &&
+      Math.max(0, Number(query?.videos) || 0) === 0 &&
+      /No Bilibili videos were discovered/u.test(String(query?.error || '')),
+  ).length;
+}
+
 function diversifyCoverageActions(actions, limit) {
   const selected = [];
   const selectedGroups = new Set();
@@ -3194,8 +3205,9 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
     const timeoutMs = Math.max(0, Number(options.perQueryTimeoutMs) || 0);
     const timeoutController = timeoutMs > 0 && typeof AbortController !== 'undefined' ? new AbortController() : null;
     const commentMisses = currentStrategyCommentMisses(priorAttempt);
+    const noVideoMisses = currentStrategyNoVideoMisses(priorAttempt);
     const duplicateAcceptedNoProgress = planItem.term ? hasDuplicateAcceptedNoProgressFeedback(state, planItem.term) : false;
-    const deepenScan = isRepeatedlyMissedAttempt(priorAttempt, options.retryBeforeUnattemptedLimit) || commentMisses > 0;
+    const deepenScan = isRepeatedlyMissedAttempt(priorAttempt, options.retryBeforeUnattemptedLimit) || commentMisses > 0 || noVideoMisses > 0;
     const hardMissedZeroEvidence = isHardMissedZeroEvidenceAttempt(priorAttempt, options.retryBeforeUnattemptedLimit);
     const hardMissedDiscoveryLimit =
       options.hardMissedDiscoveryLimit ?? Math.max(Number(options.staleMissedDiscoveryLimit) || 1, (Number(options.discoveryLimit) || 1) * 4);
@@ -3264,7 +3276,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
         searchPayload.expandTargetsFromComments = options.expandTargetsFromComments === true;
         if (options.existingTermsOnly === true && options.prioritizeSearchQueries !== false) {
           searchPayload.prioritizeSearchQueries = true;
-          searchPayload.targetSearchOnly = options.targetSearchOnly === true ? true : commentMisses === 0 && options.targetSearchOnly !== false;
+          searchPayload.targetSearchOnly = options.targetSearchOnly === true ? true : commentMisses === 0 && noVideoMisses === 0 && options.targetSearchOnly !== false;
         }
       }
       if (options.controversialPopularQueryLimit !== undefined) {
