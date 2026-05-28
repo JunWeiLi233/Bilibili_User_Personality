@@ -1,7 +1,48 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { DEFAULT_CONTROVERSY_SEARCH_QUERIES, DEFAULT_VIDEO_LINK, DEFAULT_VIDEO_SEARCH_QUERY, searchVideoKeywords } from './videoKeywordSearch.js';
+import {
+  DEFAULT_CONTROVERSY_SEARCH_QUERIES,
+  DEFAULT_VIDEO_LINK,
+  DEFAULT_VIDEO_SEARCH_QUERY,
+  commentMatchesNeedleSet,
+  filterCommentsByDictionaryNeedles,
+  searchVideoKeywords,
+} from './videoKeywordSearch.js';
+
+test('commentMatchesNeedleSet matches dictionary needles inside noisy comment text', () => {
+  const needles = new Set(['网盘见', '中国宝宝体质']);
+  assert.equal(commentMatchesNeedleSet('哈哈哈 网盘见！', needles), true);
+  assert.equal(commentMatchesNeedleSet('这就是中国宝宝体质了', needles), true);
+  // punctuation/spacing is normalized away by cleanSearchText before matching
+  assert.equal(commentMatchesNeedleSet('网 盘 见', needles), true);
+  assert.equal(commentMatchesNeedleSet('完全无关的评论', needles), false);
+  assert.equal(commentMatchesNeedleSet('', needles), false);
+  assert.equal(commentMatchesNeedleSet('网盘见', new Set()), false);
+});
+
+test('filterCommentsByDictionaryNeedles routes only term-bearing comments and falls back when empty', () => {
+  const comments = [
+    { rpid: '1', message: '网盘见，懂的都懂' },
+    { rpid: '2', message: '路过随便看看' },
+    { rpid: '3', message: '这不就是典型的中国宝宝体质' },
+  ];
+  const needles = new Set(['网盘见']);
+  const result = filterCommentsByDictionaryNeedles(comments, needles, ['中国宝宝体质']);
+  assert.equal(result.applied, true);
+  assert.equal(result.matched, 2);
+  assert.deepEqual(result.comments.map((c) => c.rpid), ['1', '3']);
+
+  // No needle matches -> fall back to the full comment set rather than emptying it.
+  const fallback = filterCommentsByDictionaryNeedles(comments, new Set(['完全不存在的词']));
+  assert.equal(fallback.applied, false);
+  assert.equal(fallback.comments.length, 3);
+
+  // Empty needle set -> no filtering applied.
+  const noNeedles = filterCommentsByDictionaryNeedles(comments, new Set());
+  assert.equal(noNeedles.applied, false);
+  assert.equal(noNeedles.comments.length, 3);
+});
 
 test('searchVideoKeywords discovers backend videos when no video link is provided', async () => {
   const requestedUrls = [];

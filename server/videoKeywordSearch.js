@@ -419,6 +419,58 @@ function dictionaryEntryNeedles(entry = {}) {
   );
 }
 
+export function commentMatchesNeedleSet(message, needleSet) {
+  if (!needleSet || needleSet.size === 0) return false;
+  const clean = cleanSearchText(message);
+  if (!clean) return false;
+  for (const needle of needleSet) {
+    if (needle.length >= 2 && clean.includes(needle)) return true;
+  }
+  return false;
+}
+
+// Local weak-term pre-filter: keep only comments whose text literally contains a
+// dictionary term (or alias/example) before routing to DeepSeek. Comment-backed
+// evidence requires the term to be present anyway, so dropping non-matching comments
+// loses nothing for existing-terms harvesting while cutting model tokens 10-50x,
+// which lets us scan far deeper comment sections per run. Falls back to the full set
+// if the filter would empty the pool or the dictionary cannot be read.
+export function filterCommentsByDictionaryNeedles(comments = [], needleSet, extraNeedles = []) {
+  const set = needleSet instanceof Set ? new Set(needleSet) : new Set(needleSet || []);
+  for (const extra of extraNeedles) {
+    const clean = cleanSearchText(extra);
+    if (clean.length >= 2) set.add(clean);
+  }
+  if (set.size === 0) return { comments, needleCount: 0, matched: comments.length, applied: false };
+  const matched = comments.filter((comment) => commentMatchesNeedleSet(comment?.message, set));
+  if (matched.length === 0) return { comments, needleCount: set.size, matched: 0, applied: false };
+  return { comments: matched, needleCount: set.size, matched: matched.length, applied: true };
+}
+
+function dictionaryNeedleSet(dictionary = {}) {
+  const set = new Set();
+  for (const entry of dictionary.entries || []) {
+    for (const needle of dictionaryEntryNeedles(entry)) set.add(needle);
+  }
+  return set;
+}
+
+async function preFilterCommentsToDictionary({ comments = [], existingTermsOnly = false, targetExistingTerms = [], deps = {}, warnings = [] }) {
+  if (!existingTermsOnly || comments.length === 0) {
+    return { comments, applied: false, needleCount: 0, before: comments.length, after: comments.length };
+  }
+  try {
+    const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
+    const dictionary = await readKeywordDictionary();
+    const needleSet = dictionaryNeedleSet(dictionary);
+    const result = filterCommentsByDictionaryNeedles(comments, needleSet, targetExistingTerms);
+    return { comments: result.comments, applied: result.applied, needleCount: result.needleCount, before: comments.length, after: result.comments.length };
+  } catch (error) {
+    warnings.push(`comment pre-filter: ${error.message}`);
+    return { comments, applied: false, needleCount: 0, before: comments.length, after: comments.length };
+  }
+}
+
 async function expandTargetTermsFromCommentHits({
   commentText = '',
   existingTermsOnly = false,
@@ -1023,7 +1075,13 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     (comment) => `${comment.bvid || comment.sourceUrl}:${comment.rpid}`,
   );
   const videos = scans.map((scan) => scan.video);
-  const commentText = comments.map((comment) => comment.message).filter(Boolean).join('\n');
+  const preFilterCommentsEnabled =
+    (payload.preFilterCommentsToTargets === true || deps.preFilterCommentsToTargets === true) && existingTermsOnly;
+  const commentPreFilter = preFilterCommentsEnabled
+    ? await preFilterCommentsToDictionary({ comments, existingTermsOnly, targetExistingTerms, deps, warnings })
+    : { comments, applied: false, needleCount: 0, before: comments.length, after: comments.length };
+  const trainingComments = commentPreFilter.comments;
+  const commentText = trainingComments.map((comment) => comment.message).filter(Boolean).join('\n');
   const contextVideos = videoContextSources(videos, discoveryContextVideos.length ? discoveryContextVideos : discoveredVideos);
   const videoContextText = includeVideoContext ? buildVideoContextText(contextVideos) : '';
   const videoObjectEvidenceText =
@@ -1113,14 +1171,22 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     entries: keywordTraining.entries || [],
     keywordTraining,
     dictionary: keywordTraining.dictionary || null,
-    collectionDiagnostics: buildCollectionDiagnostics({
-      discoveredVideos,
-      discoveryContextVideos,
-      videos,
-      comments,
-      trainingText,
-      targetExistingTerms: effectiveTargetExistingTerms,
-      keywordTraining,
-    }),
+    collectionDiagnostics: {
+      ...buildCollectionDiagnostics({
+        discoveredVideos,
+        discoveryContextVideos,
+        videos,
+        comments,
+        trainingText,
+        targetExistingTerms: effectiveTargetExistingTerms,
+        keywordTraining,
+      }),
+      commentPreFilter: {
+        applied: commentPreFilter.applied,
+        needleCount: commentPreFilter.needleCount,
+        commentsBefore: commentPreFilter.before,
+        commentsRouted: commentPreFilter.after,
+      },
+    },
   };
 }

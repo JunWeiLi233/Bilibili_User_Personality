@@ -11,8 +11,11 @@ import {
   readKeywordHarvestState,
 } from './keywordHarvest.js';
 
-process.env.DEEPSEEK_MODEL = 'deepseek-v4-flash';
-process.env.DEEPSEEK_REASONING_EFFORT = 'max';
+// Default to flash/max for the auto-coverage loop, but allow an explicit opt-in
+// override (deepseek-v4-pro validation) via a dedicated env var. A stray DEEPSEEK_MODEL
+// in the environment is still ignored, preserving the default-flash contract.
+process.env.DEEPSEEK_MODEL = process.env.BILIBILI_HARVEST_MODEL || 'deepseek-v4-flash';
+process.env.DEEPSEEK_REASONING_EFFORT = process.env.BILIBILI_HARVEST_REASONING_EFFORT || 'max';
 
 function parseList(value) {
   return String(value || '')
@@ -96,6 +99,12 @@ const staleMissedDiscoveryLimit = nonNegativeIntFromEnv('BILIBILI_HARVEST_STALE_
 const staleMissedPages = nonNegativeIntFromEnv('BILIBILI_HARVEST_STALE_MISSED_COMMENT_PAGES', 3, 5);
 const skipSeen = process.env.BILIBILI_HARVEST_SKIP_SEEN !== '0';
 const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
+// Corpus-mode knobs: let every scan (including priority-term scans) opportunistically
+// match a large pool of weak dictionary terms in the same comment section, so one
+// broad high-traffic scan can lift many terms at once instead of one term per query.
+const commentPoolTargetTermsLimit = positiveIntFromEnv('BILIBILI_HARVEST_COMMENT_POOL_TARGET_LIMIT', 24, 200);
+const priorityCommentPoolTargets = flagFromEnv('BILIBILI_HARVEST_PRIORITY_COMMENT_POOL_TARGETS', false);
+const preFilterCommentsToTargets = flagFromEnv('BILIBILI_HARVEST_PREFILTER_COMMENTS', false);
 const strict = runtimeOptions.strict;
 const expandTargetsFromComments = flagFromEnv('BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS', existingTermsOnly && requireCommentBackedEvidence);
 
@@ -150,6 +159,9 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     requireSourceBackedEvidence,
     requireCommentBackedEvidence,
     prioritizeSourceGaps: requireCommentBackedEvidence,
+    commentPoolTargetTermsLimit,
+    priorityCommentPoolTargets,
+    preFilterCommentsToTargets,
     existingTermsOnly,
     discoveryMode,
     discoveryLimit,
