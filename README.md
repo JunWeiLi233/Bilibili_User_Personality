@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2105`
+- Dictionary terms: `2092`
 - Target evidence per term: `3`
-- Coverage ratio: `58.19%`
-- Weak terms below target: `880`
-- Zero-evidence terms: `205`
-- Evidence deficit: `1857`
-- Source-backed terms: `1900`
+- Coverage ratio: `58.56%`
+- Weak terms below target: `867`
+- Zero-evidence terms: `201`
+- Evidence deficit: `1829`
+- Source-backed terms: `1891`
 - Unsourced evidence terms: `0`
-- Attempted terms: `311`
-- Successful terms: `93`
+- Attempted terms: `325`
+- Successful terms: `95`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -82,6 +82,7 @@ Recent dictionary-cleaning updates:
 - Pruned latest flash-harvest genre/platform/reaction noise: removed generic embarrassment `尬到抠脚`, broad celebrity-industry hedge `不绝对但韩国不少`, game item `赛季蛋`, fiction praise `睡前小甜饼` / `小甜饼`, romance fragment `直男不管对方叫老婆`, platform complaint `不知道ai审核`, and bare meme handoff `压力来到了小猴这边`; kept directed belittling evidence such as `哪根葱`.
 - Pruned current coverage-harvest praise/media/literal-state noise: removed typo-praise `不诗人`, appearance praise `颜值身材没有短板`, audio/body-state fragments `全损音品质` / `有一点痔疮`, generic approval `明天来上班`, engagement bait `没人吗`, isolated hot-word label `知识盲区`, creator-support `产出不易`, quote-only `成见是一座大山`, fiction-name pun `程敷衍`, and media rewatch marker `n刷`; kept direct sarcasm `策划你来当` and self-correction `记错了`.
 - Pruned latest coverage-harvest vague/proper-name/game-state noise: removed vague reaction `吞之`, proper-name question `开除凡凡`, generic quantifier `亿点点`, and game-stat typo `拉夸`; kept valid hostile evidence such as `吃相太难看` and `纯铁脑瘫`.
+- Pruned current auto-coverage praise/platform/identity noise after the `deepseek-v4-flash` max-effort run: removed generic praise `很棒先生` / `这很棒先生` / `up好牛`, payment fragment `我将支付您画画的费用`, neutral `直言不讳`, reaction-only `草生`, identity/platform terms `福瑞控` / `帽子叔` / `帽子叔叔` / `小黄鱼`, game-stat sentence `五维图全都低的可怜`, video-participation reaction `打了自己电话`, and bare meme label `肘遍全网`; kept contextual attack terms such as `饭圈味` and `纯小人`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
