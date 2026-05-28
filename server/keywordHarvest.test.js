@@ -6684,6 +6684,34 @@ test('buildDictionaryCoverageAudit defers duplicate accepted no-progress retries
   assert.equal(audit.nextActions[1].duplicateAcceptedNoProgress, true);
 });
 
+test('buildCoverageActions ignores unversioned run feedback after a strategy bump', () => {
+  const term = 'staleDuplicateFeedback';
+  const [action] = buildCoverageActions(
+    { entries: [{ term, family: 'attack', evidenceCount: 1 }] },
+    {
+      harvestStrategyVersion: 7,
+      termAttempts: {
+        [Buffer.from(term, 'utf8').toString('base64url')]: {
+          term,
+          family: 'attack',
+          attempts: 1,
+          successfulAttempts: 1,
+        },
+      },
+      runs: [
+        {
+          acceptedEvidenceCount: 1,
+          coverageIncreasingAcceptedEvidenceCount: 0,
+          queryDiagnostics: [[{ targetExistingTerms: [term], acceptedTerms: [term] }]],
+        },
+      ],
+    },
+    { targetEvidence: 3 },
+  );
+
+  assert.equal(action.duplicateAcceptedNoProgress, false);
+});
+
 test('buildDictionaryCoverageAudit defers duplicate partial refreshes behind hard zero retries', () => {
   const duplicateTerm = 'partialDuplicateAccepted';
   const zeroTerm = 'hardZeroRetry';
@@ -9452,7 +9480,7 @@ test('harvestKeywordDictionary report actions respect retry-before-unattempted l
             lastError: 'No Bilibili videos were discovered from the backend discovery mode.',
           },
         },
-        runs: [{ at: '2026-01-01T00:00:00.000Z', queries: 99 }],
+        runs: [],
       }),
       'utf8',
     );
@@ -10147,7 +10175,7 @@ test('harvestKeywordDictionary lets strict comment runs fill with hard zero retr
             queries: [{ query: 'normal \u8bc4\u8bba\u533a \u6897 \u70ed\u8bc4' }],
           },
         },
-        runs: [],
+        runs: [{ at: '2026-01-01T00:00:00.000Z', queries: 99 }],
       }),
       'utf8',
     );
@@ -10219,7 +10247,7 @@ test('harvestKeywordDictionary fills limited runs with distinct term groups befo
             queries: [{ query: '\u5927\u8c61\u611f\u5192\u4e86\u957f\u9888\u9e7f\u5728\u51b0\u7bb1\u91cc \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4' }],
           },
         },
-        runs: [],
+        runs: [{ at: '2026-01-01T00:00:00.000Z', queries: 99 }],
       }),
       'utf8',
     );
@@ -10776,7 +10804,7 @@ test('harvestKeywordDictionary ignores scanned video exclusions from stale strat
         searchedQueries: [],
         scannedBvids: ['BVoldscan'],
         termAttempts: {},
-        runs: [],
+        runs: [{ at: '2026-01-01T00:00:00.000Z', queries: 99 }],
       }),
       'utf8',
     );
@@ -10812,6 +10840,7 @@ test('harvestKeywordDictionary ignores scanned video exclusions from stale strat
     assert.equal(state.harvestStrategyVersion, 7);
     assert.equal(state.runs.length, 1);
     assert.equal(state.runs[0].queries, 1);
+    assert.equal(state.runs[0].strategyVersion, 7);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

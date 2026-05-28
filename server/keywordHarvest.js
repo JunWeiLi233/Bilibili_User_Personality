@@ -2527,6 +2527,12 @@ function hasCurrentHarvestStrategyState(state = {}) {
   );
 }
 
+function currentStrategyRuns(state = {}) {
+  const runs = Array.isArray(state.runs) ? state.runs : [];
+  if (!Object.prototype.hasOwnProperty.call(state, 'harvestStrategyVersion')) return runs;
+  return runs.filter((run) => Number(run?.strategyVersion || 0) >= HARVEST_STRATEGY_VERSION);
+}
+
 export function summarizeTermAttempts(state = {}, dictionary = {}, options = {}) {
   const entries = Array.isArray(dictionary?.entries) ? dictionary.entries : [];
   const attempts = hasCurrentHarvestStrategyState(state) && state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
@@ -2585,7 +2591,7 @@ export function summarizeTermAttempts(state = {}, dictionary = {}, options = {})
 export function buildCoverageActions(dictionary = {}, state = {}, options = {}) {
   const entries = sortEntriesForCoverage(Array.isArray(dictionary?.entries) ? dictionary.entries : []);
   const stateStrategyIsCurrent = hasCurrentHarvestStrategyState(state);
-  const feedbackState = stateStrategyIsCurrent ? state : { ...state, runs: [] };
+  const feedbackState = stateStrategyIsCurrent ? { ...state, runs: currentStrategyRuns(state) } : { ...state, runs: [] };
   const attempts = stateStrategyIsCurrent && state.termAttempts && typeof state.termAttempts === 'object' ? state.termAttempts : {};
   const searchedQueries = new Set(stateStrategyIsCurrent && Array.isArray(state.searchedQueries) ? state.searchedQueries : []);
   const assumeLegacyQueriesCurrent = stateStrategyIsCurrent;
@@ -3356,7 +3362,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
   const acceptedEvidenceCount = results.reduce((sum, item) => sum + countAcceptedEvidenceHitsForResult(item.result || {}), 0);
   const coverageIncreasingAcceptedEvidenceCount = countCoverageIncreasingAcceptedEvidence(results, before, coverageOptions);
   const finishedAt = new Date().toISOString();
-  const priorRuns = stateStrategyIsCurrent && Array.isArray(state.runs) ? state.runs : [];
+  const priorRuns = stateStrategyIsCurrent ? currentStrategyRuns(state) : [];
   const nextState = {
     version: 1,
     harvestStrategyVersion: HARVEST_STRATEGY_VERSION,
@@ -3368,6 +3374,7 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       ...priorRuns.slice(-49),
       {
         at: finishedAt,
+        strategyVersion: HARVEST_STRATEGY_VERSION,
         queries: queries.length,
         successfulQueries: results.filter((item) => item.result?.ok).length,
         videosScanned: results.reduce((sum, item) => sum + (item.result?.videos?.length || 0), 0),
