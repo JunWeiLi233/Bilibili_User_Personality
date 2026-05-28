@@ -35,6 +35,41 @@ Research-driven prototype for evaluating whether a selected Bilibili user's publ
   - Marks dictionary hits inside analyzed comments, maps each semantic family to a radar axis, and shows the vocabulary markers under the radar chart.
   - In direct analysis mode, asks DeepSeek to analyze complete sentences and return `axisImpacts`, then shows sentence-level radar markers under the chart so each score has a traceable sentence target.
 
+## Current Dictionary Status
+
+Latest verified update: commit `65d2c2e` on `main`.
+
+Current audited dictionary state:
+
+- Dictionary terms: `2149`
+- Target evidence per term: `3`
+- Coverage ratio: `55.79%`
+- Weak terms below target: `950`
+- Zero-evidence terms: `217`
+- Evidence deficit: `2004`
+- Source-backed terms: `1932`
+- Unsourced evidence terms: `0`
+- Attempted terms: `97`
+- Successful terms: `30`
+
+The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
+
+Current quality rules:
+
+- Coverage evidence must come from Bilibili public comments, replies, or public danmaku unless an explicit relaxed mode is chosen.
+- The crawler does not use AICU or third-party comment indexes as a substitute for local collection.
+- Search-result titles and glossary videos can help discovery, but strict coverage does not treat them as completed comment evidence.
+- DeepSeek is used as a dictionary extractor and sentence-context judge; it does not fine-tune a local model.
+- Complex language/dictionary work should use `deepseek-v4-pro` with `DEEPSEEK_REASONING_EFFORT=max`; light mechanical work can use `deepseek-v4-flash`.
+
+Recent dictionary-cleaning updates:
+
+- Removed mojibake and non-Chinese-looking terms such as `瀵规姉`, `鐢风洍濂冲`, and `鐑瘎` from accepted dictionary output.
+- Added stricter checks so a term must be a real Chinese/internet term with direct evidence in the crawled text.
+- Tightened filters for literal or neutral contexts, including real coins for `老硬币`, school-study narratives for `学习了`, celebrity-name mentions such as `欧阳娜娜`, and generic praise such as `伟大无需多言`.
+- Filtered glossary/explanation contexts so videos explaining a meme, a title, or a famous scene do not count as live usage evidence.
+- Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
+
 ## Run Locally
 
 From PowerShell:
