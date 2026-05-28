@@ -309,6 +309,88 @@ test('searchVideoKeywords broadens existing evidence source fallback beyond disc
   assert.equal(result.collectionDiagnostics.scannedVideos, 5);
 });
 
+test('searchVideoKeywords prefers existing evidence source videos before broad filtered fallback', async () => {
+  const scannedBvids = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u996d\u5708\u5473 \u8bc4\u8bba',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      pages: 1,
+      existingTermsOnly: true,
+      evidenceSourceVideoFallback: true,
+      allowFilteredDiscoveryFallback: true,
+      preferFilteredDiscoveryFallback: true,
+      includeVideoContext: false,
+      includeVideoObjectEvidence: false,
+      targetExistingTerms: ['\u996d\u5708\u5473'],
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        {
+          bvid: 'BVbroad00001',
+          title: '\u996d\u5708\u4e89\u8bae\u76d8\u70b9',
+          sourceUrl: 'https://www.bilibili.com/video/BVbroad00001/',
+        },
+      ],
+      readKeywordDictionary: async () => ({
+        entries: [
+          {
+            term: '\u996d\u5708\u5473',
+            family: 'attack',
+            evidenceSources: [
+              {
+                source: 'Bilibili public search-discovered video comment scan: https://www.bilibili.com/video/BVsource001/',
+                uid: 'BVsource001',
+                sample: '\u8fd9\u996d\u5708\u5473\u4e5f\u592a\u91cd\u4e86',
+              },
+            ],
+          },
+        ],
+      }),
+      fetchJson: async (url) => {
+        const textUrl = String(url);
+        if (textUrl.includes('/x/web-interface/view')) {
+          const bvid = new URL(textUrl).searchParams.get('bvid');
+          scannedBvids.push(bvid);
+          return {
+            code: 0,
+            data: {
+              aid: 101,
+              bvid,
+              title: bvid,
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: 1,
+                mid: 100,
+                member: { mid: '100', uname: 'alice' },
+                content: { message: '\u8fd9\u996d\u5708\u5473\u4e5f\u592a\u91cd\u4e86' },
+                like: 1,
+                ctime: 1710000000,
+              },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionaryEvidenceEntries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(scannedBvids, ['BVsource001']);
+  assert.equal(result.source, 'Bilibili public existing evidence-source video comment scan');
+  assert.deepEqual(result.collectionDiagnostics.targetTextHits, [{ term: '\u996d\u5708\u5473', count: 1 }]);
+});
+
 test('searchVideoKeywords reports target diagnostics when discovered video scans fail', async () => {
   const result = await searchVideoKeywords(
     {

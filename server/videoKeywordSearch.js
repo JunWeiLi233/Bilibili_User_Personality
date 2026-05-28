@@ -655,11 +655,32 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const targetSearchOnly = payload.targetSearchOnly === true || deps.targetSearchOnly === true;
   const allowFilteredDiscoveryFallback = payload.allowFilteredDiscoveryFallback === true || deps.allowFilteredDiscoveryFallback === true;
   const preferFilteredDiscoveryFallback = payload.preferFilteredDiscoveryFallback === true || deps.preferFilteredDiscoveryFallback === true;
+  const evidenceSourceVideoFallback =
+    payload.evidenceSourceVideoFallback === true ||
+    payload.allowEvidenceSourceVideoFallback === true ||
+    deps.evidenceSourceVideoFallback === true ||
+    deps.allowEvidenceSourceVideoFallback === true;
+  const evidenceSourceFallbackLimit = boundedInt(
+    payload.evidenceSourceFallbackLimit ?? deps.evidenceSourceFallbackLimit ?? process.env.BILIBILI_EVIDENCE_SOURCE_FALLBACK_LIMIT ?? Math.max(12, discoveryLimit),
+    Math.max(12, discoveryLimit),
+    discoveryLimit,
+    50,
+  );
   const discoveryWarnings = [];
   let discoveredVideos = [];
   let discoveryContextVideos = [];
   let usedEvidenceSourceFallback = false;
   const excludeBvids = parseSet(payload.excludeBvids || deps.excludeBvids);
+  const loadEvidenceSourceFallbackVideos = async () => {
+    if (!evidenceSourceVideoFallback || !existingTermsOnly || targetExistingTerms.length === 0) return [];
+    try {
+      const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
+      return evidenceSourceVideosForTerms(await readKeywordDictionary(), targetExistingTerms, evidenceSourceFallbackLimit, excludeBvids);
+    } catch (error) {
+      discoveryWarnings.push(`existing evidence-source fallback: ${error.message}`);
+      return [];
+    }
+  };
   if (videoLinks.length === 0) {
     const discoveryGroups = [];
     if (discoveryMode === 'search' || discoveryMode === 'mixed') {
@@ -783,11 +804,19 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       targetExistingTerms.length > 0
         ? rankedDiscoveryGroups.map((group) => filterRelevantVideos(group, searchQueries, targetExistingTerms))
         : rankedDiscoveryGroups;
+    if (targetExistingTerms.length > 0 && eligibleDiscoveryGroups.every((group) => group.length === 0)) {
+      const evidenceSourceVideos = await loadEvidenceSourceFallbackVideos();
+      if (evidenceSourceVideos.length > 0) {
+        eligibleDiscoveryGroups = [evidenceSourceVideos];
+        usedEvidenceSourceFallback = true;
+      }
+    }
     if (
       targetExistingTerms.length > 0 &&
       includeVideoContext === false &&
       allowFilteredDiscoveryFallback &&
       preferFilteredDiscoveryFallback &&
+      !usedEvidenceSourceFallback &&
       !targetsAskBaiduTerm(targetExistingTerms) &&
       !targetsRequireStrictRelevance(targetExistingTerms)
     ) {
@@ -797,39 +826,29 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
       targetExistingTerms.length > 0 &&
       includeVideoContext === false &&
       allowFilteredDiscoveryFallback &&
+      !usedEvidenceSourceFallback &&
       !targetsAskBaiduTerm(targetExistingTerms) &&
       !targetsRequireStrictRelevance(targetExistingTerms) &&
       eligibleDiscoveryGroups.every((group) => group.length === 0)
     ) {
       eligibleDiscoveryGroups = rankedDiscoveryGroups.map((group) => group.slice(0, discoveryLimit));
     }
-    discoveredVideos = roundRobinUnique(
-      eligibleDiscoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
-      discoveryLimit,
-      (video) => video.bvid,
-    );
+    discoveredVideos = usedEvidenceSourceFallback
+      ? uniqueByKey(
+          eligibleDiscoveryGroups.flatMap((group) => group).filter((video) => !excludeBvids.has(video.bvid)),
+          (video) => video.bvid || video.sourceUrl || video.title,
+        )
+      : roundRobinUnique(
+          eligibleDiscoveryGroups.map((group) => group.filter((video) => !excludeBvids.has(video.bvid))),
+          discoveryLimit,
+          (video) => video.bvid,
+        );
     if ((existingTermsOnly || targetExistingTerms.length > 0) && (discoveryMode !== 'controversial' || prioritizeSearchQueries)) {
       discoveredVideos = sortVideosByRelevance(discoveredVideos, searchQueries, targetExistingTerms);
     }
-    const evidenceSourceVideoFallback =
-      payload.evidenceSourceVideoFallback === true ||
-      payload.allowEvidenceSourceVideoFallback === true ||
-      deps.evidenceSourceVideoFallback === true ||
-      deps.allowEvidenceSourceVideoFallback === true;
-    const evidenceSourceFallbackLimit = boundedInt(
-      payload.evidenceSourceFallbackLimit ?? deps.evidenceSourceFallbackLimit ?? process.env.BILIBILI_EVIDENCE_SOURCE_FALLBACK_LIMIT ?? Math.max(12, discoveryLimit),
-      Math.max(12, discoveryLimit),
-      discoveryLimit,
-      50,
-    );
     if (discoveredVideos.length === 0 && evidenceSourceVideoFallback && existingTermsOnly && targetExistingTerms.length > 0) {
-      try {
-        const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
-        discoveredVideos = evidenceSourceVideosForTerms(await readKeywordDictionary(), targetExistingTerms, evidenceSourceFallbackLimit, excludeBvids);
-        usedEvidenceSourceFallback = discoveredVideos.length > 0;
-      } catch (error) {
-        discoveryWarnings.push(`existing evidence-source fallback: ${error.message}`);
-      }
+      discoveredVideos = await loadEvidenceSourceFallbackVideos();
+      usedEvidenceSourceFallback = discoveredVideos.length > 0;
     }
     if (discoveredVideos.length === 0) {
       const videoContextText = includeVideoContext ? buildVideoContextText(discoveryContextVideos) : '';
