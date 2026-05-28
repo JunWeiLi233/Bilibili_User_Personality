@@ -720,7 +720,7 @@ test('buildKeywordHarvestQueries uses high-signal comment queries for further co
     '\u5927\u9b54\u6cd5\u5e08 \u70ed\u8bc4',
     '\u5927\u610f\u4e86 \u70ed\u8bc4',
     '\u5927\u610f\u4e86\u6ca1\u6709\u95ea \u70ed\u8bc4',
-    '\u5e26\u6c9f \u70ed\u8bc4',
+    '\u5e26\u6c9f \u5e26\u8282\u594f \u8bc4\u8bba\u533a',
   ]);
 });
 
@@ -7738,6 +7738,37 @@ test('buildDictionaryCoverageAudit recommends precision queries for hard zero-ev
   assert.equal(audit.nextActions.find((item) => item.term === '\u8f66\u5bb6\u519b').nextQuery, '\u5c0f\u7c73\u6c7d\u8f66 \u8f66\u5bb6\u519b \u63a7\u8bc4');
   assert.equal(audit.nextActions.find((item) => item.term === '\u8c01\u662f\u8e6d\u6982\u5ff5').nextQuery, '\u8e6d\u6982\u5ff5\u662f\u8c01 AI');
   assert.equal(audit.nextActions.find((item) => item.term === '\u4e0d\u4f1a\u771f\u6709\u4eba\u89c9\u5f97').nextQuery, '\u4e0d\u4f1a\u771f\u6709\u4eba \u8bc1\u636e \u56de\u590d');
+});
+
+test('buildDictionaryCoverageAudit avoids medical vocal-cord searches for daigou retries', () => {
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        {
+          term: '\u5e26\u6c9f',
+          family: 'attack',
+          evidenceCount: 1,
+          evidenceSources: [{ source: 'Bilibili public video comment scan', sample: '\u8fd9\u4e3b\u6301\u4eba\u4e00\u76f4\u5728\u5e26\u6c9f\u7684\u611f\u89c9' }],
+        },
+      ],
+    },
+    {
+      harvestStrategyVersion: 7,
+      termAttempts: {
+        [Buffer.from('\u5e26\u6c9f', 'utf8').toString('base64url')]: {
+          term: '\u5e26\u6c9f',
+          family: 'attack',
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: '\u5e26\u6c9f \u70ed\u8bc4', strategyVersion: 7, ok: true, hit: false, comments: 7 }],
+          lastQuery: '\u5e26\u6c9f \u70ed\u8bc4',
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 3, requireCommentBackedEvidence: true, retryBeforeUnattemptedLimit: 1 },
+  );
+
+  assert.equal(audit.nextActions[0].nextQuery, '\u5e26\u6c9f \u5e26\u8282\u594f \u8bc4\u8bba\u533a');
 });
 
 test('buildDictionaryCoverageAudit rewrites hard misses after irrelevant query diagnostics', () => {

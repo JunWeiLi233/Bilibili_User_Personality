@@ -996,6 +996,11 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const directedMockContext = /(?:\u4f60|\u4f60\u4eec|\u4ed6|\u8fd9\u4eba|\u8001\u5904\u7537|\u5355\u8eab\u72d7|\u5b85\u7537|\u522b\u88c5).{0,24}\u5927?\u9b54\u6cd5\u5e08|\u5927?\u9b54\u6cd5\u5e08.{0,24}(?:\u522b\u88c5|\u61c2\u4ec0\u4e48|\u8fd8\u6559|\u5355\u8eab|\u5904\u7537|\u6ca1\u8c08\u8fc7|\u6025\u4e86|\u7834\u9632)/u.test(cleanSample);
     if ((literalFantasyContext || mediaTitleContext) && !directedMockContext) return true;
   }
+  if (term === '\u5e26\u6c9f' && family === 'attack') {
+    const literalMedicalContext = /(?:\u58f0\u5e26\u6c9f|\u58f0\u95e8\u88c2\u9699|\u5589\u955c|\u58f0\u5e26|\u5c0f\u7ed3|\u8033\u9f3b\u5589|\u53d1\u58f0|\u95ed\u5408|\u58f0\u5e26\u6c9f.{0,18}(?:\u75c7\u72b6|\u624b\u672f|\u68c0\u67e5|\u6cbb\u7597|\u95ed\u5408|\u53d1\u58f0)|(?:\u75c7\u72b6|\u624b\u672f|\u68c0\u67e5|\u6cbb\u7597|\u95ed\u5408|\u53d1\u58f0).{0,18}\u58f0\u5e26\u6c9f)/u.test(cleanSample);
+    const rhetoricContext = /(?:\u5e26\u6c9f|带沟).{0,18}(?:\u8282\u594f|\u8bdd\u9898|\u8206\u8bba|\u7acb\u573a|\u611f\u89c9|\u4e0d\u662f\u8ba8\u8bba)|(?:\u5e26\u8282\u594f|\u5f15\u5bfc|\u4e0d\u662f\u8ba8\u8bba|\u9634\u9633|\u62f1\u706b).{0,18}(?:\u5e26\u6c9f|带沟)/u.test(cleanSample);
+    if (literalMedicalContext && !rhetoricContext) return true;
+  }
   if (term === '\u75c5\u5f2f\u94a9' && family === 'attack') {
     const properNameRosterContext = /(?:\u5929\u6deb\u661f\s*)?\u75c5\u5f2f\u94a9\s*[\u4e00-\u9fff]{2,4}$|\u75c5\u5f2f\u94a9[\u4e00-\u9fff]{2,4}$/u.test(cleanSample);
     const hostileNicknameContext = /(?:\u9ed1\u79f0|\u9a82|\u4fae\u8fb1|\u8fd9\u4eba|\u4ed6|\u5979|\u4f60).{0,18}\u75c5\u5f2f\u94a9|\u75c5\u5f2f\u94a9.{0,18}(?:\u9ed1\u79f0|\u9a82|\u4fae\u8fb1|\u771f\u6076\u5fc3|\u4ec0\u4e48\u73a9\u610f)/u.test(cleanSample);

@@ -8621,6 +8621,63 @@ test('normalizeKeywordEntries prunes persisted literal fantasy samples for big-m
   assert.deepEqual(entries[0].evidenceSources.map((source) => source.uid), ['BVattack']);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal vocal-cord groove evidence for daigou attack terms', () => {
+  const dictionary = {
+    entries: [
+      {
+        term: '\u5e26\u6c9f',
+        family: 'attack',
+        meaning: 'criticizes someone for steering discourse or baiting a conversation',
+      },
+    ],
+  };
+
+  const falsePositiveText = [
+    '\u5589\u955c \u58f0\u95e8\u88c2\u9699\u548c\u58f0\u5e26\u6c9f',
+    '\u778e\u5417\uff0c\u6807\u9898\u5df2\u7ecf\u544a\u8bc9\u4f60\u662f\u58f0\u5e26\u6c9f\u4e86\uff0c\u5c0f\u7ed3\u4e2a\u6bdb\u5440',
+  ].join('\n');
+
+  assert.deepEqual(findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText).map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    '\u8fd9\u4e3b\u6301\u4eba\u4e00\u76f4\u5728\u5e26\u6c9f\u5f15\u5bfc\u8bdd\u9898\uff0c\u4e0d\u662f\u6b63\u5e38\u8ba8\u8bba',
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u5e26\u6c9f']);
+});
+
+test('normalizeKeywordEntries prunes persisted vocal-cord groove samples for daigou attack terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u5e26\u6c9f',
+      family: 'attack',
+      meaning: 'criticizes someone for steering discourse or baiting a conversation',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u8fd9\u4e3b\u6301\u4eba\u6ee1\u6ee1\u7684\u88ab\u8feb\u5bb3\u5984\u60f3\u75c7\uff0c\u4e00\u76f4\u5728\u5e26\u6c9f\u7684\u611f\u89c9\u3002',
+        '\u778e\u5417\uff0c\u6807\u9898\u5df2\u7ecf\u544a\u8bc9\u4f60\u662f\u58f0\u5e26\u6c9f\u4e86\uff0c\u5c0f\u7ed3\u4e2a\u6bdb\u5440',
+      ],
+      evidenceSources: [
+        {
+          source: 'Bilibili public video comment scan',
+          uid: 'BVdebate',
+          sample: '\u8fd9\u4e3b\u6301\u4eba\u6ee1\u6ee1\u7684\u88ab\u8feb\u5bb3\u5984\u60f3\u75c7\uff0c\u4e00\u76f4\u5728\u5e26\u6c9f\u7684\u611f\u89c9\u3002',
+        },
+        {
+          source: 'Bilibili public video comment scan',
+          uid: 'BVmedical',
+          sample: '\u778e\u5417\uff0c\u6807\u9898\u5df2\u7ecf\u544a\u8bc9\u4f60\u662f\u58f0\u5e26\u6c9f\u4e86\uff0c\u5c0f\u7ed3\u4e2a\u6bdb\u5440',
+        },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u4e3b\u6301\u4eba\u6ee1\u6ee1\u7684\u88ab\u8feb\u5bb3\u5984\u60f3\u75c7\uff0c\u4e00\u76f4\u5728\u5e26\u6c9f\u7684\u611f\u89c9\u3002']);
+  assert.deepEqual(entries[0].evidenceSources.map((source) => source.uid), ['BVdebate']);
+});
+
 test('normalizeKeywordEntries prunes persisted literal traditional-character samples for video-language attack terms', () => {
   const entries = normalizeKeywordEntries([
     {
