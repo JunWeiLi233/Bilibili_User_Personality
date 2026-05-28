@@ -2623,14 +2623,19 @@ test('findDictionaryEntriesWithTextEvidence rejects passive publish context for 
       '\u8fd9\u4e2a\u563f\u563f\u563f\u7684\u52a8\u9759\u662f\u9e1f\u53d1\u51fa\u6765\u7684\uff1f',
       '\u4f60\u89c9\u5f97\u4e0d\u5bf9\uff0c\u53ef\u4ee5\u53d1\u5f39\u5e55\u53d1\u8bc4\u8bba\u8bf4A\u5176\u5b9e\u662f\u5927\u5199i',
       '\u53ef\u4ee5\u53d1\u660e\u5386\u53f2\u7ed9\u660e\u667a\u5149\u79c0\u52a0\u4e2a\u5207\u652f\u4e39\u5927\u540d\u7684\u6807\u7b7e',
-      '\u4f60\u6562\u53d1\u51fa\u6765\u4ed6\u8c03\u4f83\u4e86\u5417',
+      'up\u53ef\u4ee5\u53d1\u4e00\u4e0b\u767d\u5e1d\u53f0\u8bcd\u5305\u561b[\u8dea\u4e86]',
+      '\u8c01\u5bb6\u96f6\u7ea7\u53ef\u4ee5\u53d1\u5f39\u5e55\uff1f',
+      '\u535a\u4e3b\u5bf9\u81ea\u5bb6\u7684\u732b\u7814\u7a76\u5230\u53ef\u4ee5\u53d1\u8bba\u6587\u4e86\u5df2\u7ecf',
+      '\u7ec8\u4e8e\u53ef\u4ee5\u53d1\u5764\u5764\u7684\u56fe\u7247\u4e86\uff0c\u5f00\u56e2[doge][\u559c\u6781\u800c\u6ce3][\u6253call]',
+      '\u4f60\u53d1\u7684\u4ec0\u4e48\u4e1c\u897f\u4f60\u81ea\u5df1\u6562\u516c\u5f00\u53d1\u51fa\u6765\u5417\uff1f',
+      '\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
     ].join('\n'),
     { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-post-evidence/', uid: 'BV-post-evidence' },
   );
 
   assert.deepEqual(entries.map((entry) => entry.term), ['\u53ef\u4ee5\u8d34']);
   assert.equal(entries[0].evidenceCount, 1);
-  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u6562\u53d1\u51fa\u6765\u4ed6\u8c03\u4f83\u4e86\u5417']);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417']);
 });
 
 test('findDictionaryEntriesWithTextEvidence rejects harvested platform-action evidence for cooperation and correction terms', () => {
@@ -2800,17 +2805,39 @@ test('normalizeKeywordEntries drops passive publish source evidence for request-
         '\u4e00\u53d1\u51fa\u6765\u518d\u70b9\u51fb\u5c31\u8be5\u8bc4\u8bba\u5df2\u5220\u9664',
         '\u53d1\u6b63\u7ecf\u86c7\u7c7b\u79d1\u666e\u9650\u6d41\u9650\u7684\u6b7b\u6b7b\u7684',
         '\u4e0d\u8981\u603b\u628a\u4e2d\u56fd\u7684\u4e1c\u897f\u76f4\u63a5\u8d34\u51fa\u6765\u5ba3\u4f20',
+        '\u8c01\u5bb6\u96f6\u7ea7\u53ef\u4ee5\u53d1\u5f39\u5e55\uff1f',
+        '\u535a\u4e3b\u5bf9\u81ea\u5bb6\u7684\u732b\u7814\u7a76\u5230\u53ef\u4ee5\u53d1\u8bba\u6587\u4e86\u5df2\u7ecf',
+        '\u7ec8\u4e8e\u53ef\u4ee5\u53d1\u5764\u5764\u7684\u56fe\u7247\u4e86\uff0c\u5f00\u56e2[doge][\u559c\u6781\u800c\u6ce3][\u6253call]',
+        '\u4f60\u53d1\u7684\u4ec0\u4e48\u4e1c\u897f\u4f60\u81ea\u5df1\u6562\u516c\u5f00\u53d1\u51fa\u6765\u5417\uff1f',
+        '\u76f4\u63a5\u628a\u8bc4\u8bba\u8d34\u51fa\u6765\u4e0d\u884c\u5417\uff1f\u5728\u6015\u4ec0\u4e48\uff1f',
+        '\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
       ],
       evidenceSources: [
         { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-1', sample: '\u4e00\u53d1\u51fa\u6765\u518d\u70b9\u51fb\u5c31\u8be5\u8bc4\u8bba\u5df2\u5220\u9664' },
         { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-2', sample: '\u53d1\u6b63\u7ecf\u86c7\u7c7b\u79d1\u666e\u9650\u6d41\u9650\u7684\u6b7b\u6b7b\u7684' },
         { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-3', sample: '\u4e0d\u8981\u603b\u628a\u4e2d\u56fd\u7684\u4e1c\u897f\u76f4\u63a5\u8d34\u51fa\u6765\u5ba3\u4f20' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-4', sample: '\u8c01\u5bb6\u96f6\u7ea7\u53ef\u4ee5\u53d1\u5f39\u5e55\uff1f' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-5', sample: '\u535a\u4e3b\u5bf9\u81ea\u5bb6\u7684\u732b\u7814\u7a76\u5230\u53ef\u4ee5\u53d1\u8bba\u6587\u4e86\u5df2\u7ecf' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-6', sample: '\u7ec8\u4e8e\u53ef\u4ee5\u53d1\u5764\u5764\u7684\u56fe\u7247\u4e86\uff0c\u5f00\u56e2[doge][\u559c\u6781\u800c\u6ce3][\u6253call]' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-passive-post-7', sample: '\u4f60\u53d1\u7684\u4ec0\u4e48\u4e1c\u897f\u4f60\u81ea\u5df1\u6562\u516c\u5f00\u53d1\u51fa\u6765\u5417\uff1f' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-valid-post-1', sample: '\u76f4\u63a5\u628a\u8bc4\u8bba\u8d34\u51fa\u6765\u4e0d\u884c\u5417\uff1f\u5728\u6015\u4ec0\u4e48\uff1f' },
+        { source: 'Bilibili public video comment scan', uid: 'BV-valid-post-2', sample: '\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417' },
       ],
     },
   ]);
 
   assert.deepEqual(entries.map((entry) => ({ term: entry.term, evidenceCount: entry.evidenceCount, evidenceSamples: entry.evidenceSamples, evidenceSources: entry.evidenceSources })), [
-    { term: '\u53ef\u4ee5\u8d34', evidenceCount: 0, evidenceSamples: [], evidenceSources: [] },
+    {
+      term: '\u53ef\u4ee5\u8d34',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u76f4\u63a5\u628a\u8bc4\u8bba\u8d34\u51fa\u6765\u4e0d\u884c\u5417\uff1f\u5728\u6015\u4ec0\u4e48\uff1f',
+        '\u4f60\u628a\u8bc1\u636e\u622a\u56fe\u53ef\u4ee5\u8d34\u4e00\u4e0b\u5417',
+      ],
+      evidenceSources: [
+        { source: 'Bilibili public video comment scan', uid: 'BV-valid-post-1', sample: '\u76f4\u63a5\u628a\u8bc4\u8bba\u8d34\u51fa\u6765\u4e0d\u884c\u5417\uff1f\u5728\u6015\u4ec0\u4e48\uff1f' },
+      ],
+    },
   ]);
 });
 
