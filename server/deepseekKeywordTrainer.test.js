@@ -3700,11 +3700,10 @@ test('findDictionaryEntriesWithTextEvidence rejects harvested shopping links, em
     [
       '\u8bc1\u636e\u94fe\u63a5\u8d34\u51fa\u6765\uff0c\u5426\u5219\u6ca1\u6cd5\u5224\u65ad',
       '\u770b\u5b8c\u8fd9\u6761\u79d1\u666e\u771f\u662f\u77e5\u8bc6\u589e\u52a0\u4e86',
-      '\u522b\u53ea\u8bf4\u8d34\u5427\u89c1\uff0c\u8fd9\u91cc\u628a\u8bc1\u636e\u8bf4\u6e05\u695a',
     ].join('\n'),
   );
 
-  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u94fe\u63a5', '\u77e5\u8bc6\u589e\u52a0', '\u8d34\u5427']);
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u94fe\u63a5', '\u77e5\u8bc6\u589e\u52a0']);
 });
 
 test('findDictionaryEntriesWithTextEvidence rejects harvested narration, joke reveal, emote suffix, and literal office evidence', () => {
@@ -9562,6 +9561,91 @@ test('normalizeKeywordEntries prunes current flash harvest slogan, game-progress
     [
       '\u8d44\u654c',
       ['\u4e70\u98de\u673a\u662f\u8d44\u654c\u7684\u8a00\u8bba\u771f\u662f\u7ed9\u6211\u770b\u529b\u7aed\u4e86'],
+    ],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes current flash harvest negated, platform, and meta-label noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7231\u548b\u548b\u7684',
+      family: 'evasion',
+      meaning: 'dismissive let-it-be wording',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u6240\u4ee5\u505a\u4e0d\u5230\u7231\u548b\u548b\u5730\uff0c\u5373\u4f7f\u77e5\u9053\u88ab\u4eba\u9a82\u4e24\u4e0b\u53c8\u4e0d\u4f1a\u5c11\u4e24\u5757\u8089',
+      ],
+    },
+    {
+      term: '\u5077\u5077\u53d6\u5173',
+      family: 'cooperation',
+      meaning: 'mutual-follow spam account action',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u540e\u9762\u4f1a\u5077\u5077\u53d6\u5173\u7684\u52ff\u6270\uff01\uff01\uff01\u8bda\u4fe1\u4e92\u7c89\uff0c\u6709\u5173\u5fc5\u56de',
+        '\u8bda\u4fe1\u4e92\u5173\u7684\u6765\uff0c\u5077\u5077\u53d6\u5173\u7684\u4e0d\u8981\u6765',
+      ],
+    },
+    {
+      term: '\u604b\u4e11\u7656',
+      family: 'attack',
+      meaning: 'mocking taste as liking ugly things',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u771f\u7684\u4e0d\u662f\u604b\u4e11\u7656\uff0c\u4f46\u6211\u89c9\u5f97\u5580\u7405\u65bd\u5854\u5f97\u5e05\u7206\u4e86',
+        '\u4f60\u4eec\u8fd9\u5c31\u662f\u604b\u4e11\u7656\u5427\uff0c\u8fd9\u90fd\u80fd\u5439',
+      ],
+    },
+    {
+      term: '\u7d27\u548c',
+      family: 'attack',
+      meaning: 'fan-group nickname',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u9664\u4e86\u7d27\u548c\u4e4b\u5916\u6709\u5565\u597d\u9ed1\u7684',
+        '\u8d76\u7d27\u548c\u89e3\u5427\uff0c\u8981\u4e0d\u62c9\u56de\u53bb\u4e00\u67e5\u90fd\u8d85\u6807',
+      ],
+    },
+    {
+      term: '\u8131\u5b50',
+      family: 'attack',
+      meaning: 'black nickname',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8131\u5b50\u662f\u4ec0\u4e48\u65f6\u5019\u7814\u53d1\u7684\u65b0\u9ed1\u8bcd\u5417'],
+    },
+    {
+      term: '\u8d34\u5427',
+      family: 'evasion',
+      meaning: 'generic platform name mislabeled as evasion',
+      evidenceCount: 2,
+      evidenceSamples: [
+        '\u524d\u51e0\u5e74\u4e0d\u60f3\u6d3b\u4e86\u5c31\u8dd1\u53bb\u8d34\u5427\u770b\u5927\u5bb6\u7684\u6d41\u6d6a\u7ecf\u5386',
+        '\u8ddf\u542b\u4e2a\u51b0\u6fc0\u51cc\u6ca1\u533a\u522b\uff0c\u53bb\u8d34\u5427\u95ee\u8fc7\u4e86',
+      ],
+    },
+    {
+      term: '\u7206\u7834\u4f60',
+      family: 'attack',
+      meaning: 'threaten coordinated harassment',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u5c0f\u5fc3\u5979\u7c89\u4e1d\u7206\u7834\u4f60\uff0c\u4e4b\u524d\u6709\u4eba\u8bf4\u8001\u8d56\u4e4b\u5973\uff0c\u88ab\u4ed6\u4eec\u7c89\u4e1d\u6252\u5730\u5740\u5b66\u6821',
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    [
+      '\u604b\u4e11\u7656',
+      ['\u4f60\u4eec\u8fd9\u5c31\u662f\u604b\u4e11\u7656\u5427\uff0c\u8fd9\u90fd\u80fd\u5439'],
+    ],
+    [
+      '\u7d27\u548c',
+      ['\u9664\u4e86\u7d27\u548c\u4e4b\u5916\u6709\u5565\u597d\u9ed1\u7684'],
+    ],
+    [
+      '\u7206\u7834\u4f60',
+      ['\u5c0f\u5fc3\u5979\u7c89\u4e1d\u7206\u7834\u4f60\uff0c\u4e4b\u524d\u6709\u4eba\u8bf4\u8001\u8d56\u4e4b\u5973\uff0c\u88ab\u4ed6\u4eec\u7c89\u4e1d\u6252\u5730\u5740\u5b66\u6821'],
     ],
   ]);
 });

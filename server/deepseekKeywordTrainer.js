@@ -35,6 +35,10 @@ STOP_TERMS.add('0\u63d0\u5347');
 STOP_TERMS.add('\u6001\u5ea6\u51b3\u5b9a\u4e00\u5207');
 STOP_TERMS.add('\u5956\u52b1\u7684\u6709\u70b9\u591a');
 STOP_TERMS.add('\u6838\u6b66\u5668\u51fd\u6570\u4e50');
+STOP_TERMS.add('\u5077\u5077\u53d6\u5173');
+STOP_TERMS.add('\u8d34\u5427');
+STOP_TERMS.add('\u7231\u548b\u548b\u7684');
+STOP_TERMS.add('\u8131\u5b50');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',
@@ -982,6 +986,23 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const negatedComfortContext = /(?:\u6ca1\u6709|\u6ca1|\u65e0|\u4e0d\u4f1a).{0,8}7\u79d2\u7126\u8651|7\u79d2\u7126\u8651.{0,8}(?:\u6ca1\u6709|\u6ca1|\u65e0|\u4e0d\u4f1a)/u.test(cleanSample);
     const criticalAnxietyContext = /(?:\u5236\u9020|\u8d29\u5356|\u5f15\u53d1|\u641e|\u5e26\u6765|\u6545\u610f|\u8282\u594f).{0,16}7\u79d2\u7126\u8651|7\u79d2\u7126\u8651.{0,16}(?:\u8282\u594f|\u7126\u8651|\u6298\u78e8|\u6076\u5fc3|\u725b\u9a6c|\u6545\u610f)/u.test(cleanSample);
     if (negatedComfortContext && !criticalAnxietyContext) return true;
+  }
+  if (['\u7231\u548b\u548b\u5730', '\u7231\u548b\u548b\u7684'].includes(term) && family === 'evasion') {
+    const negatedDismissiveContext = /(?:\u505a\u4e0d\u5230|\u4e0d\u80fd|\u4e0d\u6562|\u6ca1\u6cd5).{0,12}\u7231\u548b\u548b[地的]|\u7231\u548b\u548b[地的].{0,12}(?:\u505a\u4e0d\u5230|\u4e0d\u80fd|\u4e0d\u6562|\u6ca1\u6cd5)/u.test(cleanSample);
+    if (negatedDismissiveContext) return true;
+  }
+  if (term === '\u604b\u4e11\u7656' && family === 'attack') {
+    const negatedTasteContext = /(?:\u4e0d\u662f|\u771f\u7684\u4e0d\u662f|\u5e76\u975e|\u6ca1\u6709).{0,8}\u604b\u4e11\u7656/u.test(cleanSample);
+    const directedTasteAttackContext = /(?:\u4f60|\u4f60\u4eec|\u7c89\u4e1d|\u8fd9).{0,18}\u604b\u4e11\u7656|\u604b\u4e11\u7656.{0,18}(?:\u5427|\u8fd9\u90fd\u80fd|\u522b\u5439|\u771f\u6076\u5fc3)/u.test(cleanSample);
+    if (negatedTasteContext && !directedTasteAttackContext) return true;
+  }
+  if (term === '\u7d27\u548c' && family === 'attack') {
+    if (/\u8d76\u7d27\u548c\u89e3/u.test(cleanSample)) return true;
+  }
+  if (term === '\u8131\u5b50' && family === 'attack') {
+    const metaLabelQuestionContext = /\u8131\u5b50.{0,12}(?:\u4ec0\u4e48\u65f6\u5019|\u65b0\u9ed1\u8bcd|\u4ec0\u4e48\u610f\u601d|\u4ec0\u4e48\u6897)|(?:\u4ec0\u4e48\u65f6\u5019|\u65b0\u9ed1\u8bcd|\u4ec0\u4e48\u610f\u601d|\u4ec0\u4e48\u6897).{0,12}\u8131\u5b50/u.test(cleanSample);
+    const directedNicknameAttackContext = /(?:\u4f60|\u4ed6|\u7c89\u4e1d|\u522b\u5439|\u6076\u5fc3).{0,16}\u8131\u5b50|\u8131\u5b50.{0,16}(?:\u7c89\u4e1d|\u522b\u5439|\u6076\u5fc3|\u7834\u9632)/u.test(cleanSample);
+    if (metaLabelQuestionContext && !directedNicknameAttackContext) return true;
   }
   if (term === '\u6840\u6840\u6840' && family === 'attack') {
     const laughExplanationContext = /(?:\u7b11\u58f0|\u914d\u97f3|\u4e0d\u4f1a\u7b11|\u600e\u4e48\u7b11|\u4e3a\u4ec0\u4e48\u8981\u5199\u6210|\u5199\u6210\u6840\u6840\u6840|\u87f9\u8001\u677f).{0,18}\u6840\u6840\u6840|\u6840\u6840\u6840.{0,18}(?:\u7b11\u58f0|\u914d\u97f3|\u4e0d\u4f1a\u7b11|\u600e\u4e48\u7b11|\u4e3a\u4ec0\u4e48\u8981\u5199\u6210|\u87f9\u8001\u677f)/u.test(cleanSample);
