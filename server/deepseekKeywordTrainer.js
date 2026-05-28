@@ -52,6 +52,17 @@ STOP_TERMS.add('\u76f4\u7537\u4e0d\u7ba1\u5bf9\u65b9\u53eb\u8001\u5a46');
 STOP_TERMS.add('\u4e0d\u4e89\u4e0d\u62a2\u5ab3\u5987\u513f\u5c31\u98de\u4e86');
 STOP_TERMS.add('\u4e0d\u77e5\u9053ai\u5ba1\u6838');
 STOP_TERMS.add('\u538b\u529b\u6765\u5230\u4e86\u5c0f\u7334\u8fd9\u8fb9');
+STOP_TERMS.add('\u4e0d\u8bd7\u4eba');
+STOP_TERMS.add('\u989c\u503c\u8eab\u6750\u6ca1\u6709\u77ed\u677f');
+STOP_TERMS.add('\u5168\u635f\u97f3\u54c1\u8d28');
+STOP_TERMS.add('\u6709\u4e00\u70b9\u75d4\u75ae');
+STOP_TERMS.add('\u660e\u5929\u6765\u4e0a\u73ed');
+STOP_TERMS.add('\u6ca1\u4eba\u5417');
+STOP_TERMS.add('\u77e5\u8bc6\u76f2\u533a');
+STOP_TERMS.add('\u4ea7\u51fa\u4e0d\u6613');
+STOP_TERMS.add('\u6210\u89c1\u662f\u4e00\u5ea7\u5927\u5c71');
+STOP_TERMS.add('\u7a0b\u6577\u884d');
+STOP_TERMS.add('n\u5237');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',

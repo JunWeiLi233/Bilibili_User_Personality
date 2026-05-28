@@ -815,7 +815,7 @@ test('normalizes Bilibili emote wrapper artifacts to the spoken keyword', () => 
     { term: 'doge', family: 'cooperation', meaning: 'standalone Bilibili emote shorthand' },
   ]);
 
-  assert.deepEqual(entries.map((entry) => entry.term), ['\u77e5\u8bc6\u76f2\u533a', '\u5999\u554a', '\u61c2\u4e86\u5427']);
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u5999\u554a', '\u61c2\u4e86\u5427']);
 });
 
 test('normalizes mixed-case ASCII runs inside keyword terms', () => {
@@ -1081,7 +1081,7 @@ test('mergeEntriesIntoDictionary compacts persisted Bilibili emote wrapper artif
 
     const dictionary = await mergeEntriesIntoDictionary([], { dictionaryPath });
 
-    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['\u61c2\u4e86\u5427', '\u77e5\u8bc6\u76f2\u533a']);
+    assert.deepEqual(dictionary.entries.map((entry) => entry.term), ['\u61c2\u4e86\u5427']);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -9787,6 +9787,107 @@ test('normalizeKeywordEntries prunes latest flash harvest genre, platform, and g
       '\u54ea\u6839\u8471',
       ['\u5dee\u8fdc\u4e86\uff0c\u5f20\u56fd\u4f1f\u662f\u4e2d\u56fd\u8df3\u9ad8\u5386\u53f2\u4e0a\u5199\u4e0b\u6d53\u58a8\u91cd\u5f69\u7684\u4eba\uff0c\u5979\u7b97\u4e86\u54ea\u6839\u8471'],
     ],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes current coverage harvest praise, media, and literal state noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u4e0d\u8bd7\u4eba',
+      family: 'absolutes',
+      meaning: 'typo pun praise mislabeled as absolute thinking',
+      evidenceCount: 1,
+      evidenceSamples: ['666\uff0c\u7b80\u76f4\u4e0d\u8bd7\u4eba'],
+    },
+    {
+      term: '\u989c\u503c\u8eab\u6750\u6ca1\u6709\u77ed\u677f',
+      family: 'absolutes',
+      meaning: 'appearance praise mislabeled as absolute thinking',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u59d0\u989c\u503c\u8eab\u6750\u6ca1\u6709\u77ed\u677f\u7684'],
+    },
+    {
+      term: '\u5168\u635f\u97f3\u54c1\u8d28',
+      family: 'attack',
+      meaning: 'audio-quality description mislabeled as attack',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5168\u635f\u97f3\u54c1\u8d28\u90a3\u4e00\u5929\u7684\u72b9\u8c6b\uff0c\u72b9\u8c6b\u8d77\u6765'],
+    },
+    {
+      term: '\u6709\u4e00\u70b9\u75d4\u75ae',
+      family: 'attack',
+      meaning: 'literal body-state joke mislabeled as attack',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5979\u6709\u4e00\u70b9\u75d4\u75ae\u3002[doge]'],
+    },
+    {
+      term: '\u660e\u5929\u6765\u4e0a\u73ed',
+      family: 'cooperation',
+      meaning: 'generic approval meme mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['\u660e\u5929\u6765\u4e0a\u73ed\uff01'],
+    },
+    {
+      term: '\u6ca1\u4eba\u5417',
+      family: 'evasion',
+      meaning: 'engagement prompt mislabeled as evasion',
+      evidenceCount: 2,
+      evidenceSamples: ['\u6ca1\u4eba\u5417', '\u6ca1\u4eba\u5417\ud83e\udd14 \u70b9\u4e2a\u8d5e\u5173\u6ce8\u4e00\u4e0b\u5c31\u884c'],
+    },
+    {
+      term: '\u77e5\u8bc6\u76f2\u533a',
+      family: 'evasion',
+      meaning: 'standalone hot-word label mislabeled as evasion',
+      evidenceCount: 1,
+      evidenceSamples: ['[\u70ed\u8bcd\u7cfb\u5217_\u77e5\u8bc6\u76f2\u533a]'],
+    },
+    {
+      term: '\u4ea7\u51fa\u4e0d\u6613',
+      family: 'cooperation',
+      meaning: 'creator-support phrase mislabeled as cooperation behavior',
+      evidenceCount: 1,
+      evidenceSamples: ['\u542c\u7684\u5f88\u6e05\u5440 \u52a0\u5b57\u5e55\u592a\u9ebb\u70e6\u4e86 \u4ea7\u51fa\u4e0d\u6613\u5440'],
+    },
+    {
+      term: '\u6210\u89c1\u662f\u4e00\u5ea7\u5927\u5c71',
+      family: 'correction',
+      meaning: 'movie quote mislabeled as correction behavior',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7533\u516c\u8c79\uff1a\u4eba\u5fc3\u7684\u6210\u89c1\u662f\u4e00\u5ea7\u5927\u5c71\u3002'],
+    },
+    {
+      term: '\u7a0b\u6577\u884d',
+      family: 'attack',
+      meaning: 'proper-name pun in fiction discussion mislabeled as attack',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7b2c\u4e00\u6b21\u9879\u897f\u628a\u7a0b\u535a\u884d\uff0c\u8ba4\u6210\u4e86\u7a0b\u6577\u884d[\u5472\u7259][\u5472\u7259]'],
+    },
+    {
+      term: 'n\u5237',
+      family: 'cooperation',
+      meaning: 'media rewatch marker mislabeled as cooperation',
+      evidenceCount: 2,
+      evidenceSamples: ['\u8fd9\u79cd\u503c\u5f97n\u5237\u7684\u7535\u5f71\uff0c\u6b20\u7968\u623f\u554a', 'N\u5237\u7684\u6587\uff01\u9879\u5c0f\u897f\u4e5f\u771f\u7684\u5f88\u62db\u4eba\u75bc'],
+    },
+    {
+      term: '\u7b56\u5212\u4f60\u6765\u5f53',
+      family: 'attack',
+      meaning: 'direct sarcasm toward a commenter',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7b56\u5212\u4f60\u6765\u5f53[\u5403\u74dc]'],
+    },
+    {
+      term: '\u8bb0\u9519\u4e86',
+      family: 'correction',
+      meaning: 'self-correction caveat',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6211\u8bb0\u5f97\u8fd9\u73a9\u610f\u513f\u597d\u50cf\u6709\u53cd\u795e\u5427\uff1f[doge]\uff08\u4e5f\u53ef\u80fd\u662f\u6211\u8bb0\u9519\u4e86\uff09'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u7b56\u5212\u4f60\u6765\u5f53', ['\u7b56\u5212\u4f60\u6765\u5f53[\u5403\u74dc]']],
+    ['\u8bb0\u9519\u4e86', ['\u6211\u8bb0\u5f97\u8fd9\u73a9\u610f\u513f\u597d\u50cf\u6709\u53cd\u795e\u5427\uff1f[doge]\uff08\u4e5f\u53ef\u80fd\u662f\u6211\u8bb0\u9519\u4e86\uff09']],
   ]);
 });
 
