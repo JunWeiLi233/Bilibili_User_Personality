@@ -7,8 +7,8 @@
 
 $env:DEEPSEEK_API_KEY = "put-your-deepseek-api-key-here"
 $env:DEEPSEEK_BASE_URL = "https://api.deepseek.com"
-$env:DEEPSEEK_MODEL = "deepseek-v4-flash"
-$env:DEEPSEEK_REASONING_EFFORT = "medium"
+$env:DEEPSEEK_MODEL = "deepseek-v4-pro"
+$env:DEEPSEEK_REASONING_EFFORT = "max"
 
 if ($env:DEEPSEEK_API_KEY -eq "put-your-deepseek-api-key-here") {
   Write-Warning "Replace the placeholder in set-deepseek-env.ps1 with your real DeepSeek API key."

@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .omx/
+.deepseek/
+.ai-sync/
 .DS_Store
 *.log
 server/localKeywordDictionary.json

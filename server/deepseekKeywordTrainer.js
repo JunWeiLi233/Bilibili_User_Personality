@@ -2856,9 +2856,9 @@ export async function getDeepSeekConfig(options = {}) {
   const env = options.env || process.env;
   const fetchImpl = options.fetch || fetch;
   const baseUrl = String(env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').replace(/\/$/, '');
-  const configuredModel = env.DEEPSEEK_MODEL || 'deepseek-v4-flash';
-  const configuredEffort = String(env.DEEPSEEK_REASONING_EFFORT || 'medium').trim().toLowerCase();
-  const reasoningEffort = REASONING_EFFORTS.has(configuredEffort) ? configuredEffort : 'medium';
+  const configuredModel = env.DEEPSEEK_MODEL || 'deepseek-v4-pro';
+  const configuredEffort = String(env.DEEPSEEK_REASONING_EFFORT || 'max').trim().toLowerCase();
+  const reasoningEffort = REASONING_EFFORTS.has(configuredEffort) ? configuredEffort : 'max';
   const apiKey = env.DEEPSEEK_API_KEY || '';
 
   if (!apiKey) {
@@ -2882,7 +2882,7 @@ export async function getDeepSeekConfig(options = {}) {
     const models = (payload.data || []).map((model) => model.id).filter(Boolean);
     const model = models.includes(configuredModel)
       ? configuredModel
-      : models.find((item) => item === 'deepseek-v4-flash') || models.find((item) => item === 'deepseek-v4-pro') || configuredModel;
+      : models.find((item) => item === 'deepseek-v4-pro') || models.find((item) => item === 'deepseek-v4-flash') || configuredModel;
     return {
       ok: true,
       provider: 'deepseek',
@@ -3049,7 +3049,7 @@ async function generateKeywordEntries(payload, config, options = {}) {
     messages: buildKeywordMessages(payload),
     response_format: { type: 'json_object' },
     thinking: { type: 'enabled' },
-    reasoning_effort: config.reasoningEffort || 'medium',
+    reasoning_effort: config.reasoningEffort || 'max',
     stream: false,
     max_tokens: 900,
   };
@@ -3141,7 +3141,7 @@ async function generateExistingDictionaryEvidenceEntries(dictionary, payload, co
     messages: buildExistingEvidenceMessages({ entries: [...entryMap.values()] }, payload),
     response_format: { type: 'json_object' },
     thinking: { type: 'enabled' },
-    reasoning_effort: config.reasoningEffort || 'medium',
+    reasoning_effort: config.reasoningEffort || 'max',
     stream: false,
     max_tokens: 1200,
   };
@@ -3432,7 +3432,7 @@ async function requestDeepSeekAnalysis({ config, fetchImpl, payload, options, co
     messages: compact ? buildCompactAnalysisMessages(payload) : buildAnalysisMessages(payload),
     response_format: { type: 'json_object' },
     thinking: { type: 'enabled' },
-    reasoning_effort: config.reasoningEffort || 'medium',
+    reasoning_effort: config.reasoningEffort || 'max',
     stream: false,
     max_tokens: compact ? 6000 : 2000,
   };

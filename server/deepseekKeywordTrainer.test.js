@@ -50,10 +50,29 @@ test('reports DeepSeek API key missing without exposing secrets', async () => {
   const config = await getDeepSeekConfig({ env: {} });
 
   assert.equal(config.provider, 'deepseek');
-  assert.equal(config.model, 'deepseek-v4-flash');
-  assert.equal(config.reasoningEffort, 'medium');
+  assert.equal(config.model, 'deepseek-v4-pro');
+  assert.equal(config.reasoningEffort, 'max');
   assert.equal(config.available, false);
   assert.equal(config.keyConfigured, false);
+});
+
+test('defaults complex DeepSeek language work to V4 Pro max effort', async () => {
+  const config = await getDeepSeekConfig({
+    env: {
+      DEEPSEEK_API_KEY: 'test-key',
+      DEEPSEEK_BASE_URL: 'https://api.deepseek.com',
+    },
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({
+        data: [{ id: 'deepseek-v4-flash' }, { id: 'deepseek-v4-pro' }],
+      }),
+    }),
+  });
+
+  assert.equal(config.model, 'deepseek-v4-pro');
+  assert.equal(config.reasoningEffort, 'max');
+  assert.equal(config.available, true);
 });
 
 test('analyzeCommentsWithDeepSeek asks DeepSeek to analyze full sentence context', async () => {

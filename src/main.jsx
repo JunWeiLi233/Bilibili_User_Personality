@@ -725,7 +725,7 @@ function App() {
   const [commentText, setCommentText] = React.useState(sampleTextA);
   const [fetchState, setFetchState] = React.useState({
     status: 'idle',
-    message: '输入 UID 或视频链接后会直接扫描 B 站公开对象，并用 DeepSeek V4 Flash medium 学习关键词。',
+    message: '输入 UID 或视频链接后会直接扫描 B 站公开对象，并用 DeepSeek V4 Pro max 学习关键词。',
   });
   const [keywordResults, setKeywordResults] = React.useState([]);
   const [analysisMode, setAnalysisMode] = React.useState('hybrid');
@@ -809,8 +809,8 @@ function App() {
     setFetchState({
       status: 'loading',
       message: videoLink
-        ? '正在扫描该视频的公开评论，并用 DeepSeek V4 Flash medium 提取关键词...'
-        : '正在调用后端代码里的默认 B 站视频，并用 DeepSeek V4 Flash medium 提取关键词...',
+        ? '正在扫描该视频的公开评论，并用 DeepSeek V4 Pro max 提取关键词...'
+        : '正在调用后端代码里的默认 B 站视频，并用 DeepSeek V4 Pro max 提取关键词...',
     });
     try {
       const response = await fetch('/api/bilibili/video-keywords', {
