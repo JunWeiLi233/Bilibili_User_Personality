@@ -7239,7 +7239,6 @@ test('findDictionaryEntriesWithTextEvidence maps current weak miss comment forms
     {
       entries: [
         { term: '\u8349\u751f', family: 'cooperation', meaning: 'laughing interaction phrase' },
-        { term: '\u5f39\u5e55\u5168\u662f\u8282\u594f\u590d\u5236', family: 'absolutes', meaning: 'absolute claim about copied rhythm comments' },
         { term: '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211', family: 'absolutes', meaning: 'claim first coin support' },
         { term: '\u53d1\u56fe', family: 'evidence', meaning: 'ask for screenshot evidence' },
         { term: '\u996d\u5708\u5473', family: 'attack', meaning: 'criticize fandom style discourse' },
@@ -7262,7 +7261,6 @@ test('findDictionaryEntriesWithTextEvidence maps current weak miss comment forms
 
   assert.deepEqual(entries.map((entry) => entry.term), [
     '\u8349\u751f',
-    '\u5f39\u5e55\u5168\u662f\u8282\u594f\u590d\u5236',
     '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211',
     '\u53d1\u56fe',
     '\u996d\u5708\u5473',
@@ -9373,6 +9371,45 @@ test('normalizeKeywordEntries prunes latest harvested explanation, neutral objec
       ],
     ],
   ]);
+});
+
+test('normalizeKeywordEntries prunes latest harvested proper-name and sentence-fragment dictionary terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '战乙女',
+      family: 'cooperation',
+      meaning: 'cooperative fandom discussion',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '这个战乙女一骂人我就想笑',
+        '战乙女偷偷更换新时装∽',
+        '薪王丶战乙女处刑曲',
+      ],
+    },
+    {
+      term: '弹幕全是节奏复制',
+      family: 'absolutes',
+      meaning: 'absolute claim about copied rhythm in danmaku',
+      evidenceCount: 1,
+      evidenceSamples: ['那段时间弹幕全是节奏复制，最爱的三国笑话都没了[doge]'],
+    },
+    {
+      term: '那段时间弹幕全是节奏复制',
+      family: 'absolutes',
+      meaning: 'over-specific sentence fragment from one comment',
+      evidenceCount: 1,
+      evidenceSamples: ['那段时间弹幕全是节奏复制，最爱的三国笑话都没了[doge]'],
+    },
+    {
+      term: '正义开盒',
+      family: 'attack',
+      meaning: 'doxxing framed as justice',
+      evidenceCount: 1,
+      evidenceSamples: ['这个评论区竟然有人支持“正义开盒”[汤圆]'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['正义开盒']);
 });
 
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {

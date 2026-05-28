@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2149`
+- Dictionary terms: `2146`
 - Target evidence per term: `3`
-- Coverage ratio: `56.03%`
-- Weak terms below target: `945`
-- Zero-evidence terms: `223`
-- Evidence deficit: `2005`
-- Source-backed terms: `1926`
+- Coverage ratio: `56.34%`
+- Weak terms below target: `937`
+- Zero-evidence terms: `221`
+- Evidence deficit: `1991`
+- Source-backed terms: `1925`
 - Unsourced evidence terms: `0`
-- Attempted terms: `145`
-- Successful terms: `49`
+- Attempted terms: `172`
+- Successful terms: `57`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -73,6 +73,7 @@ Recent dictionary-cleaning updates:
 - Pruned the latest harvested bare/literal false positives: standalone `岂不美哉`, game/source uses of `亡灵法师`, censorship-workaround `怕被删评，故发图`, and positive/explainer uses of `无敌之人`.
 - Pruned the latest harvested product/game false positives: game-mechanic `五毒俱全`, literal product-review `100好评` / `百分百好评率`, and commerce-only `差评连天`.
 - Pruned the latest loose comment false positives: generic `发出来` publish contexts for `可以贴`, affection-only `小馋猫[doge]`, nickname-list explanations for `小孩射`, and literal dating-app / emote-only `脱单` samples.
+- Pruned the latest flash-harvest noise: proper-name `战乙女` and over-specific sentence fragments `弹幕全是节奏复制` / `那段时间弹幕全是节奏复制`, while keeping valid `正义开盒` attack evidence.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally

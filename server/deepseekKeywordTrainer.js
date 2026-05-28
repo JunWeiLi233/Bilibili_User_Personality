@@ -26,6 +26,7 @@ const STOP_TERMS = new Set([
 const URL_HOST_FRAGMENT_TERMS = new Set(['http', 'https', 'www', 'com', 'cn', 'net', 'org', 'gov', 'mps']);
 STOP_TERMS.add('\u6211\u609f\u4e86');
 STOP_TERMS.add('\u609f\u4e86');
+STOP_TERMS.add('\u6218\u4e59\u5973');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',
@@ -362,6 +363,7 @@ function isNoisyTerm(term) {
   if (/^[A-Za-z0-9]+$/.test(term) && !ALLOWED_ASCII_KEYWORD_TERMS.has(String(term).toLowerCase())) return true;
   if (/^去问(?!百度|谷歌|Google|搜索|老师|客服)/i.test(term)) return true;
   if (term === '\u4f46\u6211\u7edd\u5bf9\u4e0d\u4f1a\u53bb\u7978\u5bb3\u522b') return true;
+  if (/^(?:\u90a3\u6bb5\u65f6\u95f4)?\u5f39\u5e55\u5168\u662f(?:\u8282\u594f)?\u590d\u5236$/u.test(term)) return true;
   return false;
 }
 
