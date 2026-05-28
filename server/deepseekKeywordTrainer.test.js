@@ -10914,6 +10914,55 @@ test('normalizeKeywordEntries prunes current low-yield absolute fragment and lit
   assert.deepEqual(entries.map((entry) => entry.term), ['\u7edd\u5bf9\u6b63\u786e', '\u6beb\u65e0\u540a\u7528']);
 });
 
+test('normalizeKeywordEntries prunes current no-progress coverage literal product, game, and request noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7edd\u5bf9\u662f\u8d28\u91cf\u95ee\u9898',
+      family: 'absolutes',
+      meaning: 'specific phone repair diagnosis',
+      evidenceCount: 1,
+      evidenceSamples: ['\u624b\u673a\u865a\u710a\u7edd\u5bf9\u662f\u8d28\u91cf\u95ee\u9898\uff0c\u96be\u9053\u5de5\u5382\u4e70\u4e0d\u8d77BGA\u690d\u7403\u673a\uff0c\u5168\u662f\u624b\u5de5\u710a\u63a5\u7684'],
+    },
+    {
+      term: '\u7edd\u6d3b\u5f3a\u5ea6',
+      family: 'absolutes',
+      meaning: 'game strength label',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5b7d\u8725\u771f\u7684\u5168\u662f\u7edd\u6d3b\u5f3a\u5ea6'],
+    },
+    {
+      term: '\u770b\u95e8\u5c0f\u4e11',
+      family: 'attack',
+      meaning: 'literal game NPC description',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7136\u800c\u8fd9\u8d27\u8981\u4e00\u767e\u4e07\uff0c\u6512\u591f\u516b\u4e07\u5012\u662f\u80fd\u4ece\u53e6\u4e00\u8fb9\u770b\u95e8\u5c0f\u4e11\u90a3\u91cc\u8fdb\u5165\u8239\u5e95\uff0c\u4e0d\u8fc7\u5f97\u5e26\u4e00\u4efd\u5564\u9152\u5f00\u4f20\u9001\u70b9'],
+    },
+    {
+      term: '\u770b\u4e0b\u7075\u6839',
+      family: 'cooperation',
+      meaning: 'creator interaction request',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5df2\u4e09\u8fde\uff0c\u770b\u4e0b\u7075\u6839'],
+    },
+    {
+      term: '\u770b\u8fc7\u53bb\u5168\u662f\u7f8e\u56fd\u81ea\u5df1\u5e72\u7684',
+      family: 'absolutes',
+      meaning: 'over-specific geopolitical sentence fragment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u91cc\u9762\u7684\u5185\u5bb9\u73a9\u513f\u6211\u6076\u5fc3\uff0c\u770b\u8fc7\u53bb\u5168\u662f\u7f8e\u56fd\u81ea\u5df1\u5e72\u7684\u7834\u4e8b'],
+    },
+    {
+      term: '\u770b\u95e8\u72d7',
+      family: 'attack',
+      meaning: 'direct insult calling someone a guard dog',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4f60\u4e0d\u56de\u5e94\u95ee\u9898\uff0c\u53ea\u4f1a\u5f53\u8d44\u672c\u7684\u770b\u95e8\u72d7'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u770b\u95e8\u72d7']);
+});
+
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {
   const dictionary = {
     entries: [
