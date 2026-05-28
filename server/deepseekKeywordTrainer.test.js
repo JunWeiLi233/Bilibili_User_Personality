@@ -10865,6 +10865,55 @@ test('normalizeKeywordEntries prunes latest low-yield coverage game-mode and nar
   ]);
 });
 
+test('normalizeKeywordEntries prunes current low-yield absolute fragment and literal homophone noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u9152\u5e9f\u4e86',
+      family: 'cooperation',
+      meaning: 'literal heated wine comment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u6837\u52a0\u70ed\uff0c\u9152\u5e9f\u4e86'],
+    },
+    {
+      term: '\u9152\u6cb8\u4e86',
+      family: 'cooperation',
+      meaning: 'literal wine boiling homophone',
+      evidenceCount: 1,
+      evidenceSamples: ['\u9152\u6cb8\u4e86[\u6ed1\u7a3d]'],
+    },
+    {
+      term: '\u7edd\u5bf9\u6bd4\u6761\u5f62\u66f4\u597d',
+      family: 'absolutes',
+      meaning: 'over-specific product comparison fragment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8bc4\u8bba\u533a\u771f\u662f\u6709\u72df\u79cd\uff0c\u5206\u4f53\u518d\u600e\u4e48\u5dee\uff0c\u7edd\u5bf9\u6bd4\u6761\u5f62\u66f4\u597d\uff0c\u58f0\u573a\u4e0d\u8bf4\u8c0e'],
+    },
+    {
+      term: '\u7edd\u5bf9\u7684\u751f\u4ea7\u529b',
+      family: 'absolutes',
+      meaning: 'generic device praise fragment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd8\u662f\u7535\u8111/\u8d85\u6781\u672c\u597d\uff0c\u5f00\u673a5s\uff0c\u7528\u5b8c\u5c31\u5173\uff0c\u7edd\u5bf9\u7684\u751f\u4ea7\u529b'],
+    },
+    {
+      term: '\u7edd\u5bf9\u6b63\u786e',
+      family: 'absolutes',
+      meaning: 'stable absolute correctness claim',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u4e48\u5e72\u7edd\u5bf9\u6b63\u786e\uff0c\u6ca1\u4ec0\u4e48\u597d\u8ba8\u8bba\u7684'],
+    },
+    {
+      term: '\u6beb\u65e0\u540a\u7528',
+      family: 'absolutes',
+      meaning: 'absolute uselessness claim',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u4e2a\u9053\u5177\u6beb\u65e0\u540a\u7528\uff0c\u5c31\u662f\u9a97\u4f60\u82b1\u94b1'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u7edd\u5bf9\u6b63\u786e', '\u6beb\u65e0\u540a\u7528']);
+});
+
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {
   const dictionary = {
     entries: [

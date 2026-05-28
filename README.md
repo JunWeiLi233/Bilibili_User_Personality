@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2021`
+- Dictionary terms: `2009`
 - Target evidence per term: `3`
-- Coverage ratio: `60.91%`
-- Weak terms below target: `790`
-- Zero-evidence terms: `182`
-- Evidence deficit: `1653`
-- Source-backed terms: `1839`
+- Coverage ratio: `61.27%`
+- Weak terms below target: `778`
+- Zero-evidence terms: `179`
+- Evidence deficit: `1626`
+- Source-backed terms: `1830`
 - Unsourced evidence terms: `0`
-- Attempted terms: `438`
-- Successful terms: `122`
+- Attempted terms: `444`
+- Successful terms: `125`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -94,6 +94,7 @@ Recent dictionary-cleaning updates:
 - Ran another strict `deepseek-v4-flash` max-effort coverage pass and reduced zero-evidence terms again; kept generalized argumentative terms such as `好自为之`, `好自为之吧`, `义务教育没上完`, `很懂嘛`, `很懂嘛老铁`, `洗钱片`, and `弱弱说一句`, while pruning over-specific or literal noise `甜菜`, `黑陶渊明`, `乾隆老儿`, `破了相了`, `一曲忠诚的赞歌`, `cos路易十六`, and `视频全都不见了`.
 - Ran a lower-yield strict `deepseek-v4-flash` max-effort pass that still reduced zero-evidence terms; kept broader argumentative evidence such as `神秘的大手`, `无形的大手`, `装高手`, `吃相太难看`, `不要胡说`, and `我的问题`, while pruning narrow remix/device/emote noise `红莲业火焚我身`, `dj如来`, `你悟了`, `毁于48v`, and `tv坏笑`.
 - Ran another low-yield strict `deepseek-v4-flash` max-effort pass; kept useful terms such as `鉴定为屎`, `纠正哥`, `你的说法太绝对了`, `太绝对了`, and `抓到一个老实人`, while pruning literal/over-specific noise `极限模式` and `今天被打了没有`.
+- Ran the next strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 3; pruned literal homophone or one-off absolute fragments such as `酒废了`, `酒沸了`, `绝对比条形更好`, `绝对的生产力`, `绝对高于兰博基尼`, and `绝对买的到` so coverage work does not chase product/game/daily-life sentence fragments.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
