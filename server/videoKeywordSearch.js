@@ -666,6 +666,12 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     discoveryLimit,
     50,
   );
+  const evidenceSourceFallbackPages = boundedInt(
+    payload.evidenceSourceFallbackPages ?? deps.evidenceSourceFallbackPages ?? process.env.BILIBILI_EVIDENCE_SOURCE_FALLBACK_PAGES ?? 3,
+    3,
+    1,
+    5,
+  );
   const discoveryWarnings = [];
   let discoveredVideos = [];
   let discoveryContextVideos = [];
@@ -932,9 +938,13 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
   const scans = [];
   const warnings = [...discoveryWarnings];
   const scanTargets = videoLinks.length > 0 ? videoLinks : discoveredVideos.map((video) => video.bvid || video.sourceUrl);
+  const scanPages =
+    usedEvidenceSourceFallback && videoLinks.length === 0
+      ? Math.max(1, Math.min(Math.max(Number(payload.pages) || 1, evidenceSourceFallbackPages), 5))
+      : payload.pages;
   for (const videoLink of scanTargets) {
     try {
-      const scan = await fetchRepliesForVideo(videoLink, { pages: payload.pages, includeDanmaku }, deps);
+      const scan = await fetchRepliesForVideo(videoLink, { pages: scanPages, includeDanmaku }, deps);
       if (scan.ok) {
         scans.push(scan);
       } else {

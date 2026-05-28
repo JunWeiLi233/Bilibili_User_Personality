@@ -391,6 +391,80 @@ test('searchVideoKeywords prefers existing evidence source videos before broad f
   assert.deepEqual(result.collectionDiagnostics.targetTextHits, [{ term: '\u996d\u5708\u5473', count: 1 }]);
 });
 
+test('searchVideoKeywords deepens pages for existing evidence source fallback scans', async () => {
+  const replyPages = [];
+  const result = await searchVideoKeywords(
+    {
+      searchQuery: '\u8d29\u5b50\u53f7 \u70ed\u8bc4',
+      discoveryMode: 'search',
+      discoveryLimit: 1,
+      pages: 1,
+      existingTermsOnly: true,
+      evidenceSourceVideoFallback: true,
+      evidenceSourceFallbackPages: 2,
+      includeVideoContext: false,
+      includeVideoObjectEvidence: false,
+      targetExistingTerms: ['\u8d29\u5b50\u53f7'],
+    },
+    {
+      discoverVideosByKeyword: async () => [],
+      readKeywordDictionary: async () => ({
+        entries: [
+          {
+            term: '\u8d29\u5b50\u53f7',
+            family: 'attack',
+            evidenceSources: [
+              {
+                source: 'Bilibili public search-discovered video comment scan: https://www.bilibili.com/video/BVsource001/',
+                uid: 'BVsource001',
+                sample: '\u65e7\u7684\u8d29\u5b50\u53f7\u6837\u672c',
+              },
+            ],
+          },
+        ],
+      }),
+      fetchJson: async (url) => {
+        const textUrl = String(url);
+        if (textUrl.includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 101,
+              bvid: 'BVsource001',
+              title: 'source',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 60 },
+            },
+          };
+        }
+        const next = Number(new URL(textUrl).searchParams.get('next') || 0);
+        replyPages.push(next);
+        return {
+          code: 0,
+          data: {
+            replies: [
+              {
+                rpid: next + 1,
+                mid: 100 + next,
+                member: { mid: String(100 + next), uname: 'viewer' },
+                content: { message: next === 1 ? '\u7b2c\u4e8c\u9875\u65b0\u8d29\u5b50\u53f7\u6837\u672c' : '\u666e\u901a\u8bc4\u8bba' },
+                like: 1,
+                ctime: 1710000000 + next,
+              },
+            ],
+            cursor: { is_end: next >= 1, next: next + 1 },
+          },
+        };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionaryEvidenceEntries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(replyPages, [0, 1]);
+  assert.deepEqual(result.collectionDiagnostics.targetTextHits, [{ term: '\u8d29\u5b50\u53f7', count: 1 }]);
+});
+
 test('searchVideoKeywords reports target diagnostics when discovered video scans fail', async () => {
   const result = await searchVideoKeywords(
     {
