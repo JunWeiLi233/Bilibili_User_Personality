@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `1995`
+- Dictionary terms: `1990`
 - Target evidence per term: `3`
-- Coverage ratio: `61.70%`
-- Weak terms below target: `764`
-- Zero-evidence terms: `178`
-- Evidence deficit: `1596`
-- Source-backed terms: `1817`
+- Coverage ratio: `62.06%`
+- Weak terms below target: `755`
+- Zero-evidence terms: `176`
+- Evidence deficit: `1575`
+- Source-backed terms: `1814`
 - Unsourced evidence terms: `0`
-- Attempted terms: `454`
-- Successful terms: `127`
+- Attempted terms: `462`
+- Successful terms: `132`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -97,6 +97,7 @@ Recent dictionary-cleaning updates:
 - Ran the next strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 3; pruned literal homophone or one-off absolute fragments such as `酒废了`, `酒沸了`, `绝对比条形更好`, `绝对的生产力`, `绝对高于兰博基尼`, and `绝对买的到` so coverage work does not chase product/game/daily-life sentence fragments.
 - Ran another strict `deepseek-v4-flash` max-effort pass; the only evidence gain came from low-portability fragments, so pruned product/game/request or sentence-copy noise such as `绝对是质量问题`, `绝对有问题的`, `绝活强度`, `开国的时候`, `开爽咯`, `看过去全是美国自己干的`, `看门小丑`, and `看下灵根`, while keeping directed insult patterns such as `看门狗`.
 - Ran the next strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 1; kept useful patterns such as `可不是就急了嘛` and `肯定是人的错`, while pruning low-portability or non-argument terms `考得像史`, `科学上网`, `嗑药推广广告`, `可能倒闭但绝不可能变质`, `肯定是可以的`, and typo noise `胯群执法` without blocking the correct `跨群执法`.
+- Ran another strict `deepseek-v4-flash` max-effort pass with stronger progress, reducing zero-evidence terms by 2 and weak terms by 5; kept useful attack patterns such as `拉小群`, `拉jb倒`, and `老处男`, while pruning narrow sports/stage/stale-meme/nickname noise `快乐一赛季难过总决赛`, `拉椅子`, `蓝瘦香菇`, `牢将`, and `牢伟`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally

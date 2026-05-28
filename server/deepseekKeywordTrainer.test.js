@@ -11036,6 +11036,73 @@ test('normalizeKeywordEntries prunes latest strict harvest self-score, tutorial,
   ]);
 });
 
+test('normalizeKeywordEntries prunes current strict harvest sports, stage, stale meme, and nickname noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u5feb\u4e50\u4e00\u8d5b\u5b63\u96be\u8fc7\u603b\u51b3\u8d5b',
+      family: 'attack',
+      meaning: 'narrow sports season slogan',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5feb\u4e50\u4e00\u8d5b\u5b63\uff0c\u96be\u8fc7\u603b\u51b3\u8d5b[OK][doge]'],
+    },
+    {
+      term: '\u62c9\u6905\u5b50',
+      family: 'cooperation',
+      meaning: 'literal stage performance move',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6211\u7b11\u4e0d\u884c\u4e86\uff0c\u4f60\u522b\u8bf4\u8fd9\u4e2a\u62c9\u6905\u5b50\u8fd8\u771f\u7684\uff0c\u5e74\u672b\u821e\u53f0\u5168\u90fd\u70b9\u5f00\u770b\u4e86'],
+    },
+    {
+      term: '\u84dd\u7626\u9999\u83c7',
+      family: 'cooperation',
+      meaning: 'stale sadness meme',
+      evidenceCount: 4,
+      evidenceSamples: ['\u4e4b\u540e\u4f1a\u4e0d\u4f1a\u84dd\u7626\u9999\u83c7\uff1f[doge]', '\u84dd\u7626\u9999\u83c7'],
+    },
+    {
+      term: '\u7262\u5c06',
+      family: 'attack',
+      meaning: 'fandom nickname',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7262\u5c06\u4e5f\u4f1a\u590d\u6d3b\u54e6'],
+    },
+    {
+      term: '\u7262\u4f1f',
+      family: 'attack',
+      meaning: 'creator or character nickname',
+      evidenceCount: 1,
+      evidenceSamples: ['byd\u8fd9\u7248\u7684\u7262\u4f1f\u600e\u4e48\u770b\u8d77\u6765\u6bd4\u7262\u5927\u7248\u8fd8\u762e\u4eba\u554a[\u7b11\u54ed]'],
+    },
+    {
+      term: '\u62c9\u5c0f\u7fa4',
+      family: 'attack',
+      meaning: 'exclusionary small-group behavior',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4ed6\u4e4b\u524d\u505a\u62c9\u5c0f\u7fa4\u7684\u52a8\u4f5c\u662f\u6076\u610f\u7684\uff0c\u662f\u4e3a\u4e86\u6392\u6324\u522b\u4eba'],
+    },
+    {
+      term: '\u62c9jb\u5012',
+      family: 'attack',
+      meaning: 'coarse dismissal',
+      evidenceCount: 1,
+      evidenceSamples: ['\u62c9JB\u5012\u7684\u610f\u601d\u6bd4\u62c9\u5012\u8bed\u6c14\u66f4\u91cd'],
+    },
+    {
+      term: '\u8001\u5904\u7537',
+      family: 'attack',
+      meaning: 'direct gendered insult',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8001\u5904\u7537\u6765\u4e86[doge]'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), [
+    '\u62c9\u5c0f\u7fa4',
+    '\u62c9jb\u5012',
+    '\u8001\u5904\u7537',
+  ]);
+});
+
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {
   const dictionary = {
     entries: [

@@ -177,6 +177,11 @@ STOP_TERMS.add('\u55d1\u836f\u63a8\u5e7f\u5e7f\u544a');
 STOP_TERMS.add('\u53ef\u80fd\u5012\u95ed\u4f46\u7edd\u4e0d\u53ef\u80fd\u53d8\u8d28');
 STOP_TERMS.add('\u80af\u5b9a\u662f\u53ef\u4ee5\u7684');
 STOP_TERMS.add('\u80ef\u7fa4\u6267\u6cd5');
+STOP_TERMS.add('\u5feb\u4e50\u4e00\u8d5b\u5b63\u96be\u8fc7\u603b\u51b3\u8d5b');
+STOP_TERMS.add('\u62c9\u6905\u5b50');
+STOP_TERMS.add('\u84dd\u7626\u9999\u83c7');
+STOP_TERMS.add('\u7262\u5c06');
+STOP_TERMS.add('\u7262\u4f1f');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',
