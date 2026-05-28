@@ -2964,6 +2964,7 @@ function summarizeQueryDiagnostics(results = []) {
       commentsCollected: Math.max(0, Number(diagnostics.commentsCollected) || 0),
       trainingTextChars: Math.max(0, Number(diagnostics.trainingTextChars) || 0),
       targetExistingTerms: Array.isArray(diagnostics.targetExistingTerms) ? diagnostics.targetExistingTerms : [],
+      targetTextHits: Array.isArray(diagnostics.targetTextHits) ? diagnostics.targetTextHits : [],
       acceptedTerms: Array.isArray(diagnostics.acceptedTerms) ? diagnostics.acceptedTerms : [],
       evidenceRejected: Math.max(0, Number(diagnostics.evidenceRejected) || 0),
       sampleVideos: Array.isArray(diagnostics.sampleVideos) ? diagnostics.sampleVideos.slice(0, 5) : [],

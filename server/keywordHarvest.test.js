@@ -9407,6 +9407,7 @@ test('harvestKeywordDictionary persists per-query collection diagnostics', async
             commentsCollected: 1,
             trainingTextChars: 42,
             targetExistingTerms: ['doge'],
+            targetTextHits: [{ term: 'doge', count: 1 }],
             acceptedTerms: [],
             evidenceRejected: 2,
             sampleVideos: [{ bvid: 'BV1111111111', title: 'diagnostic title' }],
@@ -9420,6 +9421,7 @@ test('harvestKeywordDictionary persists per-query collection diagnostics', async
     assert.equal(result.queryDiagnostics[0].commentsCollected, 1);
     assert.equal(result.queryDiagnostics[0].trainingTextChars, 42);
     assert.deepEqual(result.queryDiagnostics[0].targetExistingTerms, ['doge']);
+    assert.deepEqual(result.queryDiagnostics[0].targetTextHits, [{ term: 'doge', count: 1 }]);
     const persisted = JSON.parse(await readFile(statePath, 'utf8'));
     assert.deepEqual(persisted.runs[0].queryDiagnostics, result.queryDiagnostics);
   } finally {

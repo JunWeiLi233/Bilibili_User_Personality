@@ -39,6 +39,49 @@ test('searchVideoKeywords discovers backend videos when no video link is provide
   assert.equal(requestedUrls.some((url) => url.includes('bvid=BV19yGa61Ee6')), true);
 });
 
+test('searchVideoKeywords reports target text hits in collection diagnostics', async () => {
+  const result = await searchVideoKeywords(
+    {
+      searchQueries: ['target hit topic'],
+      targetExistingTerms: ['\u53cd\u5411\u6253\u5e7f'],
+      existingTermsOnly: true,
+      pages: 1,
+      discoveryLimit: 1,
+    },
+    {
+      discoverVideosByKeyword: async () => [
+        { bvid: 'BV1xx411c7mD', title: '\u53cd\u5411\u6253\u5e7f target hit video', sourceUrl: 'https://www.bilibili.com/video/BV1xx411c7mD/' },
+      ],
+      fetchJson: async (url) => {
+        if (String(url).includes('/x/web-interface/view')) {
+          return {
+            code: 0,
+            data: {
+              aid: 123,
+              title: '\u53cd\u5411\u6253\u5e7f target hit video',
+              owner: { mid: 9, name: 'up' },
+              stat: { reply: 1 },
+            },
+          };
+        }
+        return {
+          code: 0,
+          data: {
+            replies: [
+              { rpid: 1, mid: 100, member: { uname: 'viewer' }, content: { message: '\u8fd9\u4e0d\u5c31\u662f\u53cd\u5411\u6253\u5e7f\u5417' } },
+              { rpid: 2, mid: 101, member: { uname: 'viewer2' }, content: { message: '\u53cd\u5411\u6253\u5e7f\u4e86' } },
+            ],
+            cursor: { is_end: true, next: 0 },
+          },
+        };
+      },
+      trainKeywordDictionary: async () => ({ ok: true, entries: [], dictionaryEvidenceEntries: [], dictionary: { entries: [] } }),
+    },
+  );
+
+  assert.deepEqual(result.collectionDiagnostics.targetTextHits, [{ term: '\u53cd\u5411\u6253\u5e7f', count: 3 }]);
+});
+
 test('searchVideoKeywords forwards abort signal to Bilibili fetches', async () => {
   const controller = new AbortController();
   const seenSignals = [];

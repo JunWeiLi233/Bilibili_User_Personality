@@ -476,6 +476,19 @@ function sampleVideosForDiagnostics(videos = []) {
   }));
 }
 
+function targetTextHitsForDiagnostics(trainingText = '', targetExistingTerms = []) {
+  const haystack = cleanSearchText(trainingText);
+  if (!haystack) return [];
+  return uniqueByKey(targetExistingTerms.map((term) => String(term || '').trim()).filter(Boolean), (term) => term)
+    .map((term) => {
+      const needle = cleanSearchText(term);
+      if (!needle || needle.length < 2) return null;
+      const count = haystack.split(needle).length - 1;
+      return count > 0 ? { term, count } : null;
+    })
+    .filter(Boolean);
+}
+
 function buildCollectionDiagnostics({
   discoveredVideos = [],
   discoveryContextVideos = [],
@@ -492,6 +505,7 @@ function buildCollectionDiagnostics({
     commentsCollected: comments.length,
     trainingTextChars: String(trainingText || '').length,
     targetExistingTerms,
+    targetTextHits: targetTextHitsForDiagnostics(trainingText, targetExistingTerms),
     acceptedTerms: uniqueByKey(
       [...(keywordTraining?.entries || []), ...(keywordTraining?.dictionaryEvidenceEntries || [])]
         .map((entry) => String(entry?.term || '').trim())
