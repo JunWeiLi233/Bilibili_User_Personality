@@ -94,6 +94,7 @@ const staleMissedPages = nonNegativeIntFromEnv('BILIBILI_HARVEST_STALE_MISSED_CO
 const skipSeen = process.env.BILIBILI_HARVEST_SKIP_SEEN !== '0';
 const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
 const strict = runtimeOptions.strict;
+const expandTargetsFromComments = flagFromEnv('BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS', existingTermsOnly && requireCommentBackedEvidence);
 
 const auditOptions = {
   dictionaryPath,
@@ -154,6 +155,7 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     includeDanmaku,
     pages,
     perQueryTimeoutMs,
+    expandTargetsFromComments,
     rounds: roundsPerCycle,
     statePath,
     resetState: cycle === 1 ? resetState : false,

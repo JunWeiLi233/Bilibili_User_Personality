@@ -65,6 +65,16 @@ test('buildVideoKeywordDiscoveryOptions forwards per-query harvest timeout', () 
   assert.equal(options.perQueryTimeoutMs, 45000);
 });
 
+test('buildVideoKeywordDiscoveryOptions can enable comment target expansion', () => {
+  const options = buildVideoKeywordDiscoveryOptions({
+    env: {
+      BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS: '1',
+    },
+  });
+
+  assert.equal(options.expandTargetsFromComments, true);
+});
+
 test('parsePriorityQueryContent preserves structured audit action targets', () => {
   const priorityQueries = parsePriorityQueryContent(
     JSON.stringify([

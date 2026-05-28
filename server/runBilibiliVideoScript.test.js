@@ -19,6 +19,7 @@ function runScript(args = [], script = '.\\run-bilibili-video.ps1') {
         'echo MIN_DELAY=%BILIBILI_CRAWLER_MIN_DELAY_MS%',
         'echo JITTER=%BILIBILI_CRAWLER_JITTER_MS%',
         'echo HARVEST_QUERY_TIMEOUT=%BILIBILI_HARVEST_QUERY_TIMEOUT_MS%',
+        'echo EXPAND_TARGETS=%BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS%',
       ].join('\r\n'),
     );
     const result = spawnSync(
@@ -114,4 +115,28 @@ test('run-bilibili-auto-coverage.ps1 caps crawler pacing from timeout seconds', 
   assert.match(result.stdout, /REQUEST_TIMEOUT=10000/);
   assert.match(result.stdout, /MIN_DELAY=200/);
   assert.match(result.stdout, /JITTER=100/);
+});
+
+test('run-bilibili-auto-coverage.ps1 expands weak targets from collected comments by default', (t) => {
+  const result = runScript(['-MaxCycles', '1', '-MaxQueries', '1'], '.\\run-bilibili-auto-coverage.ps1');
+  if (!result) {
+    t.skip('PowerShell is unavailable in this environment');
+    return;
+  }
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /EXPAND_TARGETS=1/);
+  assert.match(result.stdout, /Expand weak targets from collected comments: True/);
+});
+
+test('run-bilibili-auto-coverage.ps1 can disable comment target expansion', (t) => {
+  const result = runScript(['-MaxCycles', '1', '-MaxQueries', '1', '-NoCommentTargetExpansion'], '.\\run-bilibili-auto-coverage.ps1');
+  if (!result) {
+    t.skip('PowerShell is unavailable in this environment');
+    return;
+  }
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /EXPAND_TARGETS=/);
+  assert.match(result.stdout, /Expand weak targets from collected comments: False/);
 });

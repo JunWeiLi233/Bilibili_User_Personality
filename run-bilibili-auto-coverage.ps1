@@ -28,6 +28,7 @@ param(
   [switch]$StopOnNoProgress,
   [switch]$IncludeGenericPopular,
   [switch]$NoDanmaku,
+  [switch]$NoCommentTargetExpansion,
   [switch]$ResetHarvestState,
   [switch]$Strict
 )
@@ -72,6 +73,11 @@ if ($NoDanmaku) {
   Remove-Item Env:\BILIBILI_HARVEST_INCLUDE_DANMAKU -ErrorAction SilentlyContinue
 } else {
   $env:BILIBILI_HARVEST_INCLUDE_DANMAKU = "1"
+}
+if ($NoCommentTargetExpansion) {
+  Remove-Item Env:\BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS -ErrorAction SilentlyContinue
+} else {
+  $env:BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS = "1"
 }
 $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
 $env:BILIBILI_HARVEST_QUERY_TIMEOUT_MS = [string]($QueryTimeoutSeconds * 1000)
@@ -160,6 +166,7 @@ Write-Host "Controversial popular query limit: $ControversialPopularQueryLimit"
 Write-Host "Controversial popular search order: $ControversialPopularSearchOrder"
 Write-Host "Include generic popular feed in controversial mode: $IncludeGenericPopular"
 Write-Host "Include public danmaku in video scans: $(!$NoDanmaku)"
+Write-Host "Expand weak targets from collected comments: $(!$NoCommentTargetExpansion)"
 Write-Host "Existing dictionary terms only: $(!$AllowNewTerms)"
 Write-Host "Require Bilibili evidence sources: $(!$AllowUnsourcedEvidence)"
 Write-Host "Require Bilibili comment evidence: $(!$AllowUnsourcedEvidence -and !$AllowContextOnlyEvidence)"
