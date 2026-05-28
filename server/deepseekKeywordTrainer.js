@@ -732,6 +732,13 @@ function recoveredMeaningForTerm(term, family) {
   return familyMeanings[family] || `\u201c${cleanTerm}\u201d\u7684\u4e2d\u6587\u4e92\u8054\u7f51\u8bed\u7528\u4e49\uff0c\u9700\u7ed3\u5408\u5b8c\u6574\u53d1\u8a00\u4e0a\u4e0b\u6587\u5224\u65ad`;
 }
 
+function canonicalMeaningForTerm(term, family, meaning) {
+  if (term === '\u8f6f\u6587' && family === 'evidence') {
+    return '\u201c\u8f6f\u6587\u201d\u7528\u4e8e\u8d28\u7591\u5185\u5bb9\u662f\u4ed8\u8d39\u5ba3\u4f20\u3001\u5e26\u8282\u594f\u6216\u5f71\u54cd\u8bc1\u636e\u53ef\u4fe1\u5ea6\u7684\u7a3f\u4ef6';
+  }
+  return meaning;
+}
+
 export function normalizeKeywordEntries(rawEntries = []) {
   const entries = [];
   for (const item of rawEntries) {
@@ -766,7 +773,7 @@ export function normalizeKeywordEntries(rawEntries = []) {
       entries.push({
         term,
         family,
-        meaning,
+        meaning: canonicalMeaningForTerm(term, family, meaning),
         risk: String(item.risk || '').trim() || (family === 'cooperation' || family === 'correction' ? 'positive' : 'medium'),
         confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.68,
         evidenceCount,

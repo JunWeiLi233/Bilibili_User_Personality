@@ -812,6 +812,25 @@ test('normalizes mixed-case ASCII runs inside keyword terms', () => {
   assert.deepEqual(entries.map((entry) => entry.term), ['doge', 'up\u4e3b', '\u5168b\u7ad9', 'pua', 'a\u5230\u7206\u70b8']);
 });
 
+test('normalizeKeywordEntries gives ruanwen evidence a credibility-specific meaning', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u8f6f\u6587',
+      family: 'evidence',
+      meaning: '\u201c\u8f6f\u6587\u201d\u7528\u4e8e\u8bf7\u6c42\u3001\u8865\u5145\u6216\u6307\u5411\u53ef\u6838\u9a8c\u7684\u6765\u6e90\u3001\u8bc1\u636e\u6216\u539f\u59cb\u6750\u6599',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u56fd\u5185\u82b1\u94b1\u5356\u8f6f\u6587\u5929\u5929\u201c\u4e2d\u65e5\u53cb\u597d\u201d\uff0c\u4e00\u5806\u4eba\u5c31\u4fe1\u4e86',
+      ],
+    },
+  ]);
+
+  assert.equal(
+    entries[0].meaning,
+    '\u201c\u8f6f\u6587\u201d\u7528\u4e8e\u8d28\u7591\u5185\u5bb9\u662f\u4ed8\u8d39\u5ba3\u4f20\u3001\u5e26\u8282\u594f\u6216\u5f71\u54cd\u8bc1\u636e\u53ef\u4fe1\u5ea6\u7684\u7a3f\u4ef6',
+  );
+});
+
 test('normalizes away keyword entries backed only by file-share ad evidence', () => {
   const entries = normalizeKeywordEntries([
     {
