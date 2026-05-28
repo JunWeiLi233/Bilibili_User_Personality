@@ -971,6 +971,16 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     const targetedCoincidenceContext = /(?:\u7ec8\u4e8e|\u771f\u6b63|\u4e00\u770b|\u8fd9|ta|TA|\u4ed6|\u5979|\u4f60|\u4e0d\u662f|\u7edd\u5bf9|\u523b\u610f).{0,18}\u5e76\u975e\u5076\u9047|\u5e76\u975e\u5076\u9047.{0,18}(?:\u4e86|\u5427|\u554a|\u5b9e\u9524|\u523b\u610f|\u5b89\u6392|\u771f\u6b63|\u5076\u9047)/iu.test(cleanSample);
     if (bareLabelContext && !targetedCoincidenceContext) return true;
   }
+  if (term === '\u5965\u5229\u7ed9' && family === 'attack') {
+    const genericMemeOrNameContext = /(?:\u5965[\u5229\u529b]\u7ed9\u89c6\u9891|\u5927\u53f7.{0,2}\u5965\u5229\u7ed9|\u5c0f\u53f7ID|\u552f\u4e00\u5173\u6ce8|\u83b1\u5965\u5229\u7ed9|\u5965\u5229\u7ed9\u6211|\u5965\u529b\u7ed9$)/u.test(cleanSample);
+    const hostileOrScatologicalContext = /(?:\u80e1\u6b4c|\u8f66\u91cc|\u4e22\u6389|\u6076\u5fc3|\u5c4e|\u7caa).{0,24}\u5965[\u5229\u529b]\u7ed9|\u5965[\u5229\u529b]\u7ed9.{0,24}(?:\u76f2\u76d2|\u6076\u5fc3|\u5c4e|\u7caa|\u4e22\u6389|\u9a82|\u653b\u51fb|\u4fae\u8fb1)/u.test(cleanSample);
+    if (genericMemeOrNameContext && !hostileOrScatologicalContext) return true;
+  }
+  if (term === '\u8282\u594f\u72d7' && family === 'attack') {
+    const rhythmGameOrTitleContext = /(?:\u8282\u594f\u72d7\u751f|\u72d7\u72d7\u4e4b\u6b4c|\u4e25\u5224\u5b8c\u7f8e\u65e0\u7455|\u8282\u594f\u76d2\u5b50|\u6e29\u8fbe\u72d7)/u.test(cleanSample);
+    const hostileBandwagonContext = /(?:\u6b63\u4e3b\u4e0b\u573a|\u4f4e\u521b|\u5e26\u8282\u594f|\u5237\u8282\u594f|\u653b\u51fb|\u9ed1\u5b50|\u80fd\u4e0d\u80fd\u4f3c).{0,24}\u8282\u594f\u72d7|\u8282\u594f\u72d7.{0,24}(?:\u6b63\u4e3b\u4e0b\u573a|\u4f4e\u521b|\u5e26\u8282\u594f|\u5237\u8282\u594f|\u653b\u51fb|\u9ed1\u5b50|\u80fd\u4e0d\u80fd\u4f3c)/u.test(cleanSample);
+    if (rhythmGameOrTitleContext && !hostileBandwagonContext) return true;
+  }
   if (term === '\u53c2\u8003\u6587\u732e' && family === 'attack') {
     const literalCitationContext = /(?:\u53c2\u8003\u6587\u732e).{0,24}(?:\u4e66\u5199|\u683c\u5f0f|\u987a\u5e8f\u7f16\u7801|\u5f15\u7528|\u7f16\u6392|\u8bba\u6587|\u56fd\u5bb6\u6807\u51c6|pdf|grok|\u6587\u732e|sci|\u67e5\u627e|\u641c|\u627e|\u5e93|\u771f\u7684)|(?:\u4e66\u5199|\u683c\u5f0f|\u987a\u5e8f\u7f16\u7801|\u5f15\u7528|\u7f16\u6392|\u8bba\u6587|\u56fd\u5bb6\u6807\u51c6|pdf|grok|\u6587\u732e|sci|\u67e5\u627e|\u641c|\u627e|\u5e93|\u771f\u7684).{0,24}\u53c2\u8003\u6587\u732e/iu.test(cleanSample);
     const plagiarismJokeContext = /(?:\u6284|\u642c|\u6d17\u7a3f|\u81f4\u656c|\u539f\u4f5c|\u6765\u6e90|\u51fa\u5904|\u539f\u6587).{0,18}\u53c2\u8003\u6587\u732e|\u53c2\u8003\u6587\u732e.{0,18}(?:\u6284|\u642c|\u6d17\u7a3f|\u81f4\u656c|\u539f\u4f5c|\u6765\u6e90|\u51fa\u5904|\u539f\u6587|\u90fd?\u4e0d\u653e|\u6ca1\u653e|\u4e0d\u5217|\u4e0d\u7ed9)/u.test(cleanSample);
