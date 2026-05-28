@@ -8557,6 +8557,70 @@ test('findDictionaryEntriesWithTextEvidence maps pig-nose insult homophones to t
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceCount]), [['\u732a\u9f3b', 2]]);
 });
 
+test('findDictionaryEntriesWithTextEvidence rejects literal fantasy evidence for big-mage attack terms', () => {
+  const dictionary = {
+    entries: [
+      {
+        term: '\u5927\u9b54\u6cd5\u5e08',
+        family: 'attack',
+        meaning: 'mocking label for socially inexperienced single men rather than literal fantasy mages',
+      },
+    ],
+  };
+
+  const falsePositiveText = [
+    '\u300a\u6b32\u795e\u5e7b\u60f3\u300b\u5927\u9b54\u6cd5\u5e08\u9732\u5983\u6280\u80fd\u6a21\u7ec4\uff08\u7fa4\u653b\uff09',
+    '\u4e5f\u53ef\u4ee5\u524d\u671f\u4e70\u4e70\u9b54\u6cd5\u5e08\u5957\u88c5\uff0c\u540e\u671f\u5f00\u52fa\u5b50',
+    '\u5c45\u7136re\u4e86\u8fd9\u90e8\u8bf6\uff01\u6211\u8981\u70b9\u83dc\u7537\u4eba\u5355\u8eab30\u5c81\u5c31\u4f1a\u53d8\u6210\u9b54\u6cd5\u5e08',
+  ].join('\n');
+
+  assert.deepEqual(findDictionaryEntriesWithTextEvidence(dictionary, falsePositiveText).map((entry) => entry.term), []);
+
+  const realEntries = findDictionaryEntriesWithTextEvidence(
+    dictionary,
+    '\u4f60\u8fd9\u79cd\u5355\u8eab\u72d7\u5927\u9b54\u6cd5\u5e08\u522b\u88c5\u604b\u7231\u5927\u5e08\u4e86',
+  );
+
+  assert.deepEqual(realEntries.map((entry) => entry.term), ['\u5927\u9b54\u6cd5\u5e08']);
+});
+
+test('normalizeKeywordEntries prunes persisted literal fantasy samples for big-mage attack terms', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u5927\u9b54\u6cd5\u5e08',
+      family: 'attack',
+      meaning: 'mocking label for socially inexperienced single men rather than literal fantasy mages',
+      evidenceCount: 3,
+      evidenceSamples: [
+        '\u5c45\u7136re\u4e86\u8fd9\u90e8\u8bf6\uff01\u6211\u8981\u70b9\u83dc\u7537\u4eba\u5355\u8eab30\u5c81\u5c31\u4f1a\u53d8\u6210\u9b54\u6cd5\u5e08',
+        '\u4e5f\u53ef\u4ee5\u524d\u671f\u4e70\u4e70\u9b54\u6cd5\u5e08\u5957\u88c5\uff0c\u540e\u671f\u5f00\u52fa\u5b50',
+        '\u4f60\u8fd9\u79cd\u5355\u8eab\u72d7\u5927\u9b54\u6cd5\u5e08\u522b\u88c5\u604b\u7231\u5927\u5e08\u4e86',
+      ],
+      evidenceSources: [
+        {
+          source: 'Bilibili public video comment scan',
+          uid: 'BVtitle',
+          sample: '\u5c45\u7136re\u4e86\u8fd9\u90e8\u8bf6\uff01\u6211\u8981\u70b9\u83dc\u7537\u4eba\u5355\u8eab30\u5c81\u5c31\u4f1a\u53d8\u6210\u9b54\u6cd5\u5e08',
+        },
+        {
+          source: 'Bilibili public video comment scan',
+          uid: 'BVgame',
+          sample: '\u4e5f\u53ef\u4ee5\u524d\u671f\u4e70\u4e70\u9b54\u6cd5\u5e08\u5957\u88c5\uff0c\u540e\u671f\u5f00\u52fa\u5b50',
+        },
+        {
+          source: 'Bilibili public video comment scan',
+          uid: 'BVattack',
+          sample: '\u4f60\u8fd9\u79cd\u5355\u8eab\u72d7\u5927\u9b54\u6cd5\u5e08\u522b\u88c5\u604b\u7231\u5927\u5e08\u4e86',
+        },
+      ],
+    },
+  ]);
+
+  assert.equal(entries[0].evidenceCount, 1);
+  assert.deepEqual(entries[0].evidenceSamples, ['\u4f60\u8fd9\u79cd\u5355\u8eab\u72d7\u5927\u9b54\u6cd5\u5e08\u522b\u88c5\u604b\u7231\u5927\u5e08\u4e86']);
+  assert.deepEqual(entries[0].evidenceSources.map((source) => source.uid), ['BVattack']);
+});
+
 test('normalizeKeywordEntries prunes persisted literal traditional-character samples for video-language attack terms', () => {
   const entries = normalizeKeywordEntries([
     {
