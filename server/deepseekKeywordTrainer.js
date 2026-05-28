@@ -1248,7 +1248,7 @@ function isAmbiguousBenignEvidenceSample(term, family, sample) {
     if (foodAmountContext && !argumentativeContext) return true;
   }
   if (term === '\u7edd\u5bf9\u6b63\u786e' && family === 'absolutes') {
-    const conceptReflectionContext = /(?:\u5bfb\u6c42|\u8ffd\u6c42|\u5b58\u5728|\u4e0d\u5b58\u5728|\u6446\u8131|\u53cd\u601d|\u8ba8\u8bba|\u5224\u65ad).{0,18}\u7edd\u5bf9\u6b63\u786e|\u7edd\u5bf9\u6b63\u786e.{0,18}(?:\u5984\u5ff5|\u6982\u5ff5|\u6807\u51c6|\u8fb9\u754c|\u95ee\u9898|\u4e0d\u5b58\u5728|\u5b58\u5728\u5417)/u.test(cleanSample);
+    const conceptReflectionContext = /(?:\u5bfb\u6c42|\u8ffd\u6c42|\u5b58\u5728|\u4e0d\u5b58\u5728|\u6446\u8131|\u53cd\u601d|\u8ba8\u8bba|\u5224\u65ad|\u6096\u8bba|\u4e16\u754c\u4e0a\u6709).{0,18}\u7edd\u5bf9\u6b63\u786e|\u7edd\u5bf9\u6b63\u786e.{0,18}(?:\u5984\u5ff5|\u6982\u5ff5|\u6807\u51c6|\u8fb9\u754c|\u95ee\u9898|\u4e0d\u5b58\u5728|\u5b58\u5728\u5417|\u4e8b\u60c5|\u6096\u8bba)/u.test(cleanSample);
     const assertionContext = /(?:\u8bf4\u7684|\u5185\u5bb9|\u8fd9\u6837|\u8fd9\u4e48\u5e72|\u5c31\u5f97|\u5fc5\u987b).{0,18}\u7edd\u5bf9\u6b63\u786e|\u7edd\u5bf9\u6b63\u786e.{0,18}(?:\uff0c|\u3002|\uff01|\u4f46\u662f|\u5c31\u5f97|\u5fc5\u987b|\u6ca1\u6bdb\u75c5|\u5bf9)/u.test(cleanSample);
     if (conceptReflectionContext && !assertionContext) return true;
   }
