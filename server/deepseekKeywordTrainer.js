@@ -39,6 +39,10 @@ STOP_TERMS.add('\u5077\u5077\u53d6\u5173');
 STOP_TERMS.add('\u8d34\u5427');
 STOP_TERMS.add('\u7231\u548b\u548b\u7684');
 STOP_TERMS.add('\u8131\u5b50');
+STOP_TERMS.add('\u4e0d\u52a8\u5982\u5c71');
+STOP_TERMS.add('\u8840\u8d5a');
+STOP_TERMS.add('\u75c5\u5927\u90ce');
+STOP_TERMS.add('\u75c5\u5f2f\u94a9');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',

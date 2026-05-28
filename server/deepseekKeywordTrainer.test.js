@@ -6239,7 +6239,7 @@ test('normalizeKeywordEntries prunes proper-name roster and praise evidence', ()
   ]);
 
   const byTerm = Object.fromEntries(entries.map((entry) => [entry.term, entry]));
-  assert.deepEqual(byTerm['\u75c5\u5f2f\u94a9'].evidenceSamples, ['\u8fd9\u4e2a\u75c5\u5f2f\u94a9\u9ed1\u79f0\u4e5f\u592a\u4fae\u8fb1\u4eba\u4e86']);
+  assert.equal(byTerm['\u75c5\u5f2f\u94a9'], undefined);
   assert.deepEqual(byTerm['\u8001\u53ae'].evidenceSamples, ['\u8001\u53ae\u4f60\u8fd9\u4e2a\u8bc1\u636e\u6765\u6e90\u80fd\u4e0d\u80fd\u8d34\u4e00\u4e0b']);
 });
 
@@ -9646,6 +9646,60 @@ test('normalizeKeywordEntries prunes current flash harvest negated, platform, an
     [
       '\u7206\u7834\u4f60',
       ['\u5c0f\u5fc3\u5979\u7c89\u4e1d\u7206\u7834\u4f60\uff0c\u4e4b\u524d\u6709\u4eba\u8bf4\u8001\u8d56\u4e4b\u5973\uff0c\u88ab\u4ed6\u4eec\u7c89\u4e1d\u6252\u5730\u5740\u5b66\u6821'],
+    ],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes current flash harvest game-skill, game-economy, and roster nickname noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u4e0d\u52a8\u5982\u5c71',
+      family: 'evidence',
+      meaning: 'game skill name mislabeled as evidence',
+      evidenceCount: 4,
+      evidenceSamples: [
+        '\u516b\u79d2\u5c31\u6700\u5927\u4e86\u554a \u8bdd\u8bf4\u4e0d\u52a8\u5982\u5c71\u5176\u4ed6\u6b66\u5668\u5e94\u8be5\u6ca1\u7528\u5427 \u5fc5\u987b\u62ff\u7740\u5de6\u8f6e',
+        '\u4e0d\u52a8\u5982\u5c71\u6211\u662f\u642d\u914d\u7384\u6b66\u7528\u7684\uff0c\u5806\u9632\u5fa1\u7b49\u4e8e\u5806\u4f24\u5bb3',
+      ],
+    },
+    {
+      term: '\u8840\u8d5a',
+      family: 'cooperation',
+      meaning: 'game economy gain mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u5e76\u4e0d\u4e8f\uff0c\u6740\u4e09\u4e2a\u5c31\u662f900\u5757\uff0c\u5bf9\u9762\u5200\u4eba\u4e5f\u5c311500\uff0c\u6b7b\u7684\u4eba\u91cc\u8981\u662f\u597d\u5e26\u7532\uff0c\u5c31\u662f\u8840\u8d5a\u3002',
+      ],
+    },
+    {
+      term: '\u75c5\u5927\u90ce',
+      family: 'attack',
+      meaning: 'thin roster nickname',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6311\u6746\u5927\u5723\uff0c\u75c5\u5927\u90ce\uff0c\u674e\u96ea\u534e'],
+    },
+    {
+      term: '\u75c5\u5f2f\u94a9',
+      family: 'attack',
+      meaning: 'thin roster nickname',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6311\u6746\u592a\u5c81\uff0c\u75c5\u5f2f\u94a9\uff0c\u8fdf\u56fd\u4eae\uff0c\u5bf9\u4e48\u4eae\u4eae'],
+    },
+    {
+      term: '\u81ea\u6170\u961f',
+      family: 'attack',
+      meaning: 'homophone insult for Japanese self-defense force',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u5e05\u6bd4\u6bd4\u4f60\u77e5\u9053\u4e3a\u4ec0\u4e48\u65e5\u672c\u519b\u961f\u5927\u591a\u90fd\u662f\u795e\u7236\u5417\uff1f\u56e0\u4e3a\u5c0f\u7537\u5b69\u6389\u5230\u65e5\u672c\u540e\u4ed6\u4eec\u5c31\u6539\u6210\u81ea\u6170\u961f\u4e86',
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    [
+      '\u81ea\u6170\u961f',
+      ['\u5e05\u6bd4\u6bd4\u4f60\u77e5\u9053\u4e3a\u4ec0\u4e48\u65e5\u672c\u519b\u961f\u5927\u591a\u90fd\u662f\u795e\u7236\u5417\uff1f\u56e0\u4e3a\u5c0f\u7537\u5b69\u6389\u5230\u65e5\u672c\u540e\u4ed6\u4eec\u5c31\u6539\u6210\u81ea\u6170\u961f\u4e86'],
     ],
   ]);
 });
