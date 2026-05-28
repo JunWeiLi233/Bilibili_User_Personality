@@ -7250,7 +7250,6 @@ test('findDictionaryEntriesWithTextEvidence maps current weak miss comment forms
   );
 
   assert.deepEqual(entries.map((entry) => entry.term), [
-    '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211',
     '\u53d1\u56fe',
     '\u996d\u5708\u5473',
     '\u8d29\u5b50\u5c0f\u53f7',
@@ -7425,7 +7424,6 @@ test('findDictionaryEntriesWithTextEvidence maps generated sentence-form aliases
     '100\u597d\u8bc4',
     '\u767e\u5206\u767e\u597d\u8bc4\u7387',
     '100\u6ca1\u95ee\u9898',
-    '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211',
     '\u6839\u672c\u6ca1\u6709\u53c2\u8003\u4ef7\u503c',
     '\u7edd\u5bf9\u53ef\u4ee5\u723d',
     '\u7edd\u5bf9\u53ef\u4ee5\u723d\u4e00\u4e0b',
@@ -9228,7 +9226,6 @@ test('normalizeKeywordEntries prunes profile-signature and game-mechanic evidenc
   ]);
 
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceCount, entry.evidenceSamples]), [
-    ['\u4e2a\u7b7e', 0, []],
     ['\u7ed9\u7b5b\u5b50\u91cc\u704c\u4e86\u94c5', 0, []],
   ]);
 });
@@ -10047,6 +10044,65 @@ test('normalizeKeywordEntries prunes current harvest praise, platform, identity,
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
     ['\u996d\u5708\u5473', ['\u8fd9\u996d\u5708\u5473\u548b\u8fd9\u4e48\u91cd']],
     ['\u7eaf\u5c0f\u4eba', ['\u8fd9\u79cd\u80cc\u540e\u6697\u6233\u6233\u5ac9\u5992\u7684\u884c\u4e3a\u771f\u7684\u7eaf\u5c0f\u4eba']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes latest auto-coverage fan, profile, and coin-check-in noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u4f0a\u5229\u4e9a\u6211\u8f6f\u811a\u4e86',
+      family: 'cooperation',
+      meaning: 'fan meme reaction mislabeled as cooperation',
+      evidenceCount: 2,
+      evidenceSamples: ['\u6ca1\u6709\u4f0a\u5229\u4e9a\u6211\u8f6f\u811a\u4e86', '\u4f0a\u5229\u4e9a\uff0c\u6211\u8f6f\u811a\u4e86\u5feb\u6276\u6211\u8d77\u6765'],
+    },
+    {
+      term: '\u4f0a\u8389\u96c5\u6211\u8f6f\u811a\u4e86',
+      family: 'cooperation',
+      meaning: 'fan meme reaction mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u96c6\u771f\u6ca1\u6709\u201c\u4f0a\u8389\u96c5\u6211\u8f6f\u811a\u4e86\u5feb\u6276\u6211\u8d77\u6765\u201d'],
+    },
+    {
+      term: '\u4e2a\u7b7e',
+      family: 'cooperation',
+      meaning: 'profile signature shorthand mislabeled as cooperation',
+      evidenceCount: 2,
+      evidenceSamples: ['\u4ee5\u540e\u5c31\u662f\u4e2a\u7b7e\u4e86', '\u90a3\u4e48\u79bb\u8c31\u7684\u8bed\u97f3\u548c\u4e2a\u7b7e\u5c45\u7136\u80fd\u5b58\u5728\u8fd9\u4e48\u4e45'],
+    },
+    {
+      term: '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211',
+      family: 'absolutes',
+      meaning: 'coin/check-in claim mislabeled as absolute thinking',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4e0d\u8fc7\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211\u7684'],
+    },
+    {
+      term: '\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211\u7684',
+      family: 'absolutes',
+      meaning: 'coin/check-in claim mislabeled as absolute thinking',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4e0d\u8fc7\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211\u7684'],
+    },
+    {
+      term: '\u5f39\u6027\u56de\u5e94',
+      family: 'attack',
+      meaning: 'selective-response criticism',
+      evidenceCount: 1,
+      evidenceSamples: ['\u961f\u5916\u524d\u8f88\u80fd\u7ef4\u62a4\u5c31\u662f\u6ca1\u6cd5\u7ef4\u62a4\u81ea\u5bb6\u961f\u53cb\uff0c\u5f39\u6027\u56de\u5e94\u8fd9\u4e00\u5757'],
+    },
+    {
+      term: '\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9',
+      family: 'evasion',
+      meaning: 'dismisses replies before they happen',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4e2a\u4eba\u89c2\u70b9\uff0c\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u5f39\u6027\u56de\u5e94', ['\u961f\u5916\u524d\u8f88\u80fd\u7ef4\u62a4\u5c31\u662f\u6ca1\u6cd5\u7ef4\u62a4\u81ea\u5bb6\u961f\u53cb\uff0c\u5f39\u6027\u56de\u5e94\u8fd9\u4e00\u5757']],
+    ['\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9', ['\u4e2a\u4eba\u89c2\u70b9\uff0c\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9']],
   ]);
 });
 
