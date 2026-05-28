@@ -11103,6 +11103,69 @@ test('normalizeKeywordEntries prunes current strict harvest sports, stage, stale
   ]);
 });
 
+test('normalizeKeywordEntries prunes latest strict harvest image-request, product, neutral-romance, and narrow-meme noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u8001\u5e08\u56fe\u7247\u53ef\u4ee5\u62ff\u5417',
+      family: 'cooperation',
+      meaning: 'image permission request',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8001\u5e08\u56fe\u7247\u53ef\u4ee5\u62ff\u5417\uff1f'],
+    },
+    {
+      term: '\u674e\u6c0f\u7236\u5b50',
+      family: 'attack',
+      meaning: 'proper-name family label',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6bd5\u7adf\u662f\u674e\u6c0f\u7236\u5b50'],
+    },
+    {
+      term: '\u91cc\u9762\u5168\u662f\u9502\u7535\u6c60',
+      family: 'absolutes',
+      meaning: 'literal product component claim',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4e0d\u7528\u9502\u7535\u6c60\u7684\uff0c\u628a\u4f60\u4eec\u624b\u673a \u7535\u8111 \u5c0f\u578b\u7535\u5668\u5168\u90e8\u6254\u4e86\u5427\u3002\u91cc\u9762\u5168\u662f\u9502\u7535\u6c60'],
+    },
+    {
+      term: '\u8054\u52a8\u676f',
+      family: 'cooperation',
+      meaning: 'product tie-in cup',
+      evidenceCount: 2,
+      evidenceSamples: ['\u7fa1\u6155\u4e86\uff0c\u745e\u5e78\u8054\u52a8\u539f\u795e\u4e70\u8054\u52a8\u676f\uff0c\u8fde\u8054\u52a8\u676f\u90fd\u4e0d\u7ed9\u4e00\u4e2a[\u5927\u54ed]'],
+    },
+    {
+      term: '\u4e24\u60c5\u76f8\u60a6',
+      family: 'absolutes',
+      meaning: 'neutral romance phrase',
+      evidenceCount: 2,
+      evidenceSamples: ['\u8fd9\u4e2a\u52a8\u6f2b\u4e2d\u90fd\u662f\u4e24\u60c5\u76f8\u60a6\uff0c\u7537\u7684\u559c\u6b22\u5973\u7684\uff0c\u8fd9\u5973\u7684\u5c31\u4e00\u5b9a\u559c\u6b22\u8fd9\u7537\u7684'],
+    },
+    {
+      term: '\u91cf\u5b50\u76d1\u63a7\u6444\u50cf\u5934',
+      family: 'attack',
+      meaning: 'narrow surveillance meme phrase',
+      evidenceCount: 1,
+      evidenceSamples: ['\u91cf\u5b50\u76d1\u63a7\u6444\u50cf\u5934\uff0c\u6839\u636e\u4e0d\u540c\u7684\u9636\u7ea7\u5229\u76ca\u5904\u4e8e\u597d\u574f\u7684\u53e0\u52a0\u6001[doge]'],
+    },
+    {
+      term: '\u8001sp',
+      family: 'attack',
+      meaning: 'calls someone lecherous',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4f60\u4e2a\u8001sp\u771f\u662f\u4e0d\u597d\u610f\u601d\u8bf4\u4f60'],
+    },
+    {
+      term: '\u4e24\u516c\u6bcd',
+      family: 'attack',
+      meaning: 'dehumanizing couple insult',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4e94\u6bd2\u4ff1\u5168\u7684\u4e24\u516c\u6bcd\u662f\u8fd9\u6837\u7684'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u8001sp', '\u4e24\u516c\u6bcd']);
+});
+
 test('findDictionaryEntriesWithTextEvidence keeps directed probability manipulation use of loaded-dice phrase', () => {
   const dictionary = {
     entries: [
