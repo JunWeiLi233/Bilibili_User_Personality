@@ -6366,6 +6366,55 @@ test('buildDictionaryCoverageAudit rotates timeout-heavy retries behind partial 
   assert.deepEqual(audit.nextActions.map((item) => item.term), ['partialEvidence', timeoutTerm]);
 });
 
+test('buildDictionaryCoverageAudit rotates timeout retries behind ordinary weak retries before retry limit', () => {
+  const timeoutTerm = 'timeoutBeforeLimit';
+  const audit = buildDictionaryCoverageAudit(
+    {
+      entries: [
+        { term: timeoutTerm, family: 'attack', evidenceCount: 2 },
+        { term: 'ordinaryMiss', family: 'attack', evidenceCount: 2 },
+      ],
+    },
+    {
+      termAttempts: {
+        [timeoutTerm]: {
+          term: timeoutTerm,
+          family: 'attack',
+          evidenceAtPlanTime: 2,
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [
+            {
+              query: 'timeoutBeforeLimit \u8bc4\u8bba\u533a',
+              strategyVersion: 6,
+              ok: false,
+              hit: false,
+              videos: 0,
+              comments: 0,
+              error: 'Bilibili harvest query "timeoutBeforeLimit \u8bc4\u8bba\u533a" timed out after 45000ms',
+            },
+          ],
+          lastQuery: 'timeoutBeforeLimit \u8bc4\u8bba\u533a',
+          lastError: 'Bilibili harvest query "timeoutBeforeLimit \u8bc4\u8bba\u533a" timed out after 45000ms',
+        },
+        ordinaryMiss: {
+          term: 'ordinaryMiss',
+          family: 'attack',
+          evidenceAtPlanTime: 2,
+          attempts: 1,
+          successfulAttempts: 0,
+          queries: [{ query: 'ordinaryMiss \u8bc4\u8bba\u533a', strategyVersion: 6, ok: true, hit: false, videos: 1, comments: 12 }],
+          lastQuery: 'ordinaryMiss \u8bc4\u8bba\u533a',
+          lastError: '',
+        },
+      },
+    },
+    { targetEvidence: 3, maxActions: 2, retryBeforeUnattemptedLimit: 3 },
+  );
+
+  assert.deepEqual(audit.nextActions.map((item) => item.term), ['ordinaryMiss', timeoutTerm]);
+});
+
 test('buildDictionaryCoverageAudit rotates repeated no-video zero-evidence misses behind fresh weak terms', () => {
   const missed = 'repeatedNoVideo';
   const audit = buildDictionaryCoverageAudit(

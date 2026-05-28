@@ -2043,7 +2043,7 @@ function actionSortRank(action, options = {}) {
   if (noVideoDiscoveryMiss && retryLimit > 0 && attempts >= retryLimit) {
     return (evidence > 0 ? coverageActionRank('harvest_more_evidence') + 0.25 : coverageActionRank('harvest') + 0.5) + priorityPenalty;
   }
-  if (timeoutDiscoveryMiss && retryLimit > 0 && attempts >= retryLimit) {
+  if (timeoutDiscoveryMiss) {
     return coverageActionRank('harvest_more_evidence') + 0.5 + priorityPenalty;
   }
   if (duplicateAcceptedNoProgress && action?.action === 'retry_with_new_variant' && retryLimit > 0 && attempts >= retryLimit) {
