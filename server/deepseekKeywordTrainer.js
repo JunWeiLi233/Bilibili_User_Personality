@@ -85,6 +85,13 @@ STOP_TERMS.add('\u4f0a\u8389\u96c5\u6211\u8f6f\u811a\u4e86');
 STOP_TERMS.add('\u4e2a\u7b7e');
 STOP_TERMS.add('\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211');
 STOP_TERMS.add('\u7b2c\u4e00\u4e2a\u6295\u5e01\u80af\u5b9a\u662f\u6211\u7684');
+STOP_TERMS.add('\u7535\u952fpro');
+STOP_TERMS.add('\u7535\u952fpromax');
+STOP_TERMS.add('\u5b9a\u53eb\u4f60\u597d\u8bc4\u5982\u6f6e');
+STOP_TERMS.add('\u4e1c\u6d77\u6bcf\u6b21\u540c\u6846\u7edd\u5bf9\u6709\u7b11\u70b9');
+STOP_TERMS.add('\u4e0a\u7535\u89c6');
+STOP_TERMS.add('doge\u5723\u8bde');
+STOP_TERMS.add('tv\u70b9\u8d5e');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',

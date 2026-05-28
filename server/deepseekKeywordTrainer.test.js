@@ -2374,11 +2374,9 @@ test('findDictionaryEntriesWithTextEvidence rejects retirement-dance and standal
     { source: 'Bilibili public video comment scan: https://www.bilibili.com/video/BV-last-doge/', uid: 'BV-last-doge' },
   );
 
-  assert.deepEqual(entries.map((entry) => entry.term), ['\u6700\u540e\u4e00\u821e', 'doge\u5723\u8bde']);
+  assert.deepEqual(entries.map((entry) => entry.term), ['\u6700\u540e\u4e00\u821e']);
   assert.equal(entries[0].evidenceCount, 1);
   assert.deepEqual(entries[0].evidenceSamples, ['\u8fd9\u628a\u5168\u538b\u4e0a\uff0c\u6700\u540e\u4e00\u821e\u4e86\uff0c\u8d62\u4e86\u4e0a\u5cb8\u8f93\u4e86\u7b97\u4e86']);
-  assert.equal(entries[1].evidenceCount, 1);
-  assert.deepEqual(entries[1].evidenceSamples, ['\u7ed9\u5976\u8336\u6362\u4e2a\u5973\u88c5\u4e5f\u6beb\u65e0\u8fdd\u548c\u611f\u4e86\u73b0\u5728[doge-\u5723\u8bde]']);
 });
 
 test('findDictionaryEntriesWithTextEvidence rejects standalone dumpling insult evidence without a target', () => {
@@ -4265,7 +4263,6 @@ test('normalizeKeywordEntries prunes latest loose harvested cooperation and atta
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
     ['\u4e38\u4e86', ['\u54c8\u54c8\u54c8\uff0c\u6211\u98ce\u70ed\u5feb\u597d\u53c8\u6d17\u4e86\u4e2a\u6fa1\uff0c\u4e38\u4e86']],
     ['\u9488\u4e0d\u6233', ['\u4f60\u8fd9\u9634\u9633\u602a\u6c14\u9488\u4e0d\u6233\uff0c\u8bc1\u636e\u5462']],
-    ['\u4e0a\u7535\u89c6', ['\u4e3b\u5305\u80fd\u4e0d\u80fd\u628a\u8fd9\u6761\u8bc1\u636e\u4e0a\u7535\u89c6']],
     ['\u6807\u51c6\u7ed3\u5c40', ['\u4ed6\u5148\u9053\u6b49\u518d\u6539\u53e3\uff0c\u8fd9\u624d\u662f\u6807\u51c6\u7ed3\u5c40']],
     ['\u5168\u662f\u7c89\u4e1d', ['\u8bc4\u8bba\u533a\u5168\u662f\u7c89\u4e1d\u63a7\u8bc4\uff0c\u6839\u672c\u4e0d\u770b\u8bc1\u636e']],
   ]);
@@ -4740,7 +4737,6 @@ test('normalizeKeywordEntries prunes latest harvested username, emote-only, and 
     ['\u7537\u7684\u90fd\u7231\u753b\u997c', ['\u8bf4\u767d\u4e86\u5973\u7684\u5c31\u662f\u7ed9\u7537\u7684\u753b\u997c\u6279\u6362\u6280\u672f']],
     ['tv\u5455\u5410', ['\u540c\u610f\uff0c\u8fd9\u90e8\u7247\u5b50\u611f\u89c9\u5c31\u4e0d\u662f\u4e3a\u4e86\u8bb2\u597d\u6545\u4e8b\u62cd\u7684\uff0c\u800c\u662f\u6545\u610f\u50cf\u89c2\u4f17\u663e\u6446[tv_\u5455\u5410]']],
     ['\u5df2\u8d5e10\u8bf7\u56de\u4e0b', ['\u5df2\u8d5e10\uff0c\u8bf7\u56de\u4e0b\uff0c\u4f60\u524d\u9762\u7684\u65f6\u95f4\u7ebf\u8bc1\u636e\u80fd\u518d\u8865\u5145\u5417']],
-    ['\u4e0a\u7535\u89c6', ['\u8fd9\u6761\u4e0a\u7535\u89c6\u4e86\uff0c\u53ef\u4ee5\u628a\u539f\u6765\u7684\u8bc1\u636e\u94fe\u63a5\u4e5f\u8865\u4e0a']],
   ]);
 });
 
@@ -4937,7 +4933,6 @@ test('normalizeKeywordEntries prunes latest harvested bare agreement, self-state
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
     ['\u6ca1\u6bdb\u75c5\u554a', ['\u90d1\u5973\u58eb\u8bf4\u7684\u6ca1\u6bdb\u75c5']],
     ['\u6ca1\u6551\u4e86', ['\u524d\u9762\u90a3\u4e2a\u8bf4\u6cd5\u6ca1\u6551\u4e86\uff0c\u6211\u6536\u56de\u91cd\u8bf4']],
-    ['tv\u70b9\u8d5e', ['\u8fd9\u4e2a\u8865\u5145\u5f88\u6709\u7528[tv_\u70b9\u8d5e]\uff0c\u5efa\u8bae\u7f6e\u9876']],
   ]);
 });
 
@@ -5121,7 +5116,6 @@ test('normalizeKeywordEntries prunes latest harvested resource-share, definition
     ['\u7b11\u563b\u4e86', ['\u8fd9\u6bb5\u89e3\u91ca\u5f88\u6e05\u695a\uff0c\u770b\u5b8c\u7b11\u563b\u4e86']],
     ['\u9633\u75ff', ['\u4f60\u8fd9\u53d1\u8a00\u771f\u9633\u75ff\uff0c\u522b\u88c5\u4e86']],
     ['\u4f18\u96c5', ['\u4ed6\u786e\u5b9e\u5f88\u4f18\u96c5\u8fd8\u5f88\u53ef\u7231\u5f88\u5e05\u6c14[doge]\u771f\u662f\u5947\u4e86\u602a\u4e86\uff0c\u660e\u660e\u662f\u4e2a\u9ad8\u9ad8\u7626\u7626\u7684\u9ab7\u9ac5\u5934']],
-    ['tv\u70b9\u8d5e', ['\u8fd9\u4e2a\u8865\u5145\u5f88\u6709\u7528[tv_\u70b9\u8d5e]\uff0c\u5efa\u8bae\u7f6e\u9876']],
     ['\u4e0b\u996d', ['\u4e0b\u996d\u89c6\u9891', '\u8fd9\u671f\u8282\u76ee\u5f88\u4e0b\u996d\uff0c\u770b\u7740\u8f7b\u677e']],
   ]);
 });
@@ -10103,6 +10097,79 @@ test('normalizeKeywordEntries prunes latest auto-coverage fan, profile, and coin
   assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
     ['\u5f39\u6027\u56de\u5e94', ['\u961f\u5916\u524d\u8f88\u80fd\u7ef4\u62a4\u5c31\u662f\u6ca1\u6cd5\u7ef4\u62a4\u81ea\u5bb6\u961f\u53cb\uff0c\u5f39\u6027\u56de\u5e94\u8fd9\u4e00\u5757']],
     ['\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9', ['\u4e2a\u4eba\u89c2\u70b9\uff0c\u4f60\u55b7\u6211\u5c31\u662f\u4f60\u5bf9']],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes no-progress auto-coverage product, title, entertainment, and emote noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u7535\u952fpro',
+      family: 'cooperation',
+      meaning: 'game equipment/product-style joke mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7535\u952fpro max\uff0c\u8fd8\u7ed915\u5757\u94b1\uff0c\u6bd4\u5f88\u591a\u91d1\u7b56\u7565\u8981\u5f3a\u4e86'],
+    },
+    {
+      term: '\u7535\u952fpromax',
+      family: 'cooperation',
+      meaning: 'game equipment/product-style joke mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['\u7535\u952fpro max\uff0c\u8fd8\u7ed915\u5757\u94b1\uff0c\u6bd4\u5f88\u591a\u91d1\u7b56\u7565\u8981\u5f3a\u4e86'],
+    },
+    {
+      term: '\u5b9a\u53eb\u4f60\u597d\u8bc4\u5982\u6f6e',
+      family: 'attack',
+      meaning: 'bare title-like game review meme without directed comment evidence',
+      evidenceCount: 1,
+      evidenceSamples: ['\u5b9a\u53eb\u4f60\u597d\u8bc4\u5982\u6f6e'],
+    },
+    {
+      term: '\u4e1c\u6d77\u6bcf\u6b21\u540c\u6846\u7edd\u5bf9\u6709\u7b11\u70b9',
+      family: 'absolutes',
+      meaning: 'entertainment clip praise mislabeled as absolute thinking',
+      evidenceCount: 1,
+      evidenceSamples: ['\u80e1\u4e00\u7edf\u548c\u590f\u4e1c\u6d77\u6bcf\u6b21\u540c\u6846\u7edd\u5bf9\u6709\u7b11\u70b9'],
+    },
+    {
+      term: '\u4e0a\u7535\u89c6',
+      family: 'cooperation',
+      meaning: 'literal appearing on television/action phrase mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['\u4ed6\u53ef\u662f\u4e0a\u7535\u89c6\u53f0\u62bd\u8c61\u548c\u795e\u4e11\u6323\u94b1'],
+    },
+    {
+      term: 'doge\u5723\u8bde',
+      family: 'cooperation',
+      meaning: 'emote name mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['up\u597d\u6b8b\u554a\uff0c\u722c\u4e0d\u4e0a\u53bb\u3010doge-\u5723\u8bde\u3011\u3010doge-\u5723\u8bde\u3011'],
+    },
+    {
+      term: 'tv\u70b9\u8d5e',
+      family: 'cooperation',
+      meaning: 'emote name mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['\u56de\u590d @3D\u53d8\u901f\u563f\u563f\u563f :\u611f\u89c9\u5f88\u68d2\u6b38[tv_\u70b9\u8d5e]'],
+    },
+    {
+      term: '\u4e1c\u6237\u897f\u751c',
+      family: 'attack',
+      meaning: 'specific political nickname with target context',
+      evidenceCount: 1,
+      evidenceSamples: ['\u738b\u4f1f\u6052\u548c\u6237\u6668\u98ce\uff0c\u4eba\u79f0\u4e1c\u6237\u897f\u751c\uff0c\u540c\u4e3a\u4e45\u7ecf\u8003\u9a8c\u7684\u8d44\u672c\u4e3b\u4e49\u6218\u58eb'],
+    },
+    {
+      term: '\u826f\u5fc3\u8fa3',
+      family: 'attack',
+      meaning: 'sarcastic product/game monetization praise',
+      evidenceCount: 2,
+      evidenceSamples: ['\u82f1\u96c4\u6740\u592a\u826f\u5fc3\u8fa3\uff0c\u4e00\u4e2a\u6708\u53ea\u8ba9\u6211\u82b13300', '\u5bf9\u4e8e\u6ca1\u6709\u539f\u82e6\u65e0\u7684\u6211\u6765\u8bf4 \u53ef\u592a\u826f\u5fc3\u8fa3'],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    ['\u4e1c\u6237\u897f\u751c', ['\u738b\u4f1f\u6052\u548c\u6237\u6668\u98ce\uff0c\u4eba\u79f0\u4e1c\u6237\u897f\u751c\uff0c\u540c\u4e3a\u4e45\u7ecf\u8003\u9a8c\u7684\u8d44\u672c\u4e3b\u4e49\u6218\u58eb']],
+    ['\u826f\u5fc3\u8fa3', ['\u82f1\u96c4\u6740\u592a\u826f\u5fc3\u8fa3\uff0c\u4e00\u4e2a\u6708\u53ea\u8ba9\u6211\u82b13300', '\u5bf9\u4e8e\u6ca1\u6709\u539f\u82e6\u65e0\u7684\u6211\u6765\u8bf4 \u53ef\u592a\u826f\u5fc3\u8fa3']],
   ]);
 });
 
