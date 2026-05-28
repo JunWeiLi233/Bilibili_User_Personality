@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2051`
+- Dictionary terms: `2043`
 - Target evidence per term: `3`
-- Coverage ratio: `59.73%`
-- Weak terms below target: `826`
-- Zero-evidence terms: `195`
-- Evidence deficit: `1745`
-- Source-backed terms: `1856`
+- Coverage ratio: `59.96%`
+- Weak terms below target: `818`
+- Zero-evidence terms: `192`
+- Evidence deficit: `1725`
+- Source-backed terms: `1851`
 - Unsourced evidence terms: `0`
-- Attempted terms: `375`
-- Successful terms: `102`
+- Attempted terms: `386`
+- Successful terms: `106`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -89,6 +89,7 @@ Recent dictionary-cleaning updates:
 - Pruned the current flash/max coverage batch after it reduced weak and zero-evidence gaps: removed game-completion sentence `发现全是缺`, mine/rank pun `排长`, stale game nickname `牢祖冲之`, generic luck phrase `运气真好`, and generic product/game praise `炒鸡好用`; kept argument-use terms such as `防杠我先说`, `不要胡说`, and object-dismissal `废铜烂铁`.
 - Pruned the latest flash/max coverage-batch fandom/title/platform/emote noise: removed generic family address `都是家人`, entertainment ranking `恐怖童谣绝对第一`, bare `PY现场`, creator-follow/platform actions `关注力` / `三联`, fandom-specific `高妃应得的待遇`, slogan `正道的光`, and emote labels `斜眼笑` / `tv斜眼笑`; kept valid argumentative uses such as `感谢指正`, `干崩阿`, `根本没有说不允许`, and `td小青蛙`.
 - Ran another `deepseek-v4-flash` max-effort auto-coverage pass over controversial Bilibili searches; kept useful discourse evidence such as `公知话术`, `精神美国人`, `狗屎机制`, and `不黑不吹`, while pruning generic/outdated/title or creator-noise terms `梗out了` / `out了`, `监狱来的妈妈`, `小up`, `千年是哮天犬`, and `原来你也玩原神`.
+- Ran another `deepseek-v4-flash` max-effort auto-coverage pass that reduced strict comment-backed zero-evidence terms by 3 and weak terms by 4; kept useful terms such as `挂路灯`, `全是广东的`, `全是水军`, `有人急了`, `规训顾客`, `猪血馒头`, `心里没点b数`, and `hapi言论`, while pruning broad/generic noise `广东的`, `笑嘻了`, `拔群` / `效果拔群`, `罗神伟大`, `国际宅男联盟` / `宅男联盟`, and `好时代来临力`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
