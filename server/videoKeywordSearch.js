@@ -1023,9 +1023,33 @@ export async function searchVideoKeywords(payload = {}, deps = {}) {
     usedEvidenceSourceFallback && videoLinks.length === 0
       ? Math.max(1, Math.min(Math.max(Number(payload.pages) || 1, evidenceSourceFallbackPages), 5))
       : payload.pages;
+  const deepenReplyThreadsEnabled =
+    (payload.deepenReplyThreads === true || deps.deepenReplyThreads === true) && existingTermsOnly;
+  let deepenMatch = null;
+  if (deepenReplyThreadsEnabled) {
+    try {
+      const readKeywordDictionary = deps.readKeywordDictionary || defaultReadKeywordDictionary;
+      const dictionary = await readKeywordDictionary();
+      const deepenNeedles = dictionaryNeedleSet(dictionary);
+      for (const term of targetExistingTerms) {
+        const clean = cleanSearchText(term);
+        if (clean.length >= 2) deepenNeedles.add(clean);
+      }
+      if (deepenNeedles.size > 0) deepenMatch = (message) => commentMatchesNeedleSet(message, deepenNeedles);
+    } catch (error) {
+      warnings.push(`reply deepening: ${error.message}`);
+    }
+  }
+  const deepenScanOptions = deepenMatch
+    ? {
+        deepenMatch,
+        deepenRootLimit: boundedInt(payload.deepenRootLimit ?? deps.deepenRootLimit ?? process.env.BILIBILI_HARVEST_DEEPEN_ROOT_LIMIT ?? 6, 6, 0, 30),
+        deepenPages: boundedInt(payload.deepenPages ?? deps.deepenPages ?? process.env.BILIBILI_HARVEST_DEEPEN_PAGES ?? 2, 2, 1, 5),
+      }
+    : {};
   for (const videoLink of scanTargets) {
     try {
-      const scan = await fetchRepliesForVideo(videoLink, { pages: scanPages, includeDanmaku }, deps);
+      const scan = await fetchRepliesForVideo(videoLink, { pages: scanPages, includeDanmaku, ...deepenScanOptions }, deps);
       if (scan.ok) {
         scans.push(scan);
       } else {

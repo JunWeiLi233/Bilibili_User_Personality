@@ -105,6 +105,7 @@ const resetState = process.env.BILIBILI_HARVEST_RESET === '1';
 const commentPoolTargetTermsLimit = positiveIntFromEnv('BILIBILI_HARVEST_COMMENT_POOL_TARGET_LIMIT', 24, 200);
 const priorityCommentPoolTargets = flagFromEnv('BILIBILI_HARVEST_PRIORITY_COMMENT_POOL_TARGETS', false);
 const preFilterCommentsToTargets = flagFromEnv('BILIBILI_HARVEST_PREFILTER_COMMENTS', false);
+const deepenReplyThreads = flagFromEnv('BILIBILI_HARVEST_DEEPEN_REPLIES', false);
 const strict = runtimeOptions.strict;
 const expandTargetsFromComments = flagFromEnv('BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS', existingTermsOnly && requireCommentBackedEvidence);
 
@@ -162,6 +163,7 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     commentPoolTargetTermsLimit,
     priorityCommentPoolTargets,
     preFilterCommentsToTargets,
+    deepenReplyThreads,
     existingTermsOnly,
     discoveryMode,
     discoveryLimit,

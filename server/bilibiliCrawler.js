@@ -747,6 +747,43 @@ async function fetchDanmakuForVideo(video, deps = {}) {
   return parseDanmakuXml(xml, video);
 }
 
+function replySubtreeMatches(reply, deepenMatch) {
+  if (deepenMatch(reply?.content?.message || '')) return true;
+  for (const child of reply?.replies || []) {
+    if (replySubtreeMatches(child, deepenMatch)) return true;
+  }
+  return false;
+}
+
+// Reply-tree deepening: a comment that uses a rare term is often answered by replies
+// that quote/echo the same term, so drilling the full sub-thread of a term-bearing
+// root comment is the fastest way to reach the 3-evidence target for that term —
+// far more reliable than hoping three separate videos each surface it verbatim.
+export async function fetchReplyThread(video, rootRpid, options = {}, deps = {}) {
+  const root = String(rootRpid || '').trim();
+  if (!root) return [];
+  const requestJson = deps.fetchJson || fetchJson;
+  const pages = Math.max(1, Math.min(Number(options.pages || 2), 5));
+  const collected = [];
+  for (let pn = 1; pn <= pages; pn += 1) {
+    const url = `https://api.bilibili.com/x/v2/reply/reply?type=${encodeURIComponent(video.replyType || 1)}&oid=${encodeURIComponent(video.oid)}&root=${encodeURIComponent(root)}&pn=${pn}&ps=20`;
+    let data;
+    try {
+      data = await requestJson(url, video.sourceUrl);
+    } catch {
+      break;
+    }
+    if (!data || data.code !== 0) break;
+    for (const reply of data.data?.replies || []) {
+      collectPublicReply(reply, video, collected);
+    }
+    const page = data.data?.page;
+    if (!page || pn >= Math.ceil(Number(page.count || 0) / Math.max(Number(page.size || 20), 1))) break;
+    await humanPause(600, 1600);
+  }
+  return collected;
+}
+
 export async function fetchRepliesForVideo(input, options = {}, deps = {}) {
   const bvid = extractBvid(input);
   if (!bvid) {
@@ -757,6 +794,18 @@ export async function fetchRepliesForVideo(input, options = {}, deps = {}) {
   const pages = Math.max(1, Math.min(Number(options.pages || 2), 5));
   const video = await resolveBvid(bvid, deps);
   const comments = [];
+  const deepenMatch = typeof options.deepenMatch === 'function' ? options.deepenMatch : null;
+  const deepenRootLimit = deepenMatch ? Math.max(0, Math.min(Number(options.deepenRootLimit ?? 6), 30)) : 0;
+  const deepenPages = Math.max(1, Math.min(Number(options.deepenPages ?? 2), 5));
+  const deepenRoots = new Set();
+  const queueDeepenRoot = (reply) => {
+    if (!deepenMatch || deepenRoots.size >= deepenRootLimit) return;
+    const rpid = String(reply?.rpid || '').trim();
+    if (!rpid || deepenRoots.has(rpid)) return;
+    const shown = Array.isArray(reply?.replies) ? reply.replies.length : 0;
+    const total = Number(reply?.rcount || 0);
+    if (total > shown && replySubtreeMatches(reply, deepenMatch)) deepenRoots.add(rpid);
+  };
   let next = 0;
   for (let index = 0; index < pages; index += 1) {
     const url = `https://api.bilibili.com/x/v2/reply/main?type=${encodeURIComponent(video.replyType || 1)}&oid=${encodeURIComponent(video.oid)}&mode=3&next=${next}&ps=20`;
@@ -767,6 +816,7 @@ export async function fetchRepliesForVideo(input, options = {}, deps = {}) {
       if (data.code !== 0) break;
       for (const reply of data.data?.replies || []) {
         collectPublicReply(reply, video, comments);
+        queueDeepenRoot(reply);
       }
       const page = data.data?.page;
       if (!page || index + 1 >= Math.ceil(Number(page.count || 0) / Math.max(Number(page.size || 20), 1))) break;
@@ -775,11 +825,23 @@ export async function fetchRepliesForVideo(input, options = {}, deps = {}) {
     }
     for (const reply of data.data?.replies || []) {
       collectPublicReply(reply, video, comments);
+      queueDeepenRoot(reply);
     }
     const cursor = data.data?.cursor;
     if (!cursor || cursor.is_end || cursor.next == null) break;
     next = cursor.next;
     await humanPause(600, 1600);
+  }
+
+  if (deepenMatch && deepenRoots.size > 0) {
+    for (const rootRpid of deepenRoots) {
+      try {
+        comments.push(...(await fetchReplyThread(video, rootRpid, { pages: deepenPages }, deps)));
+      } catch {
+        // Thread deepening is supplemental; keep the base comment scan usable on failure.
+      }
+      await humanPause(600, 1600);
+    }
   }
 
   if (options.includeDanmaku === true) {

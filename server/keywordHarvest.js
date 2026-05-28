@@ -3255,6 +3255,9 @@ export async function harvestKeywordDictionary(options = {}, deps = {}) {
       if (options.preFilterCommentsToTargets !== undefined) {
         searchPayload.preFilterCommentsToTargets = options.preFilterCommentsToTargets;
       }
+      if (options.deepenReplyThreads !== undefined) {
+        searchPayload.deepenReplyThreads = options.deepenReplyThreads;
+      }
       if (options.existingTermsOnly === true && planItem.term) {
         const directTargetExistingTerms = unique([
           ...(Array.isArray(planItem.targetExistingTerms) ? planItem.targetExistingTerms : []),

@@ -10,12 +10,104 @@ import {
   extractBvid,
   extractDynamicRecords,
   fetchJson,
+  fetchReplyThread,
   fetchRepliesForVideo,
   isBilibiliBlockResponse,
   parseDanmakuXml,
   parseBvidPool,
   resetBilibiliRequestState,
 } from './bilibiliCrawler.js';
+
+test('fetchReplyThread collects nested replies for a root comment across pages', async () => {
+  const seen = [];
+  const video = { bvid: 'BVx', oid: '123', replyType: 1, title: 't', sourceUrl: 'https://www.bilibili.com/video/BVx/' };
+  const thread = await fetchReplyThread(video, '999', { pages: 2 }, {
+    fetchJson: async (url) => {
+      seen.push(String(url));
+      if (String(url).includes('pn=1')) {
+        return { code: 0, data: { replies: [{ rpid: 1, mid: 5, member: { mid: '5', uname: 'a' }, content: { message: '网盘见 +1' } }], page: { count: 40, size: 20, num: 1 } } };
+      }
+      return { code: 0, data: { replies: [{ rpid: 2, mid: 6, member: { mid: '6', uname: 'b' }, content: { message: '对，网盘见' } }], page: { count: 40, size: 20, num: 2 } } };
+    },
+  });
+  assert.equal(thread.length, 2);
+  assert.equal(thread.every((c) => c.message.includes('网盘见')), true);
+  assert.equal(seen.some((u) => u.includes('/x/v2/reply/reply') && u.includes('root=999')), true);
+});
+
+test('fetchRepliesForVideo deepens reply threads only for term-bearing root comments', async () => {
+  const calls = [];
+  const result = await fetchRepliesForVideo(
+    'BV1xx411c7mD',
+    { pages: 1, deepenMatch: (msg) => /网盘见/.test(msg), deepenRootLimit: 3, deepenPages: 1 },
+    {
+      fetchJson: async (url) => {
+        calls.push(String(url));
+        if (String(url).includes('/x/web-interface/view')) {
+          return { code: 0, data: { aid: 123, title: 'v', owner: { mid: 9 }, stat: { reply: 5 } } };
+        }
+        if (String(url).includes('/x/v2/reply/main')) {
+          return {
+            code: 0,
+            data: {
+              replies: [
+                { rpid: 100, mid: 1, member: { mid: '1', uname: 'root' }, content: { message: '网盘见' }, rcount: 5, replies: [] },
+                { rpid: 200, mid: 2, member: { mid: '2', uname: 'other' }, content: { message: '无关评论' }, rcount: 0, replies: [] },
+              ],
+              cursor: { is_end: true, next: 0 },
+            },
+          };
+        }
+        if (String(url).includes('/x/v2/reply/reply')) {
+          return {
+            code: 0,
+            data: {
+              replies: [
+                { rpid: 101, mid: 3, member: { mid: '3', uname: 'r1' }, content: { message: '真的网盘见' } },
+                { rpid: 102, mid: 4, member: { mid: '4', uname: 'r2' }, content: { message: '网盘见+1' } },
+              ],
+              page: { count: 2, size: 20, num: 1 },
+            },
+          };
+        }
+        return { code: 0, data: {} };
+      },
+    },
+  );
+  assert.equal(result.ok, true);
+  assert.equal(calls.some((u) => u.includes('/x/v2/reply/reply') && u.includes('root=100')), true);
+  assert.equal(calls.some((u) => u.includes('root=200')), false);
+  const messages = result.comments.map((c) => c.message);
+  assert.equal(messages.includes('真的网盘见'), true);
+  assert.equal(messages.includes('网盘见+1'), true);
+  assert.equal(result.comments.length, 4);
+});
+
+test('fetchRepliesForVideo skips deepening when no deepenMatch is provided', async () => {
+  const calls = [];
+  const result = await fetchRepliesForVideo(
+    'BV1xx411c7mD',
+    { pages: 1 },
+    {
+      fetchJson: async (url) => {
+        calls.push(String(url));
+        if (String(url).includes('/x/web-interface/view')) {
+          return { code: 0, data: { aid: 123, title: 'v', owner: { mid: 9 }, stat: { reply: 5 } } };
+        }
+        if (String(url).includes('/x/v2/reply/main')) {
+          return {
+            code: 0,
+            data: { replies: [{ rpid: 100, mid: 1, member: { mid: '1', uname: 'root' }, content: { message: '网盘见' }, rcount: 5, replies: [] }], cursor: { is_end: true, next: 0 } },
+          };
+        }
+        return { code: 0, data: {} };
+      },
+    },
+  );
+  assert.equal(result.ok, true);
+  assert.equal(calls.some((u) => u.includes('/x/v2/reply/reply')), false);
+  assert.equal(result.comments.length, 1);
+});
 
 test('discoverVideosByKeyword searches Bilibili and normalizes video objects', async () => {
   const seenUrls = [];
