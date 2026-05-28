@@ -7719,7 +7719,6 @@ test('findDictionaryEntriesWithTextEvidence maps current zero-evidence aliases b
   const entries = findDictionaryEntriesWithTextEvidence(
     {
       entries: [
-        { term: '0\u63d0\u5347', family: 'cooperation', meaning: 'claim there is zero improvement' },
         { term: '10\u5e74\u8001\u7c89', family: 'evidence', meaning: 'long-time fan source framing' },
         { term: '12300\u5de5\u4fe1\u90e8\u6295\u8bc9', family: 'evidence', meaning: 'consumer complaint source channel' },
         { term: '2026\u6253\u5361', family: 'evasion', meaning: 'future check-in marker' },
@@ -7729,7 +7728,6 @@ test('findDictionaryEntriesWithTextEvidence maps current zero-evidence aliases b
       ],
     },
     [
-      '\u8fd9\u70b9\u786e\u5b9e\u96f6\u63d0\u5347\uff0c\u548c\u4e0a\u6b21\u4e00\u6837',
       '\u6211\u5341\u5e74\u8001\u7c89\u8bf4\u4e00\u53e5\uff0c\u8fd9\u8d44\u6599\u662f\u6709\u6765\u6e90\u7684',
       '\u5b9e\u5728\u4e0d\u884c\u5c31\u625312300\u6295\u8bc9\uff0c\u8d70\u5de5\u4fe1\u90e8\u6295\u8bc9\u6e20\u9053',
       '\u6253\u53612026\uff0c\u5230\u65f6\u5019\u518d\u56de\u6765\u770b',
@@ -7744,7 +7742,6 @@ test('findDictionaryEntriesWithTextEvidence maps current zero-evidence aliases b
   );
 
   assert.deepEqual(entries.map((entry) => entry.term), [
-    '0\u63d0\u5347',
     '10\u5e74\u8001\u7c89',
     '12300\u5de5\u4fe1\u90e8\u6295\u8bc9',
     '2026\u6253\u5361',
@@ -9505,6 +9502,66 @@ test('normalizeKeywordEntries prunes current flash harvest medical-anxiety and n
     [
       '7\u79d2\u7126\u8651',
       ['\u8fd9\u73a9\u6cd5\u5c31\u662f\u6545\u610f\u5236\u90207\u79d2\u7126\u8651\uff0c\u8ba9\u4eba\u4e00\u76f4\u88ab\u8282\u594f\u7275\u7740\u8d70'],
+    ],
+  ]);
+});
+
+test('normalizeKeywordEntries prunes current flash harvest slogan, game-progress, and body-state noise', () => {
+  const entries = normalizeKeywordEntries([
+    {
+      term: '\u96f6\u63d0\u5347',
+      family: 'cooperation',
+      meaning: 'game progression complaint mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u662f\u8fd9\u6837\u7684 \u5f00\u670d\u73a9\u5bb675\u88c5\u5907\u9760\u6362 \u72ec\u73cd\u5173\u952e\u7684\u90fd\u6ca1\u51fa \u8fde\u7eed\u7684\u96f6\u63d0\u5347\u592a\u6d88\u78e8\u4eba\u4e86',
+      ],
+    },
+    {
+      term: '0\u63d0\u5347',
+      family: 'cooperation',
+      meaning: 'game progression complaint mislabeled as cooperation',
+      evidenceCount: 1,
+      evidenceSamples: ['\u8fd9\u5468\u53c80\u63d0\u5347\uff0c\u6253\u672c\u6253\u5230\u9ebb\u4e86'],
+    },
+    {
+      term: '\u6001\u5ea6\u51b3\u5b9a\u4e00\u5207',
+      family: 'cooperation',
+      meaning: 'bare motivational slogan',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6001\u5ea6\u51b3\u5b9a\u4e00\u5207'],
+    },
+    {
+      term: '\u5956\u52b1\u7684\u6709\u70b9\u591a',
+      family: 'evasion',
+      meaning: 'body-state narrative mislabeled as evasion',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u518d\u52a0\u4e0a\u6211\u8fd9\u51e0\u5929\u5956\u52b1\u7684\u6709\u70b9\u591a\uff0c\u6211\u4f30\u8ba1\u6211\u5c31\u662f\u514d\u75ab\u529b\u4f4e\u4e86',
+      ],
+    },
+    {
+      term: '\u6838\u6b66\u5668\u51fd\u6570\u4e50',
+      family: 'attack',
+      meaning: 'one-off danmaku fragment',
+      evidenceCount: 1,
+      evidenceSamples: ['\u6838\u6b66\u5668\u51fd\u6570\uff08\u4e50\uff09'],
+    },
+    {
+      term: '\u8d44\u654c',
+      family: 'attack',
+      meaning: 'accuse others of aiding an enemy',
+      evidenceCount: 1,
+      evidenceSamples: [
+        '\u4e70\u98de\u673a\u662f\u8d44\u654c\u7684\u8a00\u8bba\u771f\u662f\u7ed9\u6211\u770b\u529b\u7aed\u4e86',
+      ],
+    },
+  ]);
+
+  assert.deepEqual(entries.map((entry) => [entry.term, entry.evidenceSamples]), [
+    [
+      '\u8d44\u654c',
+      ['\u4e70\u98de\u673a\u662f\u8d44\u654c\u7684\u8a00\u8bba\u771f\u662f\u7ed9\u6211\u770b\u529b\u7aed\u4e86'],
     ],
   ]);
 });

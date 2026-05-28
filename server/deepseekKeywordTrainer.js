@@ -30,6 +30,11 @@ STOP_TERMS.add('\u6218\u4e59\u5973');
 STOP_TERMS.add('ai\u8bc6\u7247\u9171');
 STOP_TERMS.add('\u6050\u827e');
 STOP_TERMS.add('\u6050\u827e\u75c7');
+STOP_TERMS.add('\u96f6\u63d0\u5347');
+STOP_TERMS.add('0\u63d0\u5347');
+STOP_TERMS.add('\u6001\u5ea6\u51b3\u5b9a\u4e00\u5207');
+STOP_TERMS.add('\u5956\u52b1\u7684\u6709\u70b9\u591a');
+STOP_TERMS.add('\u6838\u6b66\u5668\u51fd\u6570\u4e50');
 const ALLOWED_ASCII_KEYWORD_TERMS = new Set([
   'giegie',
   'lsp',

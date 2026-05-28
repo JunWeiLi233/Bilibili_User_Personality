@@ -42,15 +42,15 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `2142`
+- Dictionary terms: `2137`
 - Target evidence per term: `3`
-- Coverage ratio: `56.96%`
-- Weak terms below target: `922`
-- Zero-evidence terms: `219`
-- Evidence deficit: `1955`
-- Source-backed terms: `1923`
+- Coverage ratio: `57.09%`
+- Weak terms below target: `917`
+- Zero-evidence terms: `216`
+- Evidence deficit: `1942`
+- Source-backed terms: `1921`
 - Unsourced evidence terms: `0`
-- Attempted terms: `227`
+- Attempted terms: `244`
 - Successful terms: `84`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
@@ -76,6 +76,7 @@ Recent dictionary-cleaning updates:
 - Pruned the latest flash-harvest noise: proper-name `战乙女` and over-specific sentence fragments `弹幕全是节奏复制` / `那段时间弹幕全是节奏复制`, while keeping valid `正义开盒` attack evidence.
 - Pruned current flash-harvest bot/name and plot-fragment noise: `ai识片酱`, `岛上完全是幻境`, and loose non-evidence `出来` / `发出来干什么` samples under `可以贴`.
 - Pruned current flash-harvest medical-anxiety and negated-context noise: removed evidence-family `恐艾` / `恐艾症` and rejected comfort-context `没有7秒焦虑` samples while keeping explicit anxiety-manufacturing criticism.
+- Pruned current flash-harvest slogan/game/body-state noise: removed `零提升` / `0提升`, bare `态度决定一切`, body-state `奖励的有点多`, and one-off `核武器函数乐`, while keeping real accusation evidence such as `资敌`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
 
 ## Run Locally
