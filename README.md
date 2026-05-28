@@ -44,14 +44,14 @@ Current audited dictionary state:
 
 - Dictionary terms: `1980`
 - Target evidence per term: `3`
-- Coverage ratio: `62.37%`
-- Weak terms below target: `745`
-- Zero-evidence terms: `174`
-- Evidence deficit: `1552`
-- Source-backed terms: `1806`
+- Coverage ratio: `65.25%`
+- Weak terms below target: `688`
+- Zero-evidence terms: `130`
+- Evidence deficit: `1368`
+- Source-backed terms: `1850`
 - Unsourced evidence terms: `0`
-- Attempted terms: `478`
-- Successful terms: `135`
+- Attempted terms: `771`
+- Successful terms: `269`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -101,6 +101,7 @@ Recent dictionary-cleaning updates:
 - Ran another strict `deepseek-v4-flash` max-effort pass and reduced strict comment-backed zero-evidence terms by 2; kept directed attack terms such as `老sp` and `两公母`, while pruning low-portability image request, product, neutral-romance, proper-name, and narrow-meme noise such as `老师图片可以拿吗`, `李氏父子`, `里面全是锂电池`, `联动杯`, `两情相悦`, and `量子监控摄像头`.
 - Ran the next strict `deepseek-v4-flash` max-effort pass and kept useful discourse evidence such as `全是粉丝` and `不黑不吹`; pruned pure game or office/faction terms `六扇门` and `轮椅轴`, and rejected explanation-only or card-game evidence for attack terms such as `大魔法师`, `蒜茄脑袋`, and `蒜茄脑瓜`.
 - Kept valid hostile or argumentative uses, for example direct `您配吗` challenges, targeted `梦男` mockery, and attack-context `猪鼻` usage.
+- Ran an extended strict `deepseek-v4-flash` max-effort auto-coverage batch (20 priority queries per cycle, 6 terms per family, 10 cycles) that lifted audited comment-backed coverage from `60.86%` to `65.25%`, reduced zero-evidence terms from `171` to `130`, and reduced weak terms from `775` to `688` while keeping the require-comment evidence gate on.
 
 ## Run Locally
 
