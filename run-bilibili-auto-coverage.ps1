@@ -29,6 +29,13 @@ param(
   [switch]$IncludeGenericPopular,
   [switch]$NoDanmaku,
   [switch]$NoCommentTargetExpansion,
+  [switch]$NoPreFilter,
+  [switch]$NoDeepenReplies,
+  [switch]$NoCommentPoolTargets,
+  [int]$CommentPoolTargetLimit = 200,
+  [int]$DeepenRootLimit = 6,
+  [int]$DeepenPages = 2,
+  [string]$HarvestModel = "",
   [switch]$ResetHarvestState,
   [switch]$Strict
 )
@@ -81,6 +88,30 @@ if ($NoCommentTargetExpansion) {
   Remove-Item Env:\BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS -ErrorAction SilentlyContinue
 } else {
   $env:BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS = "1"
+}
+# Corpus-mode yield mechanisms: pre-filter, reply-tree deepening, and comment-pool
+# targeting are on by default because they materially raise per-cycle yield on the
+# niche-slang tail. Use the -No* switches to opt out.
+if ($NoPreFilter) {
+  Remove-Item Env:\BILIBILI_HARVEST_PREFILTER_COMMENTS -ErrorAction SilentlyContinue
+} else {
+  $env:BILIBILI_HARVEST_PREFILTER_COMMENTS = "1"
+}
+if ($NoDeepenReplies) {
+  Remove-Item Env:\BILIBILI_HARVEST_DEEPEN_REPLIES -ErrorAction SilentlyContinue
+} else {
+  $env:BILIBILI_HARVEST_DEEPEN_REPLIES = "1"
+  $env:BILIBILI_HARVEST_DEEPEN_ROOT_LIMIT = [string]$DeepenRootLimit
+  $env:BILIBILI_HARVEST_DEEPEN_PAGES = [string]$DeepenPages
+}
+if ($NoCommentPoolTargets) {
+  Remove-Item Env:\BILIBILI_HARVEST_PRIORITY_COMMENT_POOL_TARGETS -ErrorAction SilentlyContinue
+} else {
+  $env:BILIBILI_HARVEST_PRIORITY_COMMENT_POOL_TARGETS = "1"
+  $env:BILIBILI_HARVEST_COMMENT_POOL_TARGET_LIMIT = [string]$CommentPoolTargetLimit
+}
+if ($HarvestModel) {
+  $env:BILIBILI_HARVEST_MODEL = $HarvestModel
 }
 $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
 $env:BILIBILI_HARVEST_QUERY_TIMEOUT_MS = [string]($QueryTimeoutSeconds * 1000)
@@ -170,6 +201,10 @@ Write-Host "Controversial popular search order: $ControversialPopularSearchOrder
 Write-Host "Include generic popular feed in controversial mode: $IncludeGenericPopular"
 Write-Host "Include public danmaku in video scans: $(!$NoDanmaku)"
 Write-Host "Expand weak targets from collected comments: $(!$NoCommentTargetExpansion)"
+Write-Host "Pre-filter comments to dictionary terms: $(!$NoPreFilter)"
+Write-Host "Deepen reply threads of term-bearing comments: $(!$NoDeepenReplies) (roots $DeepenRootLimit, pages $DeepenPages)"
+Write-Host "Priority comment-pool targets: $(!$NoCommentPoolTargets) (limit $CommentPoolTargetLimit)"
+Write-Host "Harvest validation model: $(if ($HarvestModel) { $HarvestModel } else { 'deepseek-v4-flash (default)' })"
 Write-Host "Existing dictionary terms only: $(!$AllowNewTerms)"
 Write-Host "Require Bilibili evidence sources: $(!$AllowUnsourcedEvidence)"
 Write-Host "Require Bilibili comment evidence: $(!$AllowUnsourcedEvidence -and !$AllowContextOnlyEvidence)"
