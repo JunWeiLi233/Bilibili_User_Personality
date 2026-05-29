@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { readKeywordDictionary } from './deepseekKeywordTrainer.js';
+import { readKeywordDictionary, writeJsonFileAtomic, DEFAULT_DICTIONARY_PATH } from './deepseekKeywordTrainer.js';
 import { coverageDeltaFromHarvest, hasCoverageDeltaProgress } from './coverageProgress.js';
 import { buildCoverageRuntimeOptions } from './coverageCliOptions.js';
 import {
@@ -9,6 +9,7 @@ import {
   DEFAULT_HARVEST_STATE_PATH,
   harvestKeywordDictionaryRounds,
   readKeywordHarvestState,
+  selectExhaustedTerms,
 } from './keywordHarvest.js';
 
 // Default to flash/max for the auto-coverage loop, but allow an explicit opt-in
@@ -108,6 +109,8 @@ const preFilterCommentsToTargets = flagFromEnv('BILIBILI_HARVEST_PREFILTER_COMME
 const deepenReplyThreads = flagFromEnv('BILIBILI_HARVEST_DEEPEN_REPLIES', false);
 const verbose = flagFromEnv('BILIBILI_HARVEST_VERBOSE', true);
 const prioritizeNearTarget = flagFromEnv('BILIBILI_HARVEST_PRIORITIZE_NEAR_TARGET', false);
+const pruneExhaustedAfter = nonNegativeIntFromEnv('BILIBILI_HARVEST_PRUNE_EXHAUSTED_AFTER', 0, 100000);
+const pruneIncludePartial = process.env.BILIBILI_HARVEST_PRUNE_INCLUDE_PARTIAL === '1';
 const strict = runtimeOptions.strict;
 const expandTargetsFromComments = flagFromEnv('BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS', existingTermsOnly && requireCommentBackedEvidence);
 
@@ -223,6 +226,29 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     break;
   }
   audit = nextAudit;
+
+  // Prune-after-N-tries: after harvesting, drop terms that have been attempted enough
+  // times and still cannot be attested, so coverage converges toward 100% honestly.
+  if (pruneExhaustedAfter > 0) {
+    const pruneDict = await readKeywordDictionary(dictionaryPath ? { dictionaryPath } : {});
+    const pruneState = await readKeywordHarvestState(statePath);
+    const exhausted = selectExhaustedTerms(pruneDict, pruneState, {
+      targetEvidence,
+      attemptThreshold: pruneExhaustedAfter,
+      requireZeroEvidence: !pruneIncludePartial,
+      requireSourceBackedEvidence,
+      requireCommentBackedEvidence,
+    });
+    if (exhausted.length > 0) {
+      const remove = new Set(exhausted.map((item) => item.term));
+      const before = pruneDict.entries.length;
+      pruneDict.entries = pruneDict.entries.filter((entry) => !remove.has(String(entry.term || '').trim()));
+      await writeJsonFileAtomic(dictionaryPath || DEFAULT_DICTIONARY_PATH, pruneDict);
+      console.log(`Pruned ${before - pruneDict.entries.length} exhausted term(s) (>=${pruneExhaustedAfter} attempts): ${before} -> ${pruneDict.entries.length}`);
+      audit = await buildAudit(auditOptions);
+      console.log(`Coverage after prune: ${(audit.coverage.coverageRatio * 100).toFixed(2)}%, weak ${audit.coverage.weakTerms}, zero ${audit.coverage.zeroEvidenceTerms}`);
+    }
+  }
 }
 
 if (!stopReason) stopReason = audit.ok ? 'coverage_gate_passed' : 'cycle_limit';

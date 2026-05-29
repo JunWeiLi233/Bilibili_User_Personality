@@ -36,6 +36,9 @@ param(
   [int]$DeepenRootLimit = 6,
   [int]$DeepenPages = 2,
   [string]$HarvestModel = "",
+  [switch]$NoNearTarget,
+  [int]$PruneExhaustedAfter = 0,
+  [switch]$PruneIncludePartial,
   [switch]$ResetHarvestState,
   [switch]$Strict
 )
@@ -112,6 +115,24 @@ if ($NoCommentPoolTargets) {
 }
 if ($HarvestModel) {
   $env:BILIBILI_HARVEST_MODEL = $HarvestModel
+}
+# Near-target prioritization (resolve one-evidence-away terms first) is on by default.
+if ($NoNearTarget) {
+  Remove-Item Env:\BILIBILI_HARVEST_PRIORITIZE_NEAR_TARGET -ErrorAction SilentlyContinue
+} else {
+  $env:BILIBILI_HARVEST_PRIORITIZE_NEAR_TARGET = "1"
+}
+# Prune-after-N-tries: drop terms that stay un-attestable after this many harvest
+# attempts, so coverage can converge toward 100%. 0 disables pruning.
+if ($PruneExhaustedAfter -gt 0) {
+  $env:BILIBILI_HARVEST_PRUNE_EXHAUSTED_AFTER = [string]$PruneExhaustedAfter
+} else {
+  Remove-Item Env:\BILIBILI_HARVEST_PRUNE_EXHAUSTED_AFTER -ErrorAction SilentlyContinue
+}
+if ($PruneIncludePartial) {
+  $env:BILIBILI_HARVEST_PRUNE_INCLUDE_PARTIAL = "1"
+} else {
+  Remove-Item Env:\BILIBILI_HARVEST_PRUNE_INCLUDE_PARTIAL -ErrorAction SilentlyContinue
 }
 $env:BILIBILI_VIDEO_COMMENT_PAGES = [string]$CommentPages
 $env:BILIBILI_HARVEST_QUERY_TIMEOUT_MS = [string]($QueryTimeoutSeconds * 1000)
@@ -204,6 +225,8 @@ Write-Host "Expand weak targets from collected comments: $(!$NoCommentTargetExpa
 Write-Host "Pre-filter comments to dictionary terms: $(!$NoPreFilter)"
 Write-Host "Deepen reply threads of term-bearing comments: $(!$NoDeepenReplies) (roots $DeepenRootLimit, pages $DeepenPages)"
 Write-Host "Priority comment-pool targets: $(!$NoCommentPoolTargets) (limit $CommentPoolTargetLimit)"
+Write-Host "Prioritize near-target (one-away) terms: $(!$NoNearTarget)"
+Write-Host "Prune exhausted terms after N attempts: $(if ($PruneExhaustedAfter -gt 0) { $PruneExhaustedAfter } else { 'off' })$(if ($PruneIncludePartial) { ' (incl. partial)' } else { '' })"
 Write-Host "Harvest validation model: $(if ($HarvestModel) { $HarvestModel } else { 'deepseek-v4-flash (default)' })"
 Write-Host "Existing dictionary terms only: $(!$AllowNewTerms)"
 Write-Host "Require Bilibili evidence sources: $(!$AllowUnsourcedEvidence)"

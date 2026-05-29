@@ -2744,6 +2744,34 @@ export function buildCoverageActions(dictionary = {}, state = {}, options = {}) 
   });
 }
 
+// Prune-after-N-tries: a term is "exhausted" (genuinely un-attestable in public
+// comments) only after it has been harvested attemptThreshold+ times across cycles
+// and still cannot reach the evidence target. This keeps real slang that just needs
+// more crawling while letting coverage converge toward 100% over sustained runs.
+export function selectExhaustedTerms(dictionary = {}, state = {}, options = {}) {
+  const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
+  const attemptThreshold = asPositiveInt(options.attemptThreshold, 10, 100000);
+  // Conservative by default: only zero-evidence terms (never attestable) are pruned.
+  // Set requireZeroEvidence:false to also prune terms stuck below target after N tries
+  // (needed for literal 100%, at the cost of dropping a few partially-evidenced terms).
+  const requireZeroEvidence = options.requireZeroEvidence !== false;
+  const termAttempts = state.termAttempts || {};
+  const exhausted = [];
+  for (const entry of Array.isArray(dictionary.entries) ? dictionary.entries : []) {
+    const term = String(entry?.term || '').trim();
+    if (!term) continue;
+    const evidence = coverageEvidenceCount(entry, options);
+    if (evidence >= targetEvidence) continue;
+    if (requireZeroEvidence && evidence > 0) continue;
+    const attempt = getTermAttempt(termAttempts, term);
+    const attempts = Math.max(0, Number(attempt?.attempts) || 0);
+    if (attempts >= attemptThreshold) {
+      exhausted.push({ term, family: entry.family || '', attempts, evidence });
+    }
+  }
+  return exhausted;
+}
+
 export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, options = {}) {
   const targetEvidence = asPositiveInt(options.targetEvidence, 3, 1000);
   const maxActions = asPositiveInt(options.maxActions, 20, 1000);
