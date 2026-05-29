@@ -11,6 +11,7 @@
     "dictionary:coverage": "node server/runDictionaryCoverageAudit.js",
     "dictionary:prune": "node server/pruneKeywordDictionary.js",
     "dictionary:prune-exhausted": "node server/pruneExhaustedTerms.js",
+    "dictionary:resolve-near": "node server/resolveNearTargetTerms.js",
     "dictionary:auto": "node server/runCoverageHarvestLoop.js",
     "dev:full": "node server/index.js",
     "test": "node --test",
