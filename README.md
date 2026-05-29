@@ -44,10 +44,10 @@ Current audited dictionary state:
 
 - Dictionary terms: `1931`
 - Target evidence per term: `3`
-- Coverage ratio: `68.15%`
-- Weak terms below target: `615`
+- Coverage ratio: `68.41%`
+- Weak terms below target: `610`
 - Zero-evidence terms: `98`
-- Evidence deficit: `1204`
+- Evidence deficit: `1199`
 - Source-backed terms: `1833`
 - Unsourced evidence terms: `0`
 - Attempted terms: `828`
