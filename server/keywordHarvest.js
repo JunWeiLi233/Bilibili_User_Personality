@@ -2760,16 +2760,25 @@ export function buildDictionaryCoverageAudit(dictionary = {}, state = {}, option
     summary[item.action] = (summary[item.action] || 0) + 1;
     return summary;
   }, {});
+  const prioritizeNearTarget = options.prioritizeNearTarget === true;
   const sortedActions = coverageActions
     .filter((item) => item.action !== 'none')
-    .sort(
-      (a, b) =>
+    .sort((a, b) => {
+      // Near-target first: a term one evidence away from the target yields a coverage
+      // gain from a single hit, so resolving those clears weak terms fastest.
+      if (prioritizeNearTarget) {
+        const an = Number(a.evidenceNeeded) || 99;
+        const bn = Number(b.evidenceNeeded) || 99;
+        if (an !== bn) return an - bn;
+      }
+      return (
         actionSortRank(a, { ...options, prioritizeHardZeroEvidence: true, prioritizeSourceGaps: true }) -
           actionSortRank(b, { ...options, prioritizeHardZeroEvidence: true, prioritizeSourceGaps: true }) ||
         a.evidenceNeeded - b.evidenceNeeded ||
         sameRecommendationGroupSort(a, b) ||
-        String(a.term || '').localeCompare(String(b.term || '')),
-    );
+        String(a.term || '').localeCompare(String(b.term || ''))
+      );
+    });
   const nextActions = diversifyCoverageActions(sortedActions, maxActions);
   const recommendedQueries = unique(
     nextActions.flatMap((item) => [item.nextQuery, ...(Array.isArray(item.suggestedQueries) ? item.suggestedQueries : [])]),

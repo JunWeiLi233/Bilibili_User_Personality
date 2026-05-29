@@ -107,6 +107,7 @@ const priorityCommentPoolTargets = flagFromEnv('BILIBILI_HARVEST_PRIORITY_COMMEN
 const preFilterCommentsToTargets = flagFromEnv('BILIBILI_HARVEST_PREFILTER_COMMENTS', false);
 const deepenReplyThreads = flagFromEnv('BILIBILI_HARVEST_DEEPEN_REPLIES', false);
 const verbose = flagFromEnv('BILIBILI_HARVEST_VERBOSE', true);
+const prioritizeNearTarget = flagFromEnv('BILIBILI_HARVEST_PRIORITIZE_NEAR_TARGET', false);
 const strict = runtimeOptions.strict;
 const expandTargetsFromComments = flagFromEnv('BILIBILI_HARVEST_EXPAND_TARGETS_FROM_COMMENTS', existingTermsOnly && requireCommentBackedEvidence);
 
@@ -120,6 +121,7 @@ const auditOptions = {
   requireSourceBackedEvidence,
   requireCommentBackedEvidence,
   prioritizeSourceGaps: requireCommentBackedEvidence,
+  prioritizeNearTarget,
   extraQueryTemplates,
   exhaustedSuggestionTemplates,
   retryBeforeUnattemptedLimit,
@@ -166,6 +168,7 @@ for (let cycle = 1; cycle <= maxCycles && !audit.ok; cycle += 1) {
     preFilterCommentsToTargets,
     deepenReplyThreads,
     verbose,
+    prioritizeNearTarget,
     existingTermsOnly,
     discoveryMode,
     discoveryLimit,
