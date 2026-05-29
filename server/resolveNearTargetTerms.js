@@ -13,6 +13,15 @@ const batch = Math.max(1, Number(process.env.RESOLVE_BATCH || 12));
 const videosPerTerm = Math.max(1, Number(process.env.RESOLVE_VIDEOS_PER_TERM || 3));
 const pages = Math.max(1, Number(process.env.RESOLVE_PAGES || 3));
 
+function parseList(value) {
+  return String(value || '')
+    .split(/[\r\n,;|]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+const overrideTerms = parseList(process.env.RESOLVE_OVERRIDE_TERMS);
+
 const bvidRe = /(BV[0-9A-Za-z]{8,})/g;
 const dict = await readKeywordDictionary();
 const state = await readKeywordHarvestState();
@@ -25,10 +34,12 @@ const audit = buildDictionaryCoverageAudit(dict, state, {
   requireComplete: true,
 });
 const byTerm = new Map((dict.entries || []).map((e) => [String(e.term || ''), e]));
-const targets = (audit.nextActions || [])
-  .filter((a) => a.evidenceNeeded >= 1 && a.evidenceNeeded <= maxNeed)
-  .map((a) => String(a.term || ''))
-  .filter((t) => byTerm.has(t));
+const targets = overrideTerms.length > 0
+  ? overrideTerms.filter((t) => byTerm.has(t))
+  : (audit.nextActions || [])
+      .filter((a) => a.evidenceNeeded >= 1 && a.evidenceNeeded <= maxNeed)
+      .map((a) => String(a.term || ''))
+      .filter((t) => byTerm.has(t));
 
 const poolNeedles = targets.slice(0, 200);
 let processed = 0;
