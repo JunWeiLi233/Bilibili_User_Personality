@@ -1,0 +1,1017 @@
+{
+  "ok": false,
+  "generatedAt": "2026-05-29T05:06:18.629Z",
+  "targetEvidence": 3,
+  "minCoverageRatio": 1,
+  "requireComplete": true,
+  "requireSourceBackedEvidence": true,
+  "coverage": {
+    "complete": false,
+    "targetEvidence": 3,
+    "terms": 1785,
+    "totalEvidence": 6342,
+    "averageEvidence": 3.55,
+    "coverageRatio": 0.7501,
+    "evidenceDeficit": 807,
+    "sourcedEvidenceTerms": 1767,
+    "sourceCoverageRatio": 0.9899,
+    "unsourcedEvidenceTerms": 0,
+    "weakTerms": 446,
+    "zeroEvidenceTerms": 18,
+    "weakSamples": [
+      {
+        "term": "\u57c3\u53ca\u5427",
+        "family": "evasion",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u827e\u6ecb\u5200",
+        "family": "attack",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u827e\u6ecb\u91ce",
+        "family": "attack",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u63d2\u4e2a\u773c",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u62d0\u53cb\u5546",
+        "family": "evasion",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u7687\u4e0a",
+        "family": "attack",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u7f57\u4e0d\u6cfc",
+        "family": "attack",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u914d\u961f\u4fa0",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u5207ki",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u5708\u7684\u7c73",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u5982\u679c\u6709",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u4e09\u963f\u54e5",
+        "family": "attack",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u8bbe\u5b50",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u8c01\u61c2",
+        "family": "evasion",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u4e00\u5206\u56da",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u771fcs",
+        "family": "attack",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "\u79cd\u82b1\u4eba",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "cp\u7cae",
+        "family": "cooperation",
+        "evidenceCount": 0,
+        "coverageEvidenceCount": 0
+      },
+      {
+        "term": "0\u4eba",
+        "family": "attack",
+        "evidenceCount": 1,
+        "coverageEvidenceCount": 1
+      },
+      {
+        "term": "100\u6ca1\u95ee\u9898",
+        "family": "absolutes",
+        "evidenceCount": 1,
+        "coverageEvidenceCount": 1
+      }
+    ],
+    "zeroEvidenceSamples": [
+      {
+        "term": "\u57c3\u53ca\u5427",
+        "family": "evasion"
+      },
+      {
+        "term": "\u827e\u6ecb\u5200",
+        "family": "attack"
+      },
+      {
+        "term": "\u827e\u6ecb\u91ce",
+        "family": "attack"
+      },
+      {
+        "term": "\u63d2\u4e2a\u773c",
+        "family": "cooperation"
+      },
+      {
+        "term": "\u62d0\u53cb\u5546",
+        "family": "evasion"
+      },
+      {
+        "term": "\u7687\u4e0a",
+        "family": "attack"
+      },
+      {
+        "term": "\u7f57\u4e0d\u6cfc",
+        "family": "attack"
+      },
+      {
+        "term": "\u914d\u961f\u4fa0",
+        "family": "cooperation"
+      },
+      {
+        "term": "\u5207ki",
+        "family": "cooperation"
+      },
+      {
+        "term": "\u5708\u7684\u7c73",
+        "family": "cooperation"
+      },
+      {
+        "term": "\u5982\u679c\u6709",
+        "family": "cooperation"
+      },
+      {
+        "term": "\u4e09\u963f\u54e5",
+        "family": "attack"
+      },
+      {
+        "term": "\u8bbe\u5b50",
+        "family": "cooperation"
+      },
+      {
+        "term": "\u8c01\u61c2",
+        "family": "evasion"
+      },
+      {
+        "term": "\u4e00\u5206\u56da",
+        "family": "cooperation"
+      },
+      {
+        "term": "\u771fcs",
+        "family": "attack"
+      },
+      {
+        "term": "\u79cd\u82b1\u4eba",
+        "family": "cooperation"
+      },
+      {
+        "term": "cp\u7cae",
+        "family": "cooperation"
+      }
+    ],
+    "unsourcedEvidenceSamples": [],
+    "byFamily": {
+      "absolutes": {
+        "terms": 143,
+        "evidence": 542,
+        "weak": 39,
+        "zero": 0,
+        "sourced": 143
+      },
+      "attack": {
+        "terms": 1133,
+        "evidence": 3991,
+        "weak": 298,
+        "zero": 6,
+        "sourced": 1127
+      },
+      "cooperation": {
+        "terms": 368,
+        "evidence": 1372,
+        "weak": 67,
+        "zero": 9,
+        "sourced": 359
+      },
+      "correction": {
+        "terms": 34,
+        "evidence": 117,
+        "weak": 8,
+        "zero": 0,
+        "sourced": 34
+      },
+      "evasion": {
+        "terms": 67,
+        "evidence": 200,
+        "weak": 25,
+        "zero": 3,
+        "sourced": 64
+      },
+      "evidence": {
+        "terms": 40,
+        "evidence": 120,
+        "weak": 9,
+        "zero": 0,
+        "sourced": 40
+      }
+    }
+  },
+  "termAttemptSummary": {
+    "attemptedTerms": 119,
+    "successfulTerms": 7,
+    "unattemptedTerms": 1666,
+    "unattemptedSamples": [
+      {
+        "term": "\u57c3\u53ca\u5427",
+        "family": "evasion",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u827e\u6ecb\u5200",
+        "family": "attack",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u827e\u6ecb\u91ce",
+        "family": "attack",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u63d2\u4e2a\u773c",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u62d0\u53cb\u5546",
+        "family": "evasion",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u7687\u4e0a",
+        "family": "attack",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u7f57\u4e0d\u6cfc",
+        "family": "attack",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u914d\u961f\u4fa0",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u5207ki",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u5708\u7684\u7c73",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u5982\u679c\u6709",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u4e09\u963f\u54e5",
+        "family": "attack",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u8bbe\u5b50",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u8c01\u61c2",
+        "family": "evasion",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u4e00\u5206\u56da",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u771fcs",
+        "family": "attack",
+        "evidenceCount": 0
+      },
+      {
+        "term": "\u79cd\u82b1\u4eba",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "cp\u7cae",
+        "family": "cooperation",
+        "evidenceCount": 0
+      },
+      {
+        "term": "0\u4eba",
+        "family": "attack",
+        "evidenceCount": 1
+      },
+      {
+        "term": "10\u5e74\u8001\u7c89",
+        "family": "evidence",
+        "evidenceCount": 1
+      }
+    ],
+    "repeatedlyMissedTerms": [
+      {
+        "term": "\u5927\u610f\u4e86\u6ca1\u6709\u95ea",
+        "family": "attack",
+        "attempts": 3,
+        "lastQuery": "\u90fd\u662f\u4eba\u673a\u81ea\u52a8\u53d1\u7684 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u6e2f\u6ef4\u5bf9",
+        "family": "cooperation",
+        "attempts": 3,
+        "lastQuery": "\u6e2f\u6ef4\u5bf9\u6ca1\u6bdb\u75c5\u554a\u8001\u94c1 \u8bc4\u8bba",
+        "lastError": ""
+      },
+      {
+        "term": "\u963f\u9ed1\u989c",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u4e0d\u670d\u618b\u7740 \u56de\u603c \u8bc4\u8bba\u533a \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u7231\u6765\u81ea",
+        "family": "cooperation",
+        "attempts": 2,
+        "lastQuery": "\u7231\u6765\u81ea\u997a\u5b50 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u7231\u6765\u81ea\u997a\u5b50",
+        "family": "cooperation",
+        "attempts": 2,
+        "lastQuery": "\u7231\u6765\u81ea\u997a\u5b50 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u7206\u7834\u4f60",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u7c89\u4e1d\u7206\u7834 \u8bc4\u8bba\u533a",
+        "lastError": ""
+      },
+      {
+        "term": "\u4ece\u5c0f\u4e11\u5230\u5927",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u5927\u610f\u4e86 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u5927\u75c5\u4eba",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u5927\u610f\u4e86 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u5927\u610f\u4e86",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u90fd\u662f\u4eba\u673a\u81ea\u52a8\u53d1\u7684 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u8d29\u5b50\u53f7",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u8d29\u5b50\u53f7 \u8bc4\u8bba\u533a",
+        "lastError": "Bilibili harvest query \"\u8d29\u5b50\u53f7 \u8bc4\u8bba\u533a\" timed out after 150000ms"
+      },
+      {
+        "term": "\u80ba\u7269",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u8be5\u9a82\u5c31\u9a82 \u7406\u6027\u8ba8\u8bba \u8bc4\u8bba\u533a \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u7c89\u4e1d\u7206\u7834",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u7c89\u4e1d\u7206\u7834 \u8bc4\u8bba\u533a",
+        "lastError": ""
+      },
+      {
+        "term": "\u6839\u672c\u6ca1\u6709\u53c2\u8003\u4ef7\u503c",
+        "family": "absolutes",
+        "attempts": 2,
+        "lastQuery": "\u7231\u6765\u81ea\u997a\u5b50 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u6839\u672c\u6ca1\u6709\u53c2\u8003\u4ef7\u503c\u5440",
+        "family": "absolutes",
+        "attempts": 2,
+        "lastQuery": "\u7231\u6765\u81ea\u997a\u5b50 \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u7d27\u548c",
+        "family": "attack",
+        "attempts": 2,
+        "lastQuery": "\u7d27\u548c \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "\u5168\u5458be",
+        "family": "absolutes",
+        "attempts": 2,
+        "lastQuery": "\u54d2\u52fe\u52fe \u62bd\u8c61 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "100\u6ca1\u95ee\u9898",
+        "family": "absolutes",
+        "attempts": 1,
+        "lastQuery": "\u6a21\u68f1\u4e24\u53ef \u8f66\u8f71\u8f98\u8bdd \u8bc4\u8bba\u533a \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "12300\u5de5\u4fe1\u90e8\u6295\u8bc9",
+        "family": "evidence",
+        "attempts": 1,
+        "lastQuery": "\u5de5\u4fe1\u90e8\u6295\u8bc9 \u8bc4\u8bba\u533a",
+        "lastError": ""
+      },
+      {
+        "term": "3a\u53d83o",
+        "family": "attack",
+        "attempts": 1,
+        "lastQuery": "\u7537\u76d7\u5973\u5a3c \u5a31\u4e50\u5708 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+        "lastError": ""
+      },
+      {
+        "term": "58\u5206\u5148\u751f",
+        "family": "attack",
+        "attempts": 1,
+        "lastQuery": "\u7537\u76d7\u5973\u5a3c \u5a31\u4e50\u5708 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+        "lastError": ""
+      }
+    ],
+    "exhaustedTerms": 0,
+    "exhaustedSamples": []
+  },
+  "actionSummary": {
+    "harvest": 340,
+    "retry_with_new_variant": 106,
+    "none": 1339
+  },
+  "familyGaps": [
+    {
+      "family": "attack",
+      "terms": 1133,
+      "weak": 298,
+      "zero": 6,
+      "evidence": 3991,
+      "coverageRatio": 0.737
+    },
+    {
+      "family": "cooperation",
+      "terms": 368,
+      "weak": 67,
+      "zero": 9,
+      "evidence": 1372,
+      "coverageRatio": 0.8179
+    },
+    {
+      "family": "absolutes",
+      "terms": 143,
+      "weak": 39,
+      "zero": 0,
+      "evidence": 542,
+      "coverageRatio": 0.7273
+    },
+    {
+      "family": "evasion",
+      "terms": 67,
+      "weak": 25,
+      "zero": 3,
+      "evidence": 200,
+      "coverageRatio": 0.6269
+    },
+    {
+      "family": "evidence",
+      "terms": 40,
+      "weak": 9,
+      "zero": 0,
+      "evidence": 120,
+      "coverageRatio": 0.775
+    },
+    {
+      "family": "correction",
+      "terms": 34,
+      "weak": 8,
+      "zero": 0,
+      "evidence": 117,
+      "coverageRatio": 0.7647
+    }
+  ],
+  "nextActions": [
+    {
+      "term": "gai\u5df2\u6025\u54ed",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 2,
+      "coverageEvidenceCount": 2,
+      "sourcedEvidence": true,
+      "recommendationGroup": "gai\u5df2\u6025\u54ed",
+      "targetEvidence": 3,
+      "evidenceNeeded": 1,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "gai\u5df2\u6025\u54ed \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "judge\u4eba",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 2,
+      "coverageEvidenceCount": 2,
+      "sourcedEvidence": true,
+      "recommendationGroup": "judge\u4eba",
+      "targetEvidence": 3,
+      "evidenceNeeded": 1,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "judge\u4eba \u8bf4\u6559 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "sm\u5973\u738b",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 2,
+      "coverageEvidenceCount": 2,
+      "sourcedEvidence": true,
+      "recommendationGroup": "sm\u5973\u738b",
+      "targetEvidence": 3,
+      "evidenceNeeded": 1,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "sm\u5973\u738b \u89d2\u8272 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "xswl",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 2,
+      "coverageEvidenceCount": 2,
+      "sourcedEvidence": true,
+      "recommendationGroup": "xswl",
+      "targetEvidence": 3,
+      "evidenceNeeded": 1,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "xswl \u7b11\u6b7b\u6211\u4e86 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "0\u4eba",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "0\u4eba\u5728\u610f",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "0\u4eba \u8bc4\u8bba\u533a",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "10\u5e74\u8001\u7c89",
+      "family": "evidence",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "10\u5e74\u8001\u7c89",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "10\u5e74\u8001\u7c89 \u7c89\u4e1d \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u7231\u548b\u548b\u5730",
+      "family": "evasion",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u7231\u548b\u548b\u5730",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u7231\u548b\u548b\u5730 \u6001\u5ea6 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u676f\u53cb\u9171",
+      "family": "evidence",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u676f\u53cb\u9171",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u676f\u53cb\u9171 \u865a\u62df\u4e3b\u64ad \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u5954\u4e0d\u4f4f",
+      "family": "cooperation",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u5954\u4e0d\u4f4f",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u5954\u4e0d\u4f4f \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u95ed\u7740\u773c\u775b\u4ed8\u94b1",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u95ed\u7740\u773c\u775b\u4ed8\u94b1",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u95ed\u7740\u773c\u775b\u4ed8\u94b1 \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u522b\u4e70\u522b\u78b0",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u522b\u4e70\u522b\u78b0",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u522b\u4e70\u522b\u78b0 \u8bc4\u8bba\u533a",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u51b0\u6cb3\u65f6\u4ee3",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u51b0\u6cb3\u65f6\u4ee3",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u51b0\u6cb3\u65f6\u4ee3 \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u5e76\u975e\u5076\u9047",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u5e76\u975e\u5076\u9047",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u5e76\u975e\u5076\u9047 \u523b\u610f \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u4e0d\u5e26\u8111\u5b50",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u4e0d\u5e26\u8111\u5b50",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u4e0d\u5e26\u8111\u5b50 \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u4e0d\u5f97\u4e0d\u5c1d",
+      "family": "cooperation",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u4e0d\u5f97\u4e0d\u5c1d",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u4e0d\u5f97\u4e0d\u5c1d \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u4e0d\u548c\u5356\u7684\u73a9",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u4e0d\u548c\u5356\u7684\u73a9",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u4e0d\u548c\u5356\u7684\u73a9 \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u4e0d\u662f\u5f88\u8ba4\u53ef",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 4,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u4e0d\u662f\u5f88\u8ba4\u53ef",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u4e0d\u662f\u5f88\u8ba4\u53ef \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u4e0d\u4e00\u4e00",
+      "family": "evasion",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u4e0d\u4e00\u4e00",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u4e0d\u4e00\u4e00\u5217\u4e3e \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    },
+    {
+      "term": "\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7",
+      "family": "attack",
+      "status": "weak_unattempted",
+      "action": "harvest",
+      "evidenceCount": 1,
+      "coverageEvidenceCount": 1,
+      "sourcedEvidence": true,
+      "recommendationGroup": "\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7",
+      "targetEvidence": 3,
+      "evidenceNeeded": 2,
+      "attempts": 0,
+      "successfulAttempts": 0,
+      "duplicateAcceptedNoProgress": false,
+      "currentCommentMisses": 0,
+      "exhausted": false,
+      "nextQuery": "\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7 \u70ed\u8bc4",
+      "suggestedQueries": [],
+      "lastQuery": "",
+      "lastError": ""
+    }
+  ],
+  "recommendedQueries": [
+    "gai\u5df2\u6025\u54ed \u70ed\u8bc4",
+    "judge\u4eba \u8bf4\u6559 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "sm\u5973\u738b \u89d2\u8272 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "xswl \u7b11\u6b7b\u6211\u4e86 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "0\u4eba \u8bc4\u8bba\u533a",
+    "10\u5e74\u8001\u7c89 \u7c89\u4e1d \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "\u7231\u548b\u548b\u5730 \u6001\u5ea6 \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "\u676f\u53cb\u9171 \u865a\u62df\u4e3b\u64ad \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "\u5954\u4e0d\u4f4f \u70ed\u8bc4",
+    "\u95ed\u7740\u773c\u775b\u4ed8\u94b1 \u70ed\u8bc4",
+    "\u522b\u4e70\u522b\u78b0 \u8bc4\u8bba\u533a",
+    "\u51b0\u6cb3\u65f6\u4ee3 \u70ed\u8bc4",
+    "\u5e76\u975e\u5076\u9047 \u523b\u610f \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "\u4e0d\u5e26\u8111\u5b50 \u70ed\u8bc4",
+    "\u4e0d\u5f97\u4e0d\u5c1d \u70ed\u8bc4",
+    "\u4e0d\u548c\u5356\u7684\u73a9 \u70ed\u8bc4",
+    "\u4e0d\u770b\u5185\u5bb9\u8bc4\u8bba \u70ed\u8bc4",
+    "\u4e0d\u662f\u5f88\u8ba4\u53ef \u70ed\u8bc4",
+    "\u4e0d\u4e00\u4e00\u5217\u4e3e \u56de\u590d \u8bc4\u8bba\u533a \u70ed\u8bc4",
+    "\u8e29\u4e2d\u4f60\u5bb6\u5730\u96f7 \u70ed\u8bc4"
+  ],
+  "failureReasons": [
+    "coverage ratio 0.7501 is below 1",
+    "446 term(s) are below 3 evidence hit(s)"
+  ]
+}
