@@ -42,16 +42,16 @@ Latest verified update: current `main` HEAD after this update.
 
 Current audited dictionary state:
 
-- Dictionary terms: `1980`
+- Dictionary terms: `1931`
 - Target evidence per term: `3`
-- Coverage ratio: `66.16%`
-- Weak terms below target: `670`
-- Zero-evidence terms: `109`
-- Evidence deficit: `1312`
-- Source-backed terms: `1871`
+- Coverage ratio: `68.15%`
+- Weak terms below target: `615`
+- Zero-evidence terms: `98`
+- Evidence deficit: `1204`
+- Source-backed terms: `1833`
 - Unsourced evidence terms: `0`
-- Attempted terms: `906`
-- Successful terms: `403`
+- Attempted terms: `828`
+- Successful terms: `275`
 
 The dictionary coverage target is not complete yet. Continue running `.\run-bilibili-auto-coverage.ps1` or `npm run dictionary:auto` until weak and zero-evidence terms are eliminated, then re-run `npm run dictionary:coverage`.
 
@@ -108,7 +108,8 @@ Recent dictionary-cleaning updates:
   - A local weak-term pre-filter (`BILIBILI_HARVEST_PREFILTER_COMMENTS=1`) routes only comments that literally contain a dictionary term/alias/example to DeepSeek. Comment-backed evidence requires the term to be present anyway, so this drops nothing for strict harvesting while cutting model tokens enough to scan far deeper comment sections per run; it falls back to the full set if the filter would empty the pool.
   - Priority scans can now opportunistically capture the whole weak-term pool from one busy comment section (`BILIBILI_HARVEST_PRIORITY_COMMENT_POOL_TARGETS=1`, `BILIBILI_HARVEST_COMMENT_POOL_TARGET_LIMIT`), validated live when one Genshin-video scan lifted two unrelated weak terms (`中国宝宝体质`, `网盘见`) at once.
   - The auto-coverage loop keeps its `deepseek-v4-flash`/max default, with an opt-in `BILIBILI_HARVEST_MODEL=deepseek-v4-pro` validation override for harder batches.
-- Added **reply-tree deepening** (`BILIBILI_HARVEST_DEEPEN_REPLIES=1`) to reach the 3-evidence target on rare terms. A comment that uses a niche term is usually answered by replies echoing the same term, so when a scanned root comment matches a dictionary needle and has more replies than the preview shows, the crawler drills its full thread via `/x/v2/reply/reply`. Live-verified: one root comment expanded into 20 additional term-bearing replies, turning a single lucky hit into several evidences instead of hoping three separate videos each surface the term verbatim. Tunable via `BILIBILI_HARVEST_DEEPEN_ROOT_LIMIT` and `BILIBILI_HARVEST_DEEPEN_PAGES`.
+- Added **reply-tree deepening** (`BILIBILI_HARVEST_DEEPEN_REPLIES=1`) to reach the 3-evidence target on rare terms. A comment that uses a niche term is usually answered by replies echoing the same term, so when a scanned root comment matches a dictionary needle and has more replies than the preview shows, the crawler drills its full thread via `/x/v2/reply/reply`. Live-verified: one root comment expanded into 20 additional term-bearing replies, turning a single lucky hit into several evidences instead of hoping three separate videos each surface the term verbatim. Tunable via `BILIBILI_HARVEST_DEEPEN_ROOT_LIMIT` and `BILIBILI_HARVEST_DEEPEN_PAGES`. `run-bilibili-auto-coverage.ps1` now turns the pre-filter, reply-deepening, and comment-pool targeting on by default (opt out with `-NoPreFilter` / `-NoDeepenReplies` / `-NoCommentPoolTargets`).
+- A corpus-mode + reply-deepening harvest batch lifted audited comment-backed coverage from `66.16%` to `66.46%` before a defensible curation pass. Then removed 49 non-reusable dictionary entries — 15 particle-only duplicate variants whose canonical form was kept (e.g. `号被盗了`→`号被盗`, `你管得着人家啊`→`你管得着人家`), over-specific one-off sentence fragments that are not portable rhetorical terms (e.g. `然后抽的全是自己小号`, `蛋仔派对全是小孩你搞这个`, `我有十个亿美元的存款`, `排气口吹出来全是臭气`), re-documented noise (`实名制观看`, `百分百好评率`, `怕被删评故发图`), and proper-noun/typo-bound fragments (`邱莹莹plus版`, `把自己当drake`, `不如ravenfiled`, `windowxp启动`, `紫雷完全是被牵连的`). Real idioms and memes were deliberately kept (`只可意会不可言传`, `收藏从未停止行动从未开始`, `肯定是想金蝉脱壳`, `插个眼`). The cleanup lifted audited comment-backed coverage from `66.46%` to `68.15%` (terms `1980`→`1931`, weak `664`→`615`, zero-evidence `110`→`98`) while preserving real-slang breadth. Remaining headroom toward the 75% gate is genuine rare slang that needs sustained local harvesting via the script above.
 
 ## Run Locally
 
